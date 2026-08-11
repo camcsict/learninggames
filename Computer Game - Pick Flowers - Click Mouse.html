@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Blooming Mouse Garden - Master Mouse Controls</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-sky-top: #38bdf8;
+      --bg-sky-mid: #bae6fd;
+      --bg-grass-top: #bef264;
+      --bg-grass-bot: #22c55e;
+      --panel-bg: rgba(255, 255, 255, 0.96);
+      --accent-yellow: #fde047;
+      --accent-orange: #fb923c;
+      --accent-pink: #f472b6;
+      --accent-green: #16a34a;
+      --text-dark: #1e293b;
+      --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #38bdf8 0%, #bae6fd 28%, #d9f99d 62%, #4ade80 100%);
+      color: var(--text-dark);
+      position: relative;
+    }
+
+    /* ==========================================================
+       SUNNY & VIBRANT BACKGROUND
+       ========================================================== */
+    .sky-decor {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .sun {
+      position: absolute;
+      top: 12px;
+      right: 36px;
+      width: 95px;
+      height: 95px;
+      background: radial-gradient(circle, #fffbeb 25%, #fde047 60%, rgba(251, 191, 36, 0) 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 50px #fde047, 0 0 90px #f59e0b;
+      animation: sunGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes sunGlow {
+      0% { transform: scale(1); opacity: 0.9; }
+      100% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 25px #fde047); }
+    }
+
+    .cloud {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 50px;
+      animation: floatCloud linear infinite;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+    }
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: inherit;
+      border-radius: 50%;
+    }
+    .cloud1 { width: 140px; height: 45px; top: 10%; left: -160px; animation-duration: 36s; }
+    .cloud1::before { width: 50px; height: 50px; top: -22px; left: 22px; }
+    .cloud1::after { width: 65px; height: 65px; top: -32px; left: 55px; }
+
+    .cloud2 { width: 190px; height: 55px; top: 20%; left: -220px; animation-duration: 48s; animation-delay: 9s; }
+    .cloud2::before { width: 65px; height: 65px; top: -30px; left: 30px; }
+    .cloud2::after { width: 85px; height: 85px; top: -42px; left: 78px; }
+
+    @keyframes floatCloud {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(calc(100vw + 300px)); }
+    }
+
+    /* Floating pollen dust */
+    .sparkle {
+      position: absolute;
+      background: #ffffff;
+      border-radius: 50%;
+      opacity: 0.7;
+      animation: sparkleRise 6s ease-in-out infinite;
+    }
+    @keyframes sparkleRise {
+      0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+      50% { opacity: 0.9; }
+      100% { transform: translateY(-5vh) scale(1.1); opacity: 0; }
+    }
+
+    /* ==========================================================
+       TOP HEADER
+       ========================================================== */
+    header {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 24px;
+      background: rgba(255, 255, 255, 0.93);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-soft);
+      height: 70px;
+      border-bottom: 3px solid #e0f2fe;
+    }
+
+    .level-info-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .level-tag {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: #ffffff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      padding: 6px 16px;
+      border-radius: 999px;
+      box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
+      border: 2px solid #ffedd5;
+    }
+
+    .level-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #15803d;
+    }
+
+    .mission-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fef08a;
+      padding: 7px 20px;
+      border-radius: 999px;
+      border: 2px solid #facc15;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #854d0e;
+      box-shadow: 0 4px 12px rgba(250, 204, 21, 0.35);
+      animation: bannerPulse 2.2s infinite ease-in-out;
+    }
+
+    @keyframes bannerPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-sound {
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+      transition: transform 0.15s ease, background-color 0.2s;
+    }
+    .btn-sound:hover { transform: scale(1.1); background-color: #f8fafc; }
+    .btn-sound:active { transform: scale(0.92); }
+
+    /* ==========================================================
+       GARDEN FIELD & 25 STRICT NON-OVERLAPPING CELLS
+       ========================================================== */
+    main#garden-field {
+      position: relative;
+      flex: 1;
+      z-index: 10;
+      overflow: hidden;
+      width: 100vw;
+      height: calc(100vh - 146px);
+    }
+
+    /* Cell Component */
+    .flower-item {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transform-origin: center center;
+      z-index: 15;
+      /* Prevent any layout displacement */
+      will-change: transform;
+    }
+
+    .flower-visual {
+      font-size: 2.85rem;
+      line-height: 1;
+      pointer-events: none;
+      transform-origin: bottom center;
+      transition: transform 0.15s ease-out;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+    }
+
+    /* SMOOTH IN-PLACE GENTLE WIGGLE (No Translation / No Blurring) */
+    .flower-item:hover .flower-visual {
+      animation: gentleWiggle 0.32s ease-in-out infinite alternate !important;
+    }
+
+    @keyframes gentleWiggle {
+      0% { transform: rotate(-7deg) scale(1.08); }
+      100% { transform: rotate(7deg) scale(1.08); }
+    }
+
+    .action-pill {
+      margin-top: 3px;
+      background: rgba(15, 23, 42, 0.88);
+      color: #ffffff;
+      font-size: 0.76rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      pointer-events: none;
+      border: 1.5px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Wrong click in-place shake */
+    @keyframes errorWiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-14deg); }
+      75% { transform: rotate(14deg); }
+    }
+
+    /* Harvest flying flower */
+    .flower-flyer {
+      position: fixed;
+      font-size: 2.8rem;
+      pointer-events: none;
+      z-index: 9999;
+      transition: all 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* ==========================================================
+       BOTTOM FOOTER (FARMER & PROGRESS)
+       ========================================================== */
+    footer {
+      position: relative;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+      padding: 6px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 76px;
+      border-top: 3px solid #bbf7d0;
+    }
+
+    .farmer-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .farmer-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 58px;
+      height: 58px;
+      background: #fef08a;
+      border: 3px solid #facc15;
+      border-radius: 50%;
+      font-size: 2.6rem;
+      box-shadow: 0 4px 12px rgba(250, 204, 21, 0.35);
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .farmer-jump {
+      animation: farmerJump 0.42s ease;
+    }
+
+    @keyframes farmerJump {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.36) rotate(-8deg); }
+      75% { transform: scale(0.96) rotate(6deg); }
+      100% { transform: scale(1); }
+    }
+
+    .farmer-inventory {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .harvest-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #f0fdf4;
+      border: 2px solid #86efac;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #166534;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+    }
+
+    .progress-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+    }
+
+    .progress-text {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #15803d;
+    }
+
+    .progress-track {
+      width: 230px;
+      height: 16px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 2px solid #cbd5e1;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #facc15 0%, #22c55e 100%);
+      border-radius: 999px;
+      transition: width 0.22s ease-out;
+    }
+
+    /* ==========================================================
+       MODALS (PRACTICE & VICTORY)
+       ========================================================== */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.68);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-card {
+      background: var(--panel-bg);
+      width: 90%;
+      max-width: 580px;
+      border-radius: 28px;
+      padding: 26px 32px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      border: 4px solid #ffffff;
+      transform: scale(0.92);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-backdrop.active .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-h2 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #15803d;
+      margin-bottom: 4px;
+    }
+
+    .modal-sub {
+      font-size: 1.12rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 16px;
+    }
+
+    /* Mouse Diagram */
+    .mouse-diagram {
+      width: 105px;
+      height: 148px;
+      margin: 0 auto 16px auto;
+      position: relative;
+      background: #f8fafc;
+      border: 4px solid #334155;
+      border-radius: 50px 50px 42px 42px;
+      box-shadow: inset 0 -4px 8px rgba(0,0,0,0.08);
+    }
+
+    .mouse-h-line {
+      position: absolute;
+      top: 52px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #334155;
+    }
+
+    .mouse-v-line {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 3px;
+      height: 52px;
+      background: #334155;
+      transform: translateX(-50%);
+    }
+
+    .mouse-left {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50%;
+      height: 52px;
+      border-top-left-radius: 46px;
+      transition: background-color 0.2s;
+    }
+
+    .mouse-right {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 50%;
+      height: 52px;
+      border-top-right-radius: 46px;
+      transition: background-color 0.2s;
+    }
+
+    .mouse-wheel {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 30px;
+      background: #cbd5e1;
+      border: 3px solid #334155;
+      border-radius: 8px;
+      z-index: 5;
+      transition: all 0.2s;
+    }
+
+    .highlighted {
+      background-color: #facc15 !important;
+      animation: pulseLight 0.8s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseLight {
+      0% { box-shadow: 0 0 6px #facc15; }
+      100% { box-shadow: 0 0 18px #f59e0b; }
+    }
+
+    /* Practice Area */
+    .practice-box {
+      background: #f0fdf4;
+      border: 3px dashed #86efac;
+      border-radius: 20px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .practice-guide {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: #166534;
+    }
+
+    .practice-target-seed {
+      width: 84px;
+      height: 84px;
+      background: #ffffff;
+      border: 3px solid #f59e0b;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(245, 158, 11, 0.28);
+      transition: transform 0.15s ease, background-color 0.2s;
+    }
+
+    .practice-target-seed:hover { transform: scale(1.1); }
+    .practice-target-seed:active { transform: scale(0.94); }
+
+    .dots-container {
+      display: flex;
+      gap: 12px;
+    }
+
+    .dot-step {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 3px solid #cbd5e1;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #64748b;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .dot-step.done {
+      border-color: #22c55e;
+      background: #22c55e;
+      color: #ffffff;
+      transform: scale(1.15);
+    }
+
+    .btn-action {
+      background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 1.3rem;
+      font-weight: 800;
+      padding: 12px 34px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 10px 22px rgba(22, 163, 74, 0.5);
+    }
+
+    .btn-action:disabled {
+      background: #94a3b8;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* CONFETTI CANVAS */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sky & Ambient decorations -->
+  <div class="sky-decor">
+    <div class="sun"></div>
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="level-info-group">
+      <div class="level-tag" id="level-tag">Level 1/6</div>
+      <div class="level-title" id="level-title">Pink Blossom Garden</div>
+    </div>
+
+    <div class="mission-indicator" id="mission-indicator">
+      <span>🖱️</span>
+      <span id="mission-text">Left Click to harvest 25 Pink Flowers!</span>
+    </div>
+
+    <div class="header-tools">
+      <button class="btn-sound" id="btn-sound" title="Toggle Sound">🔊</button>
+    </div>
+  </header>
+
+  <!-- Garden Field (25 Flowers positioned in strict 5x5 non-overlapping grid) -->
+  <main id="garden-field"></main>
+
+  <!-- Footer with Farmer & Progress -->
+  <footer>
+    <div class="farmer-group">
+      <div class="farmer-box" id="farmer-avatar" title="Farmer">👨‍🌾</div>
+      <div class="farmer-inventory" id="farmer-inventory"></div>
+    </div>
+
+    <div class="progress-group">
+      <div class="progress-text" id="progress-text">Harvested: 0 / 25</div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-bar"></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Practice Modal -->
+  <div class="modal-backdrop active" id="practice-modal">
+    <div class="modal-card">
+      <h2 class="modal-h2" id="modal-title">Level 1: Left Click</h2>
+      <p class="modal-sub" id="modal-sub">Learn to use the <b>Left Mouse Button</b> to harvest flowers!</p>
+
+      <!-- Mouse hardware diagram -->
+      <div class="mouse-diagram">
+        <div class="mouse-h-line"></div>
+        <div class="mouse-v-line"></div>
+        <div class="mouse-left" id="hl-left"></div>
+        <div class="mouse-right" id="hl-right"></div>
+        <div class="mouse-wheel" id="hl-wheel"></div>
+      </div>
+
+      <!-- Practice Arena -->
+      <div class="practice-box">
+        <div class="practice-guide" id="practice-guide">
+          Practice the action <b>3 times</b> on the glowing seed!
+        </div>
+        <div class="practice-target-seed" id="practice-target">🌱</div>
+        <div class="dots-container">
+          <div class="dot-step" id="dot-1">1</div>
+          <div class="dot-step" id="dot-2">2</div>
+          <div class="dot-step" id="dot-3">3</div>
+        </div>
+      </div>
+
+      <button class="btn-action" id="btn-start-level" disabled>
+        Practice 3 Times to Unlock 🔒
+      </button>
+    </div>
+  </div>
+
+  <!-- Victory & Game-Over Modal -->
+  <div class="modal-backdrop" id="victory-modal">
+    <div class="modal-card">
+      <div style="font-size: 4.2rem; margin-bottom: 6px;" id="victory-icon">🎉</div>
+      <h2 class="modal-h2" id="victory-title">Garden Harvested!</h2>
+      <p class="modal-sub" id="victory-desc">You completed the harvest with outstanding precision!</p>
+
+      <div id="victory-stats" style="margin: 14px 0; font-size: 1.25rem; font-weight: 800; color: #15803d; display: none;"></div>
+
+      <button class="btn-action" id="btn-victory-action">Next Garden ➡️</button>
+    </div>
+  </div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <script>
+    /* ==========================================================
+       SYNTHESIZED AUDIO ENGINE (Web Audio API)
+       ========================================================== */
+    class AudioSynthesizer {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.25) {
+        if (!this.enabled) return;
+        this.init();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+      }
+
+      playPluck() {
+        if (!this.enabled) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(380, now);
+        osc.frequency.exponentialRampToValueAtTime(860, now + 0.12);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(now + 0.16);
+      }
+
+      playSuccess() {
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => this.playTone(freq, 'sine', 0.22, 0.25), idx * 80);
+        });
+      }
+
+      playGrandFanfare() {
+        const arpeggio = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        arpeggio.forEach((freq, idx) => {
+          setTimeout(() => this.playTone(freq, 'triangle', 0.3, 0.28), idx * 90);
+        });
+        setTimeout(() => {
+          [659.25, 830.61, 987.77, 1318.51].forEach(f => this.playTone(f, 'triangle', 0.6, 0.25));
+        }, 500);
+      }
+
+      playBoop() {
+        this.playTone(480, 'sine', 0.1, 0.2);
+      }
+
+      playWrong() {
+        this.playTone(220, 'sawtooth', 0.15, 0.18);
+      }
+    }
+
+    const audio = new AudioSynthesizer();
+
+    /* ==========================================================
+       CONFETTI CANNON
+       ========================================================== */
+    class ConfettiCannon {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.animId = null;
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+      }
+
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      }
+
+      fire(amount = 75) {
+        const palette = ['#ff0055', '#ffbe0b', '#00f5d4', '#7b2cbf', '#fee440', '#00bbf9', '#ff5400'];
+        for (let i = 0; i < amount; i++) {
+          this.particles.push({
+            x: window.innerWidth / 2 + (Math.random() - 0.5) * 220,
+            y: window.innerHeight / 2 + (Math.random() - 0.5) * 120,
+            vx: (Math.random() - 0.5) * 20,
+            vy: (Math.random() - 1.25) * 15,
+            size: Math.random() * 9 + 6,
+            color: palette[Math.floor(Math.random() * palette.length)],
+            rotation: Math.random() * 360,
+            rotSpeed: (Math.random() - 0.5) * 14,
+            opacity: 1
+          });
+        }
+        if (!this.animId) this.loop();
+      }
+
+      loop() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.36;
+          p.vx *= 0.98;
+          p.rotation += p.rotSpeed;
+          p.opacity -= 0.009;
+
+          if (p.opacity <= 0 || p.y > this.canvas.height) {
+            this.particles.splice(i, 1);
+            continue;
+          }
+
+          this.ctx.save();
+          this.ctx.globalAlpha = p.opacity;
+          this.ctx.translate(p.x, p.y);
+          this.ctx.rotate((p.rotation * Math.PI) / 180);
+          this.ctx.fillStyle = p.color;
+          this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+          this.ctx.restore();
+        }
+
+        if (this.particles.length > 0) {
+          this.animId = requestAnimationFrame(() => this.loop());
+        } else {
+          this.animId = null;
+        }
+      }
+    }
+
+    const confetti = new ConfettiCannon('confetti-canvas');
+
+    /* ==========================================================
+       GAME CONFIGURATION (25 FLOWERS PER LEVEL)
+       ========================================================== */
+    const GAME_LEVELS = [
+      {
+        id: 1,
+        name: "Pink Blossom Garden",
+        action: "left-click",
+        flower: "🌸",
+        actionLabel: "Left Click",
+        instruction: "Left Click with the mouse to harvest 25 Pink Flowers!",
+        practiceDesc: "Practice the <b>Left Click</b> 3 times on the seed!",
+        targetCount: 25
+      },
+      {
+        id: 2,
+        name: "Daisy",
+        action: "right-click",
+        flower: "🌼",
+        actionLabel: "Right Click",
+        instruction: "Right Click with the mouse to harvest 25 Daisy!",
+        practiceDesc: "Practice the <b>Right Click</b> 3 times on the seed!",
+        targetCount: 25
+      },
+      {
+        id: 3,
+        name: "Golden Sunflower Valley",
+        action: "double-click",
+        flower: "🌻",
+        actionLabel: "Double Click",
+        instruction: "Quickly Double Click to harvest 25 Golden Sunflowers!",
+        practiceDesc: "Practice <b>Double Click</b> (2 fast clicks) 3 times on the seed!",
+        targetCount: 25
+      },
+      {
+        id: 4,
+        name: "Orange Tulip Fields",
+        action: "scroll-up",
+        flower: "🌷",
+        actionLabel: "Scroll UP ⬆️",
+        instruction: "Hover on each tulip and Scroll Wheel UP to harvest 25 Orange Tulips!",
+        practiceDesc: "Hover on the seed and <b>Scroll Wheel UP</b> 3 times!",
+        targetCount: 25
+      },
+      {
+        id: 5,
+        name: "White Lotus Pond",
+        action: "scroll-down",
+        flower: "💮",
+        actionLabel: "Scroll DOWN ⬇️",
+        instruction: "Hover on each lotus and Scroll Wheel DOWN to harvest 25 White Lotuses!",
+        practiceDesc: "Hover on the seed and <b>Scroll Wheel DOWN</b> 3 times!",
+        targetCount: 25
+      },
+      {
+        id: 6,
+        name: "Grand Rainbow Paradise",
+        action: "mixed",
+        flower: "🌈",
+        actionLabel: "Mastery Garden",
+        instruction: "Use the correct mouse skill for each flower to harvest the Grand Garden!",
+        practiceDesc: "Demonstrate mastery: Perform any mouse action 3 times on the magic flower!",
+        targetCount: 25
+      }
+    ];
+
+    const ALL_FIVE_FLOWERS = [
+      { emoji: "🌸", action: "left-click", label: "Left Click" },
+      { emoji: "🌼", action: "right-click", label: "Right Click" },
+      { emoji: "🌻", action: "double-click", label: "Double Click" },
+      { emoji: "🌷", action: "scroll-up", label: "Scroll UP ⬆️" },
+      { emoji: "💮", action: "scroll-down", label: "Scroll DOWN ⬇️" }
+    ];
+
+    /* ==========================================================
+       MAIN GAME CONTROLLER
+       ========================================================== */
+    class GameController {
+      constructor() {
+        this.currentLevelIndex = 0;
+        this.harvestedCount = 0;
+        this.practiceStep = 0;
+        this.farmerInventory = { "🌸": 0, "🪻": 0, "🌻": 0, "🌷": 0, "💮": 0 };
+
+        // DOM elements
+        this.garden = document.getElementById('garden-field');
+        this.levelTag = document.getElementById('level-tag');
+        this.levelTitle = document.getElementById('level-title');
+        this.missionText = document.getElementById('mission-text');
+        this.progressBar = document.getElementById('progress-bar');
+        this.progressText = document.getElementById('progress-text');
+        this.farmerAvatar = document.getElementById('farmer-avatar');
+        this.farmerInventoryEl = document.getElementById('farmer-inventory');
+
+        // Modal elements
+        this.practiceModal = document.getElementById('practice-modal');
+        this.modalTitle = document.getElementById('modal-title');
+        this.modalSub = document.getElementById('modal-sub');
+        this.practiceGuide = document.getElementById('practice-guide');
+        this.practiceTarget = document.getElementById('practice-target');
+        this.btnStartLevel = document.getElementById('btn-start-level');
+        this.dots = [
+          document.getElementById('dot-1'),
+          document.getElementById('dot-2'),
+          document.getElementById('dot-3')
+        ];
+
+        // Highlights
+        this.hlLeft = document.getElementById('hl-left');
+        this.hlRight = document.getElementById('hl-right');
+        this.hlWheel = document.getElementById('hl-wheel');
+
+        // Victory Modal
+        this.victoryModal = document.getElementById('victory-modal');
+        this.victoryTitle = document.getElementById('victory-title');
+        this.victoryDesc = document.getElementById('victory-desc');
+        this.victoryIcon = document.getElementById('victory-icon');
+        this.victoryStats = document.getElementById('victory-stats');
+        this.btnVictoryAction = document.getElementById('btn-victory-action');
+
+        this.initPollenBackground();
+        this.initGlobalEvents();
+        this.initPracticeListeners();
+        this.startLevel(0);
+      }
+
+      initPollenBackground() {
+        const sky = document.querySelector('.sky-decor');
+        for (let i = 0; i < 18; i++) {
+          const spark = document.createElement('div');
+          spark.className = 'sparkle';
+          const size = Math.random() * 7 + 4;
+          spark.style.width = `${size}px`;
+          spark.style.height = `${size}px`;
+          spark.style.left = `${Math.random() * 100}vw`;
+          spark.style.animationDelay = `${Math.random() * 5}s`;
+          spark.style.animationDuration = `${Math.random() * 4 + 4}s`;
+          sky.appendChild(spark);
+        }
+      }
+
+      initGlobalEvents() {
+        window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        const btnSound = document.getElementById('btn-sound');
+        btnSound.addEventListener('click', () => {
+          audio.enabled = !audio.enabled;
+          btnSound.textContent = audio.enabled ? '🔊' : '🔇';
+        });
+
+        this.btnStartLevel.addEventListener('click', () => {
+          this.practiceModal.classList.remove('active');
+          this.spawnGardenFlowers();
+        });
+
+        this.btnVictoryAction.addEventListener('click', () => {
+          this.victoryModal.classList.remove('active');
+          if (this.currentLevelIndex < GAME_LEVELS.length - 1) {
+            this.startLevel(this.currentLevelIndex + 1);
+          } else {
+            // Replay full game from Level 1
+            this.farmerInventory = { "🌸": 0, "🌼": 0, "🌻": 0, "🌷": 0, "💮": 0 };
+            this.startLevel(0);
+          }
+        });
+
+        // Window resize reposition
+        window.addEventListener('resize', () => {
+          if (!this.practiceModal.classList.contains('active') && !this.victoryModal.classList.contains('active')) {
+            this.repositionExistingFlowers();
+          }
+        });
+      }
+
+      initPracticeListeners() {
+        this.practiceTarget.addEventListener('click', () => {
+          const lvl = GAME_LEVELS[this.currentLevelIndex];
+          if (lvl.action === 'left-click' || lvl.action === 'mixed') {
+            this.handlePracticeSuccess();
+          }
+        });
+
+        this.practiceTarget.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const lvl = GAME_LEVELS[this.currentLevelIndex];
+          if (lvl.action === 'right-click' || lvl.action === 'mixed') {
+            this.handlePracticeSuccess();
+          }
+        });
+
+        this.practiceTarget.addEventListener('dblclick', () => {
+          const lvl = GAME_LEVELS[this.currentLevelIndex];
+          if (lvl.action === 'double-click') {
+            this.handlePracticeSuccess();
+          }
+        });
+
+        this.practiceTarget.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const lvl = GAME_LEVELS[this.currentLevelIndex];
+          if (lvl.action === 'scroll-up' && e.deltaY < 0) {
+            this.handlePracticeSuccess();
+          } else if (lvl.action === 'scroll-down' && e.deltaY > 0) {
+            this.handlePracticeSuccess();
+          } else if (lvl.action === 'mixed') {
+            this.handlePracticeSuccess();
+          }
+        }, { passive: false });
+      }
+
+      handlePracticeSuccess() {
+        if (this.practiceStep >= 3) return;
+        this.practiceStep++;
+        audio.playBoop();
+
+        const curDot = this.dots[this.practiceStep - 1];
+        if (curDot) {
+          curDot.classList.add('done');
+          curDot.textContent = '⭐';
+        }
+
+        this.practiceTarget.style.transform = 'scale(1.22) rotate(12deg)';
+        setTimeout(() => {
+          this.practiceTarget.style.transform = 'scale(1)';
+        }, 160);
+
+        if (this.practiceStep >= 3) {
+          audio.playSuccess();
+          confetti.fire(35);
+          this.practiceGuide.innerHTML = "🎉 <b>Mastered! You are ready!</b>";
+          this.btnStartLevel.disabled = false;
+          this.btnStartLevel.textContent = "Start Garden Harvest! 🌸";
+        }
+      }
+
+      startLevel(levelIndex) {
+        this.currentLevelIndex = levelIndex;
+        this.harvestedCount = 0;
+        this.practiceStep = 0;
+        const config = GAME_LEVELS[levelIndex];
+
+        // Update UI
+        this.levelTag.textContent = `Level ${config.id}/6`;
+        this.levelTitle.textContent = config.name;
+        this.missionText.textContent = config.instruction;
+        this.updateProgressUI();
+        this.renderFarmerInventory();
+
+        this.garden.innerHTML = '';
+
+        // Modal Setup
+        this.modalTitle.textContent = `Level ${config.id}: ${config.name}`;
+        this.modalSub.innerHTML = `Mouse Skill: <b>${config.actionLabel}</b>`;
+        this.practiceGuide.innerHTML = config.practiceDesc;
+        this.practiceTarget.textContent = config.id === 6 ? '🌈' : '🌱';
+
+        this.dots.forEach((dot, idx) => {
+          dot.classList.remove('done');
+          dot.textContent = idx + 1;
+        });
+
+        this.btnStartLevel.disabled = true;
+        this.btnStartLevel.textContent = "Practice 3 Times to Unlock 🔒";
+
+        // Highlights
+        this.hlLeft.className = 'mouse-left';
+        this.hlRight.className = 'mouse-right';
+        this.hlWheel.className = 'mouse-wheel';
+
+        if (config.action === 'left-click') {
+          this.hlLeft.classList.add('highlighted');
+        } else if (config.action === 'right-click') {
+          this.hlRight.classList.add('highlighted');
+        } else if (config.action === 'double-click') {
+          this.hlLeft.classList.add('highlighted');
+        } else if (config.action === 'scroll-up' || config.action === 'scroll-down') {
+          this.hlWheel.classList.add('highlighted');
+        } else if (config.action === 'mixed') {
+          this.hlLeft.classList.add('highlighted');
+          this.hlRight.classList.add('highlighted');
+          this.hlWheel.classList.add('highlighted');
+        }
+
+        this.practiceModal.classList.add('active');
+      }
+
+      /* ==========================================================
+         MATHEMATICAL 5x5 GRID (STRICT NON-OVERLAP GUARANTEE)
+         ========================================================== */
+      calculate25GridSlots() {
+        const rect = this.garden.getBoundingClientRect();
+        const W = rect.width;
+        const H = rect.height;
+
+        // 5 columns x 5 rows = exactly 25 non-overlapping cells
+        const cols = 5;
+        const rows = 5;
+        const cellW = W / cols;
+        const cellH = H / rows;
+
+        const slots = [];
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            // Absolute Center of the individual cell
+            const centerX = c * cellW + cellW / 2;
+            const centerY = r * cellH + cellH / 2;
+
+            // Safe bounded subtle organic jitter (strictly inside cell boundary)
+            const jitterX = (Math.random() - 0.5) * (cellW * 0.22);
+            const jitterY = (Math.random() - 0.5) * (cellH * 0.22);
+
+            slots.push({
+              x: centerX + jitterX,
+              y: centerY + jitterY
+            });
+          }
+        }
+
+        // Shuffle slots so distribution feels natural
+        for (let i = slots.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [slots[i], slots[j]] = [slots[j], slots[i]];
+        }
+
+        return slots;
+      }
+
+      spawnGardenFlowers() {
+        this.garden.innerHTML = '';
+        const config = GAME_LEVELS[this.currentLevelIndex];
+        const total = 25; // 25 flowers per level
+        const slots = this.calculate25GridSlots();
+
+        for (let i = 0; i < total; i++) {
+          let flowerData;
+          if (config.id === 6) {
+            // Level 6: 5 of each of the 5 distinct flower types (5 * 5 = 25 flowers)
+            flowerData = ALL_FIVE_FLOWERS[i % ALL_FIVE_FLOWERS.length];
+          } else {
+            flowerData = {
+              emoji: config.flower,
+              action: config.action,
+              label: config.actionLabel
+            };
+          }
+
+          const slot = slots[i];
+          const flowerEl = document.createElement('div');
+          flowerEl.className = 'flower-item';
+
+          // Strictly center in slot without translate jumping
+          flowerEl.style.left = `${slot.x}px`;
+          flowerEl.style.top = `${slot.y}px`;
+          flowerEl.style.transform = 'translate(-50%, -50%)';
+
+          flowerEl.innerHTML = `
+            <div class="flower-visual">${flowerData.emoji}</div>
+            <div class="action-pill">${flowerData.label}</div>
+          `;
+
+          this.bindFlowerEvents(flowerEl, flowerData);
+          this.garden.appendChild(flowerEl);
+        }
+      }
+
+      repositionExistingFlowers() {
+        const flowers = Array.from(this.garden.querySelectorAll('.flower-item'));
+        if (flowers.length === 0) return;
+        const slots = this.calculate25GridSlots();
+        flowers.forEach((flowerEl, idx) => {
+          if (slots[idx]) {
+            flowerEl.style.left = `${slots[idx].x}px`;
+            flowerEl.style.top = `${slots[idx].y}px`;
+          }
+        });
+      }
+
+      bindFlowerEvents(flowerEl, flowerData) {
+        // Left Click
+        flowerEl.addEventListener('click', () => {
+          if (flowerData.action === 'left-click') {
+            this.harvestFlower(flowerEl, flowerData);
+          } else {
+            this.triggerErrorShake(flowerEl);
+          }
+        });
+
+        // Right Click
+        flowerEl.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          if (flowerData.action === 'right-click') {
+            this.harvestFlower(flowerEl, flowerData);
+          } else {
+            this.triggerErrorShake(flowerEl);
+          }
+        });
+
+        // Double Click
+        flowerEl.addEventListener('dblclick', () => {
+          if (flowerData.action === 'double-click') {
+            this.harvestFlower(flowerEl, flowerData);
+          } else {
+            this.triggerErrorShake(flowerEl);
+          }
+        });
+
+        // Scroll Wheel
+        flowerEl.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          if (flowerData.action === 'scroll-up' && e.deltaY < 0) {
+            this.harvestFlower(flowerEl, flowerData);
+          } else if (flowerData.action === 'scroll-down' && e.deltaY > 0) {
+            this.harvestFlower(flowerEl, flowerData);
+          } else {
+            this.triggerErrorShake(flowerEl);
+          }
+        }, { passive: false });
+      }
+
+      triggerErrorShake(el) {
+        audio.playWrong();
+        const visual = el.querySelector('.flower-visual');
+        if (visual) {
+          visual.style.animation = 'none';
+          void visual.offsetWidth;
+          visual.style.animation = 'errorWiggle 0.35s ease';
+        }
+      }
+
+      harvestFlower(flowerEl, flowerData) {
+        if (flowerEl.dataset.picked) return;
+        flowerEl.dataset.picked = 'true';
+
+        audio.playPluck();
+
+        // Projectile flying to Farmer
+        const fRect = flowerEl.getBoundingClientRect();
+        const farmerRect = this.farmerAvatar.getBoundingClientRect();
+
+        const flyer = document.createElement('div');
+        flyer.className = 'flower-flyer';
+        flyer.textContent = flowerData.emoji;
+        flyer.style.left = `${fRect.left + fRect.width / 4}px`;
+        flyer.style.top = `${fRect.top}px`;
+        document.body.appendChild(flyer);
+
+        flowerEl.remove();
+
+        requestAnimationFrame(() => {
+          flyer.style.left = `${farmerRect.left + 8}px`;
+          flyer.style.top = `${farmerRect.top - 8}px`;
+          flyer.style.transform = 'scale(0.35) rotate(360deg)';
+          flyer.style.opacity = '0.5';
+        });
+
+        setTimeout(() => {
+          flyer.remove();
+          this.farmerInventory[flowerData.emoji] = (this.farmerInventory[flowerData.emoji] || 0) + 1;
+          this.harvestedCount++;
+          this.renderFarmerInventory();
+          this.updateProgressUI();
+
+          // Farmer Jump Cheer
+          this.farmerAvatar.classList.remove('farmer-jump');
+          void this.farmerAvatar.offsetWidth;
+          this.farmerAvatar.classList.add('farmer-jump');
+
+          // Check if level complete
+          if (this.harvestedCount >= 25) {
+            this.handleLevelComplete();
+          }
+        }, 650);
+      }
+
+      renderFarmerInventory() {
+        this.farmerInventoryEl.innerHTML = '';
+        let hasItems = false;
+        for (const [emoji, count] of Object.entries(this.farmerInventory)) {
+          if (count > 0) {
+            hasItems = true;
+            const chip = document.createElement('div');
+            chip.className = 'harvest-chip';
+            chip.innerHTML = `<span>${emoji}</span><span>x ${count}</span>`;
+            this.farmerInventoryEl.appendChild(chip);
+          }
+        }
+        if (!hasItems) {
+          this.farmerInventoryEl.innerHTML = '<span style="color:#64748b; font-weight:700; font-size: 1rem;">Farmer is waiting to harvest...</span>';
+        }
+      }
+
+      updateProgressUI() {
+        const target = 25;
+        const pct = Math.min(100, (this.harvestedCount / target) * 100);
+        this.progressBar.style.width = `${pct}%`;
+        this.progressText.textContent = `Harvested: ${this.harvestedCount} / ${target}`;
+      }
+
+      handleLevelComplete() {
+        const config = GAME_LEVELS[this.currentLevelIndex];
+        const isFinal = this.currentLevelIndex === GAME_LEVELS.length - 1;
+
+        setTimeout(() => {
+          if (isFinal) {
+            audio.playGrandFanfare();
+            confetti.fire(160);
+            this.victoryIcon.textContent = '🏆';
+            this.victoryTitle.textContent = 'Congratulations! You Won the Game!';
+            this.victoryDesc.textContent = 'You have mastered all mouse controls and harvested the Grand Rainbow Paradise with Farmer 👨‍🌾!';
+
+            // Total Collection Stats
+            let summary = 'Total Harvest: ';
+            for (const [emoji, count] of Object.entries(this.farmerInventory)) {
+              summary += `${emoji} x ${count} &nbsp;&nbsp; `;
+            }
+            this.victoryStats.innerHTML = summary;
+            this.victoryStats.style.display = 'block';
+
+            // Question & Play Again button
+            this.btnVictoryAction.textContent = 'Do you want to play again? 🔄';
+          } else {
+            audio.playSuccess();
+            confetti.fire(75);
+            this.victoryIcon.textContent = '🎉';
+            this.victoryTitle.textContent = `${config.name} Complete!`;
+            this.victoryDesc.textContent = `Great job! You successfully harvested all 25 flowers with ${config.actionLabel}!`;
+            this.victoryStats.style.display = 'none';
+            this.btnVictoryAction.textContent = `Continue to Level ${config.id + 1} ➡️`;
+          }
+
+          this.victoryModal.classList.add('active');
+        }, 500);
+      }
+    }
+
+    // Launch Game
+    window.addEventListener('DOMContentLoaded', () => {
+      new GameController();
+    });
+  </script>
+</body>
+</html>
