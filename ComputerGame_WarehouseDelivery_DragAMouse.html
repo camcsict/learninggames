@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Warehouse Delivery Express</title>
+    <!-- Thêm Font chữ Game sinh động -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #2c3e50;
+            --fridge-border: #95a5a6;
+            --phone-border: #1a1a1a;
+            --primary: #3498db;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --pack: #e67e22;
+        }
+
+        * { box-sizing: border-box; }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1f2a35 0%, #34495e 100%);
+            /* Sử dụng font chữ an toàn không lỗi */
+            font-family: 'Nunito', 'Segoe UI', Tahoma, sans-serif; 
+            user-select: none;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* Start Screen Modal */
+        #start-screen {
+            position: fixed; inset: 0;
+            background: rgba(30, 43, 56, 0.98);
+            z-index: 9999;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; text-align: center;
+            padding: 20px;
+        }
+        #start-screen h1 { 
+            font-size: 3rem; 
+            text-shadow: 3px 3px 0 #3498db, 6px 6px 0 rgba(0,0,0,0.4); 
+            margin-bottom: 10px; 
+            color: #f1c40f;
+        }
+        #start-screen input {
+            font-size: 1.5rem; padding: 15px; margin: 15px 0;
+            border-radius: 12px; border: 3px solid #3498db; text-align: center;
+            width: 80%; max-width: 320px; font-weight: 800; font-family: 'Nunito', sans-serif;
+            outline: none; box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Shift Selection Buttons */
+        .shift-options {
+            display: flex; gap: 15px; margin: 15px 0 30px 0;
+        }
+        .shift-btn {
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.2rem;
+            padding: 10px 20px; border-radius: 10px; cursor: pointer;
+            background: #7f8c8d; color: white; border: none; transition: all 0.2s;
+            box-shadow: 0 4px 0 #555;
+        }
+        .shift-btn.active {
+            background: var(--primary); box-shadow: 0 4px 0 #2980b9; transform: translateY(-2px);
+        }
+
+        #start-screen .start-btn {
+            font-family: 'Nunito', sans-serif; font-weight: 900;
+            font-size: 1.6rem; padding: 15px 50px;
+            background: var(--success); color: white;
+            border: none; border-radius: 12px; cursor: pointer;
+            box-shadow: 0 6px 0 #27ae60, 0 10px 20px rgba(0,0,0,0.3); 
+            transition: all 0.1s;
+        }
+        #start-screen .start-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #27ae60, 0 5px 10px rgba(0,0,0,0.3); }
+
+        /* Layout */
+        .warehouse {
+            display: flex; width: 100%; height: 100%; max-width: 1200px;
+            padding: 15px; gap: 20px;
+            justify-content: center; align-items: center;
+        }
+
+        /* Fridge Section */
+        .fridge-container {
+            flex: 1; max-width: 450px; height: 90vh; max-height: 800px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .fridge-title {
+            color: white; text-align: center; font-size: 2rem; margin: 0;
+            text-transform: uppercase; letter-spacing: 3px;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.3); font-weight: 900;
+        }
+
+        .fridge {
+            background-color: #d1d8e0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px),
+                linear-gradient(0deg, #7f8c8d 8px, transparent 8px);
+            background-size: 20px 20px, 20px 20px, 100% calc(100% / 3);
+            border: 18px solid var(--fridge-border); border-radius: 12px;
+            padding: 10px; flex: 1;
+            display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px;
+            box-shadow: inset 15px 15px 40px rgba(0,0,0,0.3), inset -10px -10px 30px rgba(255,255,255,0.7), 10px 10px 30px rgba(0,0,0,0.4);
+            position: relative; overflow: hidden; touch-action: none;
+        }
+
+        .fridge::before {
+            content: ''; position: absolute; top: 0; left: -50%;
+            width: 80%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg); pointer-events: none; z-index: 10;
+        }
+
+        .snowflake { position: absolute; color: #fff; pointer-events: none; z-index: 1; animation: fall linear forwards; text-shadow: 0 0 5px rgba(255,255,255,0.8); }
+        @keyframes fall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Đồ ăn kho chứa to hơn */
+        .item {
+            font-size: clamp(3rem, 6vh, 4.5rem); text-align: center;
+            cursor: grab; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: white; border-radius: 10px; padding: 2px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 5; align-self: end;
+        }
+        .item:hover { transform: scale(1.15); }
+        .item:active { transform: scale(0.9); cursor: grabbing; }
+
+        /* Phone Section */
+        .phone-container {
+            flex: 1; max-width: 380px; height: 90vh; max-height: 800px;
+            background: var(--phone-border); border-radius: 40px; border: 14px solid #111;
+            display: flex; flex-direction: column; position: relative;
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.4), inset 0 0 10px rgba(255,255,255,0.2);
+        }
+
+        .phone-notch {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 130px; height: 25px; background: #111;
+            border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 20;
+        }
+
+        .screen {
+            background: #f8f9fa; flex: 1; border-radius: 25px;
+            display: flex; flex-direction: column; padding: 35px 15px 15px 15px;
+            overflow: hidden; position: relative;
+        }
+
+        /* Toast thông báo đơn hàng (Đã sửa lỗi đè) */
+        .toast {
+            position: absolute; top: 75px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: #e74c3c; color: white; padding: 6px 15px; border-radius: 20px;
+            font-size: 0.95rem; font-weight: 800; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000; pointer-events: none; /* Không block các object bên dưới */
+            white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .stats-bar { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.1rem; font-weight: 900; color: #2c3e50; }
+        .stat-box { background: #ecf0f1; padding: 6px 12px; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 8px; }
+        .header h2 { margin: 0; font-size: 1.3rem; color: #333; font-weight: 900; text-transform: uppercase;}
+        .status { font-weight: 900; text-align: center; padding: 8px; border-radius: 8px; background: var(--warning); color: #333; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 1rem; }
+
+        .order-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; flex: 1; justify-content: space-evenly; }
+
+        .dropzone {
+            border: 3px dashed #bdc3c7; border-radius: 12px; flex: 1; min-height: 50px; max-height: 80px;
+            display: flex; align-items: center; justify-content: center; font-size: clamp(2rem, 5vh, 3.5rem);
+            background: white; position: relative; transition: all 0.3s;
+        }
+        .dropzone.shadow::after { content: attr(data-emoji); filter: grayscale(100%) brightness(0) opacity(0.15); position: absolute; }
+        .dropzone.filled { border-color: var(--success); background: #eafaf1; border-style: solid; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        .actions { display: flex; justify-content: center; gap: 15px; height: 60px; align-items: center; position: relative; z-index: 100; margin-top: 10px; }
+        .btn { font-size: 2rem; width: 65px; height: 55px; border: none; border-radius: 12px; cursor: pointer; display: none; transform: scale(0); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 0 rgba(0,0,0,0.2); }
+        .btn:active { transform: scale(0.95) translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+        .btn.show { display: flex; align-items: center; justify-content: center; transform: scale(1); }
+        .btn-pack { background: var(--pack); }
+        .btn-deliver { background: var(--primary); }
+        
+        .scooter-icon { display: inline-block; transform: scaleX(-1); }
+
+        .overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); border-radius: 25px; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 50; text-align: center; padding: 15px; }
+
+        /* Hoa giấy Confetti */
+        .confetti {
+            position: absolute; width: 12px; height: 12px;
+            top: -20px; z-index: 300; border-radius: 2px;
+            animation: fallConfetti linear forwards;
+        }
+        @keyframes fallConfetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+        }
+
+        /* Delivery Scene */
+        .delivery-scene { width: 100%; height: 120px; position: relative; overflow: hidden; display: flex; align-items: flex-end; padding-bottom: 5px; }
+        .building { font-size: 5rem; position: absolute; right: 10px; bottom: 5px; }
+        .scooter { font-size: 4.5rem; position: absolute; bottom: 5px; left: -100px; z-index: 2; animation: drive 1.2s ease-in forwards; }
+        .road { position: absolute; bottom: 5px; left: 0; width: 100%; height: 5px; background: #555; border-radius: 5px; }
+        .flying-item { position: absolute; font-size: 4rem; pointer-events: none; z-index: 1000; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
+
+        @keyframes popIn { 0% { transform: scale(0.3) rotate(-15deg); } 80% { transform: scale(1.2) rotate(5deg); } 100% { transform: scale(1) rotate(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+        .shake { animation: shake 0.4s ease-in-out; border-color: #e74c3c !important; }
+        @keyframes packBox { 0% { transform: scale(0.1) translateY(50px); opacity: 0; } 50% { transform: scale(1.2) rotate(5deg) translateY(0); opacity: 1; } 70% { transform: scale(0.9) rotate(-5deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+        
+        @keyframes drive { 0% { left: -80px; transform: scaleX(-1) rotate(5deg); } 100% { left: calc(100% + 20px); transform: scaleX(-1) rotate(0deg); opacity: 0; } }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .warehouse { flex-direction: column; gap: 10px; padding: 5px; }
+            .fridge-container { height: 40vh; max-width: 100%; width: 95%; }
+            .fridge { grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(2, 1fr); border-width: 10px; background-size: 20px 20px, 20px 20px, 100% 50%; }
+            .item { font-size: clamp(2.5rem, 6vh, 4rem); }
+            .phone-container { height: 55vh; width: 95%; border-width: 8px; }
+            .screen { padding-top: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1>📦 Warehouse Express</h1>
+        <p style="font-size: 1.2rem; margin: 0; font-weight: 700;">Employee System Login</p>
+        <input type="text" id="emp-name" placeholder="Enter your Name" autocomplete="off" maxlength="15">
+        
+        <p style="font-size: 1.1rem; margin: 5px 0; font-weight: 700; color: #bdc3c7;">Select Shift Duration:</p>
+        <div class="shift-options">
+            <button id="btn-3min" class="shift-btn active">3 Minutes</button>
+            <button id="btn-5min" class="shift-btn">5 Minutes</button>
+        </div>
+
+        <button id="start-btn" class="start-btn">Start Shift 🛒</button>
+    </div>
+
+    <div class="warehouse">
+        <!-- Fridge -->
+        <div class="fridge-container">
+            <h1 class="fridge-title">Storage Fridge</h1>
+            <div class="fridge" id="fridge"></div>
+        </div>
+
+        <!-- Phone -->
+        <div class="phone-container">
+            <div class="phone-notch"></div>
+            <div class="screen">
+                <!-- Thông báo Toast (Đã sửa lỗi đè) -->
+                <div id="new-order-toast" class="toast">🔔 You have a new order!</div>
+
+                <div class="stats-bar">
+                    <div id="timer" class="stat-box">⏱️ 00:00</div>
+                    <div id="score-display" class="stat-box">📦 0</div>
+                </div>
+                <div class="header">
+                    <h2 id="order-number">Order #001</h2>
+                </div>
+                <div class="status" id="status">Status: Pending... ⏳</div>
+                
+                <div class="order-list" id="order-list"></div>
+
+                <div class="overlay" id="overlay"></div>
+
+                <div class="actions">
+                    <button class="btn btn-pack" id="btn-pack" title="Pack Order">📦</button>
+                    <!-- Icon xe lật ngược bằng class scooter-icon -->
+                    <button class="btn btn-deliver" id="btn-deliver" title="Deliver Order"><span class="scooter-icon">🛵</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ALL_EMOJIS = ['🥩', '🍗', '🍖', '🦑', '🐟', '🦐', '🦀', '🧀','🥚', '🧃','🥛', '🥤'];
+        // Lọc bỏ nhà thờ/tôn giáo, giữ lại các toà nhà thế tục
+        const BUILDINGS = ['🏢','🏬','🏠','🏡','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏭','🏰','🏯'];
+        
+        let currentOrder = [], orderCount = 1, score = 0, gameActive = false;
+        let employeeName = "";
+        let orderStartTime = 0;
+        
+        let shiftMinutes = 3; // Default 3 mins
+        let timeLeft = shiftMinutes * 60;
+
+        const fridgeEl = document.getElementById('fridge');
+        const orderListEl = document.getElementById('order-list');
+        const statusEl = document.getElementById('status');
+        const btnPack = document.getElementById('btn-pack');
+        const btnDeliver = document.getElementById('btn-deliver');
+        const overlay = document.getElementById('overlay');
+        const toast = document.getElementById('new-order-toast');
+        
+        let activeItem = null, activeEmoji = '';
+
+        // --- Bắt sự kiện chọn ca làm việc ---
+        document.getElementById('btn-3min').addEventListener('click', (e) => {
+            shiftMinutes = 3;
+            e.target.classList.add('active');
+            document.getElementById('btn-5min').classList.remove('active');
+        });
+        document.getElementById('btn-5min').addEventListener('click', (e) => {
+            shiftMinutes = 5;
+            e.target.classList.add('active');
+            document.getElementById('btn-3min').classList.remove('active');
+        });
+
+        // --- AUDIO SYSTEM (Web Audio API) ---
+        let audioCtx;
+        function initAudio() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            playBGM();
+        }
+        function playTone(freq, type, duration, vol=0.1) {
+            if(!audioCtx || audioCtx.state === 'suspended') return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        }
+        function playBGM() {
+            const melody = [440, 0, 523, 0, 659, 523, 440, 0];
+            let i = 0;
+            setInterval(() => {
+                if(!gameActive) return;
+                if(melody[i] > 0) playTone(melody[i], 'sine', 0.15, 0.03);
+                i = (i + 1) % melody.length;
+            }, 250);
+        }
+        function sfxPickup() { playTone(600, 'sine', 0.1, 0.1); }
+        function sfxDrop() { playTone(900, 'square', 0.1, 0.1); setTimeout(()=>playTone(1200, 'square', 0.15, 0.1), 100); }
+        function sfxWrong() { playTone(200, 'sawtooth', 0.3, 0.1); }
+        function sfxPack() { playTone(300, 'square', 0.2, 0.1); setTimeout(()=>playTone(250, 'square', 0.3, 0.1), 150); }
+        function sfxDeliver() { playTone(150, 'sawtooth', 1.0, 0.15); playTone(200, 'sawtooth', 1.0, 0.1); }
+        function sfxStar() { playTone(1000, 'sine', 0.1, 0.1); playTone(1500, 'sine', 0.2, 0.1); }
+        function sfxWin() { playTone(440, 'sine', 0.2, 0.1); setTimeout(()=>playTone(554, 'sine', 0.2, 0.1), 200); setTimeout(()=>playTone(659, 'sine', 0.4, 0.1), 400); }
+
+        // --- GAME LOGIC ---
+        document.getElementById('start-btn').addEventListener('click', () => {
+            const name = document.getElementById('emp-name').value.trim();
+            employeeName = name || "Staff";
+            timeLeft = shiftMinutes * 60; // Gán thời gian theo ca đã chọn
+            
+            document.getElementById('start-screen').style.display = 'none';
+            initAudio();
+            
+            overlay.style.display = 'flex';
+            overlay.style.zIndex = '200';
+            overlay.innerHTML = `
+                <h2 style="color: var(--primary); font-size: 2rem; margin:0 0 10px 0; font-weight:900;">Hello ${employeeName}!</h2>
+                <p style="color: #333; font-size: 1.2rem; font-weight: 800; margin:0;">Welcome to the online supermarket.<br>Have a productive shift!</p>
+            `;
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                startGame();
+            }, 3000);
+        });
+
+        function startGame() {
+            gameActive = true;
+            ALL_EMOJIS.forEach(emoji => {
+                const div = document.createElement('div');
+                div.className = 'item'; div.innerText = emoji;
+                div.addEventListener('pointerdown', handlePointerDown);
+                fridgeEl.appendChild(div);
+            });
+            setInterval(createSnowflake, 300);
+            
+            const timerInterval = setInterval(() => {
+                if (!gameActive) { clearInterval(timerInterval); return; }
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                document.getElementById('timer').innerText = `⏱️ 0${m}:${s.toString().padStart(2, '0')}`;
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+
+            generateOrder();
+        }
+
+        function createSnowflake() {
+            if (!gameActive) return;
+            const flake = document.createElement('div');
+            flake.className = 'snowflake'; flake.innerText = '❄️';
+            flake.style.left = Math.random() * 90 + '%';
+            flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+            flake.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            fridgeEl.appendChild(flake);
+            setTimeout(() => flake.remove(), 4000);
+        }
+
+        function fireConfetti() {
+            const colors = ['#f1c40f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6'];
+            for(let i=0; i<40; i++) {
+                const conf = document.createElement('div');
+                conf.classList.add('confetti');
+                conf.style.left = Math.random() * 100 + '%';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 1.5 + 1) + 's';
+                conf.style.animationDelay = (Math.random() * 0.2) + 's';
+                overlay.appendChild(conf);
+                setTimeout(() => conf.remove(), 2500);
+            }
+        }
+
+        function generateOrder() {
+            if (!gameActive) return;
+            orderListEl.innerHTML = ''; currentOrder = [];
+            let shuffled = [...ALL_EMOJIS].sort(() => 0.5 - Math.random());
+            let selected = shuffled.slice(0, 3);
+
+            selected.forEach(emoji => {
+                currentOrder.push(emoji);
+                const dz = document.createElement('div');
+                dz.className = 'dropzone shadow'; dz.dataset.emoji = emoji;
+                orderListEl.appendChild(dz);
+            });
+
+            document.getElementById('order-number').innerText = `Order #${String(orderCount).padStart(3, '0')}`;
+            statusEl.innerHTML = 'Status: Pending... ⏳';
+            statusEl.style.backgroundColor = 'var(--warning)'; statusEl.style.color = '#333';
+            
+            btnPack.classList.remove('show'); btnDeliver.classList.remove('show');
+            overlay.style.display = 'none';
+            orderStartTime = Date.now(); 
+
+            // Hiện thông báo đơn hàng mới - Sẽ không bị đè do pointer-events: none
+            if(orderCount > 1) {
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            }
+        }
+
+        function handlePointerDown(e) {
+            if (!gameActive) return;
+            e.preventDefault();
+            activeEmoji = e.target.innerText;
+            sfxPickup();
+            activeItem = document.createElement('div');
+            activeItem.className = 'flying-item'; activeItem.innerText = activeEmoji;
+            document.body.appendChild(activeItem);
+            moveItem(e.pageX, e.pageY);
+        }
+
+        document.addEventListener('pointermove', (e) => {
+            if (!activeItem) return;
+            moveItem(e.pageX, e.pageY);
+        });
+
+        document.addEventListener('pointerup', (e) => {
+            if (!activeItem) return;
+            activeItem.style.display = 'none';
+            let elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+            activeItem.style.display = 'block';
+
+            let dropzone = elemBelow ? elemBelow.closest('.dropzone') : null;
+
+            if (dropzone && !dropzone.classList.contains('filled')) {
+                if (dropzone.dataset.emoji === activeEmoji) {
+                    sfxDrop();
+                    dropzone.classList.remove('shadow'); dropzone.classList.add('filled');
+                    dropzone.innerHTML = activeEmoji;
+                    checkOrderCompletion();
+                } else {
+                    sfxWrong();
+                    dropzone.classList.add('shake');
+                    setTimeout(() => dropzone.classList.remove('shake'), 400);
+                }
+            }
+            activeItem.remove(); activeItem = null; activeEmoji = '';
+        });
+
+        function moveItem(x, y) {
+            const size = window.innerWidth > 800 ? 60 : 50; 
+            activeItem.style.left = (x - size/2) + 'px'; activeItem.style.top = (y - size/2) + 'px';
+        }
+
+        function checkOrderCompletion() {
+            if(document.querySelectorAll('.dropzone.filled').length === currentOrder.length) {
+                statusEl.innerHTML = 'Status: Ready to Pack ✅';
+                statusEl.style.backgroundColor = 'var(--success)'; statusEl.style.color = 'white';
+                btnPack.classList.add('show');
+            }
+        }
+
+        btnPack.addEventListener('click', () => {
+            if (!gameActive) return;
+            sfxPack();
+            overlay.style.display = 'flex'; overlay.style.zIndex = '50';
+            overlay.innerHTML = '<div style="font-size: 6rem; animation: packBox 0.5s ease-out forwards;">📦</div>';
+            statusEl.innerHTML = 'Status: Ready to Deliver 🚀'; statusEl.style.backgroundColor = 'var(--primary)';
+            btnPack.classList.remove('show');
+            setTimeout(() => btnDeliver.classList.add('show'), 500);
+        });
+
+        btnDeliver.addEventListener('click', () => {
+            if (!gameActive) return;
+            sfxDeliver();
+            btnDeliver.classList.remove('show');
+            
+            let timeTaken = (Date.now() - orderStartTime) / 1000;
+            let stars = "", tipHtml = "";
+            if(timeTaken <= 10) { 
+                stars = "⭐⭐⭐⭐⭐"; 
+                let gift = Math.random() > 0.5 ? "🧧" : "🎁";
+                tipHtml = `<p style="font-size:1.3rem; color:#e67e22; font-weight:900; margin:5px 0;">Tip received: ${gift}</p>`;
+            } 
+            else if(timeTaken <= 15) { stars = "⭐⭐⭐⭐"; } 
+            else { stars = "⭐⭐⭐"; }
+
+            let randBuilding = BUILDINGS[Math.floor(Math.random() * BUILDINGS.length)];
+
+            overlay.innerHTML = `
+                <div class="delivery-scene">
+                    <div class="building">${randBuilding}</div>
+                    <div class="road"></div>
+                    <div class="scooter">🛵</div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                sfxWin();
+                overlay.innerHTML = `
+                    <h3 style="color:#2c3e50; margin:0 0 10px 0; font-size:1.5rem; font-weight:900;">Customer Feedback</h3>
+                    <div style="font-size:2rem; letter-spacing:2px; margin-bottom: 5px;">${stars}</div>
+                    ${tipHtml}
+                    <p style="color:#7f8c8d; font-size:1rem; font-weight:800; margin-top:5px;">Time: ${timeTaken.toFixed(1)}s</p>
+                `;
+                fireConfetti(); 
+                
+                setTimeout(() => {
+                    score++; orderCount++;
+                    document.getElementById('score-display').innerText = `📦 ${score}`;
+                    generateOrder();
+                }, 2500);
+
+            }, 1200); 
+        });
+
+        function endGame() {
+            gameActive = false;
+            overlay.style.display = 'flex'; overlay.style.zIndex = '200';
+            overlay.style.background = 'rgba(255,255,255,0.98)';
+            overlay.innerHTML = `
+                <h1 style="color: #e74c3c; margin: 0; font-size: 2.8rem; font-weight:900;">SHIFT OVER!</h1>
+                <p style="font-size: 1.2rem; color: #333; font-weight:800; margin: 5px 0;">Great job, ${employeeName}!</p>
+                
+                <div style="margin: 20px 0; padding: 15px; background: #ecf0f1; border-radius: 15px;">
+                    <p style="font-size: 1.1rem; color: #7f8c8d; font-weight: 800; margin: 0;">You successfully delivered</p>
+                    <p style="font-size: 2.5rem; color: var(--primary); font-weight: 900; margin: 5px 0;">${score} Orders</p>
+                    <p style="font-size: 1.1rem; color: #7f8c8d; font-weight: 800; margin: 0;">in ${shiftMinutes} minutes!</p>
+                </div>
+
+                <p style="font-size: 1.2rem; color: #2c3e50; font-weight:900; margin-top: 10px;">Do you want to work another shift?</p>
+                <button onclick="location.reload()" style="font-family:'Nunito', sans-serif; font-weight:900; padding: 15px 30px; font-size: 1.3rem; background: var(--success); color: white; border: none; border-radius: 12px; cursor: pointer; margin-top: 10px; box-shadow: 0 6px 0 #27ae60;">Yes, Let's Go! 🛵</button>
+            `;
+        }
+    </script>
+</body>
+</html>
