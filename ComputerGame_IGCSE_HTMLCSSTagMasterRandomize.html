@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML/CSS Tag Master Game</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 15px;
+            background-color: #0b1120;
+            border-bottom: 2px solid var(--accent-blue);
+            font-size: 24px;
+            text-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+        }
+
+        /* Split View */
+        .left-panel, .right-panel {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px dashed var(--border-color);
+            position: relative;
+            z-index: 10;
+        }
+
+        .right-panel {
+            border-right: none;
+        }
+
+        h2 {
+            color: var(--accent-green);
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        /* Input Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: flex-end; /* Align to bottom so labels sit nicely on top */
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .control-group-fixed {
+            display: flex;
+            flex-direction: column;
+            flex: 0 0 auto;
+        }
+
+        select, input, textarea, button {
+            padding: 10px;
+            background: #0f172a;
+            color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        textarea {
+            resize: none; /* Fixed height to match buttons */
+            height: 42px;
+            font-family: Arial, sans-serif;
+            overflow: hidden; /* Hide scrollbar if they only type one line */
+        }
+        textarea:focus {
+            overflow: auto;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            height: 42px;
+            white-space: nowrap;
+        }
+
+        .btn-vocab { background-color: var(--accent-blue); border-color: var(--accent-blue); }
+        .btn-vocab:hover { background-color: #2563eb; box-shadow: 0 0 15px var(--accent-blue); }
+        
+        .btn-player { background-color: var(--accent-green); border-color: var(--accent-green); color: #000;}
+        .btn-player:hover { background-color: #059669; box-shadow: 0 0 15px var(--accent-green); }
+        
+        .btn-reveal { background-color: #eab308; border-color: #eab308; color: #000; display: none; margin-top: 15px;}
+        .btn-reveal:hover { background-color: #ca8a04; box-shadow: 0 0 15px #eab308;}
+
+        /* Display Boxes */
+        .display-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .word-display {
+            font-size: 45px;
+            color: #eab308;
+            margin-bottom: 15px;
+            word-break: break-word;
+            text-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
+        }
+
+        .desc-display {
+            font-size: 22px;
+            color: #94a3b8;
+            max-width: 80%;
+            display: none;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .player-display {
+            font-size: 50px;
+            color: #a855f7;
+            text-shadow: 0 0 20px #a855f7;
+        }
+
+        /* Player List */
+        .player-list-container {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        
+        .player-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 5px;
+            background: #334155;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        /* Timer */
+        .timer-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap; 
+            justify-content: center;
+        }
+        
+        .timer-display {
+            font-size: 30px;
+            font-weight: bold;
+            color: var(--accent-red);
+            width: 80px;
+            text-align: center;
+            height: 42px;
+            line-height: 42px;
+        }
+        
+        .control-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 5px;
+            display: block;
+            text-align: left;
+        }
+
+        /* Canvas for Fireworks */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        &lt;html&gt; HTML & CSS Element Master Game &lt;/html&gt;
+    </header>
+
+    <div class="container">
+        <!-- LEFT PANEL: VOCABULARY -->
+        <div class="left-panel">
+            <h2>&lt; Vocabulary Structure /&gt;</h2>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <span class="control-label">Select Chapter</span>
+                    <select id="chapterSelect" style="height: 42px;">
+                        <option value="all">All Chapters</option>
+                        <option value="1">Chapter 1: Basic Structure & Head</option>
+                        <option value="2">Chapter 2: Body Section & Basic Tags</option>
+                        <option value="3">Chapter 3: Tables</option>
+                        <option value="4">Chapter 4: CSS Styling</option>
+                        <option value="5">Chapter 5: Media & Hyperlinks</option>
+                    </select>
+                </div>
+                <div class="control-group-fixed">
+                    <button class="btn-vocab" id="btnRollVocab" onclick="rollVocab()">Randomize Tag</button>
+                </div>
+            </div>
+
+            <div class="display-box">
+                <div class="word-display" id="vocabWord">loading...</div>
+                <div class="desc-display" id="vocabDesc"></div>
+                <button class="btn-reveal" id="btnReveal" onclick="revealAnswer()">Reveal Answer</button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: PLAYERS -->
+        <div class="right-panel">
+            <h2>{ Player Management }</h2>
+
+            <div class="controls">
+                <div class="control-group">
+                    <span class="control-label">Add Players</span>
+                    <textarea id="playerName" placeholder=""></textarea>
+                </div>
+                <div class="control-group-fixed">
+                    <button style="background: #475569;" onclick="addPlayers()">Add</button>
+                </div>
+            </div>
+
+            <div class="player-list-container" id="playerList">
+                <!-- Players will appear here -->
+            </div>
+
+            <div class="display-box" style="flex: 1.5; margin-top: 20px;">
+                <div class="player-display" id="playerResult">loading...</div>
+                
+                <div class="timer-container">
+                    <div class="control-group-fixed">
+                        <span class="control-label" style="text-align: center;">Roll Effect</span>
+                        <select id="rollTimeSelect" style="height: 42px;">
+                            <option value="3">3s</option>
+                            <option value="5">5s</option>
+                            <option value="10">10s</option>
+                            <option value="20">20s</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group-fixed">
+                        <span class="control-label" style="text-align: center;">Think Time</span>
+                        <select id="thinkTimeSelect" style="height: 42px;">
+                            <option value="30">30s</option>
+                            <option value="60">60s</option>
+                            <option value="90">90s</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group-fixed">
+                        <button class="btn-player" id="btnRollPlayer" onclick="rollPlayer()">Randomize Player</button>
+                    </div>
+                    
+                    <div class="control-group-fixed">
+                        <div class="timer-display" id="timerDisplay">00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fireworks Canvas -->
+    <canvas id="fireworksCanvas"></canvas>
+
+<script>
+    // --- AUDIO SYSTEM ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new AudioContext();
+        }
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'tick') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        } else if (type === 'winner') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+            osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } else if (type === 'reveal') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        } else if (type === 'buzzer') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+    }
+
+    document.body.addEventListener('click', initAudio, { once: true });
+
+
+    // --- DATABASE ---
+    const vocabulary = [
+        { ch: 1, tag: "<!DOCTYPE html>", desc: "Declares HTML5 standard document." },
+        { ch: 1, tag: "<html>", desc: "Root element wrapping the entire webpage." },
+        { ch: 1, tag: "<head>", desc: "Contains configuration info, not displayed on the webpage UI." },
+        { ch: 1, tag: "<title>", desc: "Page title displayed on the browser tab." },
+        { ch: 1, tag: "<base>", desc: "Sets default base URL or target for all relative links." },
+        { ch: 1, tag: "<style>", desc: "Contains internal CSS code." },
+        { ch: 1, tag: "<meta>", desc: "Contains website metadata." },
+        { ch: 1, tag: "target (attr)", desc: "Determines how to open a link (e.g., _blank)." },
+        { ch: 1, tag: "charset (attr)", desc: "Defines character encoding (e.g., UTF-8)." },
+        { ch: 1, tag: "name (attr)", desc: "Names the metadata (author, description, keywords, viewport)." },
+        { ch: 1, tag: "content (attr)", desc: "Value corresponding to the metadata name." },
+        { ch: 2, tag: "<body>", desc: "Main body containing all visible content." },
+        { ch: 2, tag: "<p>", desc: "Paragraph tag." },
+        { ch: 2, tag: "<h1> to <h6>", desc: "Heading tags, from largest (h1) to smallest (h6)." },
+        { ch: 2, tag: "<sub>", desc: "Subscript formatting (lowered text)." },
+        { ch: 2, tag: "<sup>", desc: "Superscript formatting (raised text)." },
+        { ch: 2, tag: "<ul>", desc: "Unordered list (bullet points)." },
+        { ch: 2, tag: "<ol>", desc: "Ordered list (numbered)." },
+        { ch: 2, tag: "<li>", desc: "List item inside <ul> or <ol>." },
+        { ch: 2, tag: "<div>", desc: "Division block used to group HTML elements." },
+        { ch: 3, tag: "<table>", desc: "Creates a table." },
+        { ch: 3, tag: "<caption>", desc: "Table caption/title." },
+        { ch: 3, tag: "<thead>", desc: "Table header section." },
+        { ch: 3, tag: "<tbody>", desc: "Table body section for main data." },
+        { ch: 3, tag: "<tfoot>", desc: "Table footer section." },
+        { ch: 3, tag: "<tr>", desc: "Table Row." },
+        { ch: 3, tag: "<th>", desc: "Table Header cell (typically bold and centered)." },
+        { ch: 3, tag: "<td>", desc: "Table Data cell." },
+        { ch: 3, tag: "border (attr)", desc: "Sets table border thickness (deprecated in HTML5, use CSS instead, but common in IGCSE)." },
+        { ch: 3, tag: "colspan (attr)", desc: "Merges multiple columns horizontally." },
+        { ch: 3, tag: "rowspan (attr)", desc: "Merges multiple rows vertically." },
+        { ch: 4, tag: "<link>", desc: "Links external resources (e.g., external CSS stylesheet)." },
+        { ch: 4, tag: "rel, type, href", desc: "Declares relationship, format, and path of CSS file in <link>." },
+        { ch: 4, tag: "style (attr)", desc: "Embeds Inline CSS directly into tags." },
+        { ch: 4, tag: "width, height", desc: "CSS: Width and height dimensions." },
+        { ch: 4, tag: "margin-left, right", desc: "CSS: Left/right outer spacing (set both to 'auto' to center block elements)." },
+        { ch: 4, tag: "text-align", desc: "CSS: Horizontal text alignment (left, right, center, justify)." },
+        { ch: 4, tag: "vertical-align", desc: "CSS: Vertical alignment (top, middle, bottom)." },
+        { ch: 4, tag: "border-collapse", desc: "CSS: Merges table borders (collapse)." },
+        { ch: 4, tag: "border", desc: "CSS: Shorthand for border (thickness, style, color)." },
+        { ch: 4, tag: "color", desc: "CSS: Text color." },
+        { ch: 4, tag: "background-color", desc: "CSS: Background color." },
+        { ch: 4, tag: "font-family", desc: "CSS: Font style/typeface." },
+        { ch: 4, tag: "font-size", desc: "CSS: Font size (px, pt, em, ex)." },
+        { ch: 4, tag: "font-weight", desc: "CSS: Text boldness (e.g., bold)." },
+        { ch: 4, tag: "font-style", desc: "CSS: Text style (e.g., italic)." },
+        { ch: 4, tag: "text-decoration", desc: "CSS: Underline effect (underline, none)." },
+        { ch: 4, tag: "background-image", desc: "CSS: Background image path (url(...))." },
+        { ch: 4, tag: "background-repeat", desc: "CSS: Background repetition (repeat, repeat-x, repeat-y, no-repeat)." },
+        { ch: 4, tag: "background-position", desc: "CSS: Background placement." },
+        { ch: 4, tag: "padding", desc: "CSS: Inner spacing (top, bottom, right, left)." },
+        { ch: 4, tag: "border-spacing", desc: "CSS: Spacing between table cells." },
+        { ch: 5, tag: "<img>", desc: "Inserts an image." },
+        { ch: 5, tag: "<video>", desc: "Inserts a video." },
+        { ch: 5, tag: "<audio>", desc: "Inserts audio." },
+        { ch: 5, tag: "<source>", desc: "Declares path and format for video/audio." },
+        { ch: 5, tag: "<a>", desc: "Creates a hyperlink or anchor." },
+        { ch: 5, tag: "src (attr)", desc: "Path to the media file." },
+        { ch: 5, tag: "alt (attr)", desc: "Alternative text if image fails to load." },
+        { ch: 5, tag: "controls (attr)", desc: "Shows play/pause/volume controls for media." },
+        { ch: 5, tag: "autoplay (attr)", desc: "Auto-plays media on load." },
+        { ch: 5, tag: "loop (attr)", desc: "Plays media on continuous loop." },
+        { ch: 5, tag: "muted (attr)", desc: "Mutes audio by default." },
+        { ch: 5, tag: "type (attr)", desc: "Declares MIME type (e.g., video/mp4, audio/mpeg)." },
+        { ch: 5, tag: "id (attr)", desc: "Unique identifier, used as Bookmark/Anchor." },
+        { ch: 5, tag: "href (attr)", desc: "Destination URL (#id, mailto:, etc.)." },
+        { ch: 5, tag: "target (attr)", desc: "Where to open link (_blank, _self)." },
+        { ch: 5, tag: "class (attr)", desc: "Assigns a CSS class identifier to an element." }
+    ];
+
+    // --- STATE VARIABLES ---
+    let players = [];
+    let availablePlayers = [];
+    let isRollingVocab = false;
+    let isRollingPlayer = false;
+    let timerInterval;
+    let currentVocabDesc = "";
+
+    // --- PLAYER FUNCTIONS ---
+    function addPlayers() {
+        const input = document.getElementById('playerName');
+        const rawText = input.value;
+        
+        const newPlayers = rawText.split(/[,\n]+/).map(name => name.trim()).filter(name => name.length > 0);
+        
+        let addedCount = 0;
+        newPlayers.forEach(name => {
+            if (!players.includes(name)) {
+                players.push(name);
+                availablePlayers.push(name);
+                addedCount++;
+            }
+        });
+
+        if (addedCount > 0) {
+            input.value = '';
+            renderPlayers();
+        }
+    }
+
+    function renderPlayers() {
+        const list = document.getElementById('playerList');
+        list.innerHTML = '';
+        
+        players.forEach(p => {
+            const span = document.createElement('span');
+            span.className = 'player-badge';
+            span.innerText = p;
+            list.appendChild(span);
+        });
+    }
+
+    // --- RANDOMIZER FUNCTIONS ---
+    function rollVocab() {
+        if (isRollingVocab) return;
+        
+        const chap = document.getElementById('chapterSelect').value;
+        let filtered = vocabulary;
+        if (chap !== 'all') {
+            filtered = vocabulary.filter(v => v.ch == chap);
+        }
+
+        if (filtered.length === 0) return;
+
+        isRollingVocab = true;
+        const btn = document.getElementById('btnRollVocab');
+        const btnReveal = document.getElementById('btnReveal');
+        const descEl = document.getElementById('vocabDesc');
+        
+        btn.disabled = true;
+        btnReveal.style.display = 'none';
+        descEl.style.display = 'none';
+
+        const wordEl = document.getElementById('vocabWord');
+
+        let counter = 0;
+        let finalItem;
+        
+        const interval = setInterval(() => {
+            playSound('tick');
+            const randomItem = filtered[Math.floor(Math.random() * filtered.length)];
+            wordEl.innerText = randomItem.tag;
+            counter++;
+            
+            if (counter > 20) {
+                clearInterval(interval);
+                finalItem = randomItem;
+                wordEl.innerText = finalItem.tag;
+                currentVocabDesc = finalItem.desc; 
+                
+                btnReveal.style.display = 'block'; 
+                isRollingVocab = false;
+                btn.disabled = false;
+            }
+        }, 50);
+    }
+
+    function revealAnswer() {
+        const descEl = document.getElementById('vocabDesc');
+        descEl.innerText = currentVocabDesc;
+        descEl.style.display = 'block';
+        document.getElementById('btnReveal').style.display = 'none';
+        playSound('reveal');
+    }
+
+    function rollPlayer() {
+        if (players.length === 0) {
+            alert("Please add players first!");
+            return;
+        }
+        if (isRollingPlayer) return;
+
+        if (availablePlayers.length === 0) {
+            alert("All players have gone! Starting a new round.");
+            availablePlayers = [...players];
+        }
+
+        isRollingPlayer = true;
+        const btn = document.getElementById('btnRollPlayer');
+        btn.disabled = true;
+        
+        const playerEl = document.getElementById('playerResult');
+        clearInterval(timerInterval);
+        document.getElementById('timerDisplay').innerText = "00";
+        document.getElementById('timerDisplay').style.color = "var(--accent-red)";
+
+        const rollDurationSeconds = parseInt(document.getElementById('rollTimeSelect').value);
+        const totalRollTicks = (rollDurationSeconds * 1000) / 50; 
+
+        let counter = 0;
+        let finalPlayerIndex;
+
+        const interval = setInterval(() => {
+            playSound('tick');
+            playerEl.innerText = players[Math.floor(Math.random() * players.length)];
+            counter++;
+            
+            if (counter > totalRollTicks) {
+                clearInterval(interval);
+                
+                finalPlayerIndex = Math.floor(Math.random() * availablePlayers.length);
+                const winner = availablePlayers[finalPlayerIndex];
+                
+                playerEl.innerText = winner;
+                availablePlayers.splice(finalPlayerIndex, 1); 
+                
+                playSound('winner');
+                triggerFireworks();
+                startTimer(); 
+                
+                isRollingPlayer = false;
+                btn.disabled = false;
+            }
+        }, 50);
+    }
+
+    // --- TIMER ---
+    function startTimer() {
+        const timeInput = parseInt(document.getElementById('thinkTimeSelect').value);
+        let timeLeft = timeInput;
+        const display = document.getElementById('timerDisplay');
+        display.style.color = "var(--text-main)";
+        display.innerText = timeLeft;
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            display.innerText = timeLeft;
+            if (timeLeft <= 5 && timeLeft > 0) {
+                display.style.color = "var(--accent-red)";
+                playSound('tick');
+            }
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                display.innerText = "TIME!";
+                playSound('buzzer');
+            }
+        }, 1000);
+    }
+
+    // --- FIREWORKS ---
+    const canvas = document.getElementById('fireworksCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particles = [];
+    const colors = ['#10b981', '#3b82f6', '#eab308', '#ef4444', '#a855f7'];
+
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.radius = Math.random() * 3 + 1;
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 8 + 2;
+            this.dx = Math.cos(angle) * velocity;
+            this.dy = Math.sin(angle) * velocity;
+            this.alpha = 1;
+            this.decay = Math.random() * 0.02 + 0.015;
+        }
+        draw() {
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.restore();
+        }
+        update() {
+            this.x += this.dx;
+            this.y += this.dy;
+            this.dy += 0.1; // gravity
+            this.alpha -= this.decay;
+        }
+    }
+
+    function animateFireworks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles = particles.filter(p => p.alpha > 0);
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        if (particles.length > 0) {
+            requestAnimationFrame(animateFireworks);
+        }
+    }
+
+    function triggerFireworks() {
+        const x = window.innerWidth * 0.75; 
+        const y = window.innerHeight * 0.5;
+        
+        for (let i = 0; i < 150; i++) {
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            particles.push(new Particle(x, y, color));
+        }
+        animateFireworks();
+    }
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+</script>
+</body>
+</html>
