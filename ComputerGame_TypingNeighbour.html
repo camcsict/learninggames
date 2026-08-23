@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Typing Adventure: Ultimate Urban Deluxe</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        :root {
+            --ui-bg: rgba(20, 25, 35, 0.9);
+            --neon-gold: #f1c40f;
+            --neon-green: #00ff88;
+            --neon-blue: #00f2fe;
+            --urban-asphalt: #2c3e50;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body, html { 
+            background-color: #05050a; 
+            color: white; 
+            font-family: 'Nunito', 'Segoe UI Emoji', sans-serif; 
+            height: 100vh; 
+            width: 100vw;
+            overflow: hidden; 
+            user-select: none; 
+        }
+        
+        #game-container { 
+            position: relative; 
+            width: 100vw; 
+            height: 100vh; 
+            background-color: #1a252f; 
+            overflow: hidden; 
+        }
+        
+        /* OVERWORLD MAP */
+        #overworld { 
+            position: absolute; 
+            width: 2000px; 
+            height: 2000px; 
+            background-color: var(--urban-asphalt); 
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 2px, transparent 2px),
+                radial-gradient(circle at 30% 30%, rgba(52, 152, 219, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 70% 70%, rgba(155, 89, 182, 0.1) 0%, transparent 40%);
+            background-size: 150px 150px, 150px 150px, 100% 100%, 100% 100%; 
+            transition: transform 0.1s ease-out; 
+            transform-origin: top left;
+        }
+
+        #weather-overlay {
+            position: absolute;
+            width: 2000px;
+            height: 2000px;
+            top: 0;
+            left: 0;
+            z-index: 18;
+            pointer-events: none;
+            transition: background 2s ease-in-out;
+        }
+
+        /* Hiệu ứng mưa rơi */
+        .rain-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 2000px; height: 2000px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cline x1='20' y1='-10' x2='10' y2='20' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' stroke-linecap='round'/%3E%3Cline x1='60' y1='20' x2='50' y2='50' stroke='rgba(255,255,255,0.3)' stroke-width='1' stroke-linecap='round'/%3E%3Cline x1='90' y1='60' x2='80' y2='90' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+            z-index: 19;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        .rain-overlay.active {
+            opacity: 1;
+            animation: rainFallAnim 0.3s linear infinite;
+        }
+        @keyframes rainFallAnim {
+            0% { background-position: 0px 0px; }
+            100% { background-position: -33px 100px; }
+        }
+        
+        /* Urban Roads */
+        .road-h { position: absolute; background: #34495e; border-top: 4px dashed #7f8c8d; border-bottom: 4px dashed #7f8c8d; box-shadow: 0 0 20px rgba(0,0,0,0.8); z-index: 2;}
+        .road-v { position: absolute; background: #34495e; border-left: 4px dashed #7f8c8d; border-right: 4px dashed #7f8c8d; box-shadow: 0 0 20px rgba(0,0,0,0.8); z-index: 2;}
+        .intersection { position: absolute; background: #34495e; z-index: 3; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);}
+
+        /* Ambient Truck */
+        #ambient-truck {
+            position: absolute; font-size: 65px; top: 435px; left: -100px; z-index: 15;
+            animation: driveTruck 25s linear infinite; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+        }
+        @keyframes driveTruck {
+            0% { transform: translateX(-100px) scaleX(-1); }
+            49% { transform: translateX(2200px) scaleX(-1); }
+            50% { transform: translateX(2200px) scaleX(1); }
+            99% { transform: translateX(-100px) scaleX(1); }
+            100% { transform: translateX(-100px) scaleX(-1); }
+        }
+
+        /* City Scenery */
+        .scenery { position: absolute; z-index: 4; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.7)); transition: 0.3s; cursor: default; display: flex; justify-content: center; align-items: flex-end;}
+        .scenery:hover { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 15px 15px rgba(0,0,0,1)) brightness(1.1); z-index: 15;}
+        
+        /* Player */
+        #player { position: absolute; width: 45px; height: 45px; font-size: 45px; line-height: 45px; text-align: center; z-index: 20; transition: transform 0.05s; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.9)); pointer-events: none;}
+        .walking { animation: bob 0.2s infinite alternate ease-in-out; }
+        @keyframes bob { from { transform: translateY(0) scale(1); } to { transform: translateY(-10px) scale(1.05); } }
+        
+        /* Level Zones */
+        .level-zone { position: absolute; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 20px; text-shadow: 2px 2px 5px rgba(0,0,0,1); flex-direction: column; text-align: center; box-shadow: 0 0 20px rgba(255,255,255,0.1), inset 0 0 20px rgba(0,0,0,0.8); animation: pulseNode 2.5s infinite alternate ease-in-out; border: 4px solid rgba(255,255,255,0.4); background: rgba(30, 40, 50, 0.8); backdrop-filter: blur(5px); transition: 0.3s; z-index: 6; cursor: pointer; padding: 15px;}
+        .level-zone:hover { transform: scale(1.1); box-shadow: 0 0 40px white; border-color: white;}
+        @keyframes pulseNode { from { box-shadow: 0 0 10px rgba(255,255,255,0.2); } to { box-shadow: 0 0 30px rgba(255,255,255,0.4); } }
+        .completed-zone { background: rgba(46, 204, 113, 0.7) !important; animation: none; border: 4px solid var(--neon-gold) !important; box-shadow: 0 0 30px var(--neon-gold); }
+        
+        .zone-key { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 45px; filter: brightness(0) opacity(0.3); transition: 0.5s; z-index: 10; pointer-events: none; }
+        .zone-key.collected { filter: brightness(1) drop-shadow(0 0 15px var(--neon-gold)); transform: translateX(-50%) scale(1.2) rotate(15deg); }
+
+        /* Gate */
+        #gate-container { position: absolute; z-index: 6; display: flex; flex-direction: column; justify-content: center; align-items: center;}
+        .gate-key-slots { display: flex; gap: 15px; margin-bottom: 20px;}
+        .key-slot { width: 45px; height: 45px; background: rgba(0,0,0,0.8); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 25px; box-shadow: inset 0 0 15px rgba(0,0,0,0.9); transition: 0.5s; position: relative;}
+        .key-slot::after { content: '🔑'; position: absolute; filter: brightness(0) opacity(0.2); transform: scale(0.7); transition: 0.5s; }
+        .key-slot.active::after { filter: brightness(1) opacity(1); transform: scale(1); text-shadow: 0 0 15px var(--neon-gold); }
+        .key-slot.active { background: rgba(241, 196, 15, 0.1); box-shadow: 0 0 20px var(--neon-gold), inset 0 0 10px var(--neon-gold); }
+        #gate { display: flex; justify-content: center; align-items: center; flex-direction: column; transition: 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); transform-origin: center;}
+        #gate-lock { font-size: 80px; filter: drop-shadow(0 15px 20px rgba(0,0,0,0.9)); cursor: pointer; transition: 0.3s; }
+        #gate-lock:hover { transform: scale(1.15) rotate(5deg); filter: drop-shadow(0 0 40px var(--neon-gold)); }
+        
+        /* GLOBAL UI */
+        .glass-panel { background: var(--ui-bg); backdrop-filter: blur(15px); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);}
+        #hud { position: absolute; top: 3vh; left: 2vw; padding: 1.5vh 2.5vw; font-size: clamp(18px, 2vw, 24px); z-index: 20; font-weight: 900; color: var(--neon-gold); text-shadow: 2px 2px 5px rgba(0,0,0,1);}
+        
+        .admin-btn { position: absolute; top: 3vh; right: 2vw; font-size: clamp(20px, 2.5vw, 30px); cursor: pointer; z-index: 1000; transition: 0.3s; background: rgba(0,0,0,0.6); border-radius: 50%; width: clamp(45px, 4vw, 55px); height: clamp(45px, 4vw, 55px); display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2);}
+        .admin-btn:hover { transform: rotate(90deg) scale(1.1); background: #3498db; border-color: #fff;}
+
+        #admin-next-btn { position: absolute; top: 12vh; right: 2vw; z-index: 1500; background: linear-gradient(135deg, #f1c40f, #f39c12); box-shadow: 0 8px 0 #d35400, 0 15px 20px rgba(0,0,0,0.6); color: black; font-size: clamp(18px, 2vw, 26px); border: none; padding: 10px 30px; border-radius: 15px; font-weight: 900; cursor: pointer;}
+        #admin-next-btn:hover { filter: brightness(1.2); transform: translateY(-3px); box-shadow: 0 11px 0 #d35400, 0 20px 25px rgba(0,0,0,0.8);}
+        
+        #exit-level-btn { position: absolute; top: 12vh; right: 2vw; z-index: 1500; background: linear-gradient(135deg, #3498db, #2980b9); box-shadow: 0 8px 0 #1c5980, 0 15px 20px rgba(0,0,0,0.6); color: white; font-size: clamp(18px, 2vw, 26px); border: none; padding: 10px 30px; border-radius: 15px; font-weight: 900; cursor: pointer;}
+        #exit-level-btn:hover { filter: brightness(1.2); transform: translateY(-3px); }
+
+        #minimap-container { position: absolute; bottom: 3vh; right: 2vw; width: clamp(130px, 15vw, 200px); aspect-ratio: 1/1; border-radius: 50%; z-index: 20; overflow: hidden; border: 4px solid rgba(255,255,255,0.5); box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
+        .mini-zone { position: absolute; font-size: 22px; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; text-shadow: 0 0 5px rgba(0,0,0,1); transform: translate(-50%, -50%);}
+        #mini-player { position: absolute; width: 12px; height: 12px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #fff, 0 0 20px #fff; transition: 0.1s; z-index: 30; transform: translate(-50%, -50%);}
+
+        /* Modals */
+        .overlay-modal { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,10,0.9); backdrop-filter: blur(10px); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .modal-card { background: rgba(20,25,35,0.7); padding: 5vh 5vw; border-radius: 30px; box-shadow: 0 25px 60px rgba(0,0,0,1); display: flex; flex-direction: column; align-items: center; justify-content: center; max-width: 90vw; max-height: 90vh; overflow-y: auto;}
+        
+        #level-cleared-modal .modal-card { border: 2px solid var(--neon-blue); box-shadow: 0 0 60px rgba(0, 242, 254, 0.3), inset 0 0 30px rgba(0, 242, 254, 0.1); background: rgba(10,15,25,0.95); cursor: pointer; transition: 0.3s;}
+        #level-cleared-modal .modal-card:hover { transform: scale(1.02); }
+        #win-modal .modal-card { border: 4px solid var(--neon-gold); box-shadow: 0 0 100px rgba(241, 196, 15, 0.5), inset 0 0 50px rgba(241,196,15,0.1); background: rgba(15, 15, 20, 0.95);}
+
+        .action-btn { font-size: clamp(18px, 2vw, 26px); font-family: 'Nunito', sans-serif; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; border-radius: 15px; padding: 1.5vh 3vw; margin: 10px; cursor: pointer; transition: 0.2s; font-weight: 900; box-shadow: 0 8px 0 #1c5980, 0 15px 25px rgba(0,0,0,0.6); text-transform: uppercase; letter-spacing: 1px;}
+        .action-btn:hover { filter: brightness(1.2); transform: translateY(-4px); box-shadow: 0 11px 0 #1c5980, 0 20px 30px rgba(0,0,0,0.8);}
+        .action-btn:active { transform: translateY(8px); box-shadow: 0 0 0 transparent; }
+        .action-btn.cancel { background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 8px 0 #922b21, 0 15px 25px rgba(0,0,0,0.6); }
+
+        .char-card { background: linear-gradient(135deg, #3498db, #2980b9); border-radius: 20px; padding: 3vh 4vw; cursor: pointer; transition: 0.3s; font-weight: 900; box-shadow: 0 10px 0 #1c5980, 0 20px 35px rgba(0,0,0,0.6); display:flex; flex-direction:column; align-items:center; color: white; font-size: clamp(24px, 3vw, 40px); text-transform: uppercase;}
+        .char-card.girl { background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 10px 0 #922b21; }
+        .char-card:hover { transform: translateY(-5px); }
+        .admin-input { font-size: 35px; padding: 15px; border-radius: 15px; border: 2px solid #555; text-align: center; margin-bottom: 3vh; background: #111; color: var(--neon-gold); width: 200px;}
+        
+        .mouse-icon-anim { font-size: clamp(18px, 2.5vw, 26px); color: var(--neon-green); font-weight: 900; animation: pulseClick 0.8s infinite alternate ease-in-out; margin-top: 3vh; }
+        @keyframes pulseClick { from { opacity: 0.5; transform: scale(0.95); } to { opacity: 1; transform: scale(1.05); } }
+
+        /* LEVEL UI - Backgrounds */
+        #level-ui { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500; display: none; flex-direction: column; justify-content: space-between; align-items: center; padding: 3vh 2vw; }
+        
+        .bg-l1 { background: repeating-conic-gradient(#e74c3c 0% 25%, #c0392b 0% 50%) 50% / 100px 100px !important; }
+        .bg-l2 { background: linear-gradient(135deg, #87CEEB, #E0FFFF, #98FB98) !important; }
+        .bg-l3 { background: repeating-linear-gradient(45deg, #ffb6c1, #ffb6c1 30px, #fffff0 30px, #fffff0 60px) !important; }
+        .bg-l4 { background: radial-gradient(circle at center, #8B4513, #3e2723) !important; }
+        .bg-l5 { background: repeating-linear-gradient(-45deg, #2c3e50, #2c3e50 20px, #1a252f 20px, #1a252f 40px) !important; }
+
+        .bg-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
+        .effect-particle { position: absolute; bottom: -100px; animation: floatUp linear infinite; }
+        @keyframes floatUp { to { transform: translateY(-120vh) rotate(360deg); } }
+        
+        #level-header { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; width: 100%; z-index: 50;}
+        #level-title { font-size: clamp(35px, 5vw, 55px); text-shadow: 3px 3px 10px #000; letter-spacing: 3px; color: white; margin-bottom: 1vh;}
+        #progress-container { width: 40vw; max-width: 500px; height: 1.5vh; min-height: 12px; background: rgba(0,0,0,0.8); border-radius: 20px; overflow: hidden; border: 2px solid rgba(255,255,255,0.2);}
+        #progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #f1c40f, #e67e22); transition: width 0.4s ease; }
+        
+        #level-content { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; position: relative; z-index: 50;}
+
+        #typing-wrapper { flex: 0 0 auto; display: flex; justify-content: center; width: 100%; padding-bottom: 2vh; z-index: 50;}
+        .typing-display { font-size: clamp(35px, 5vw, 60px); letter-spacing: 8px; font-weight: 900; padding: 1.5vh 4vw; border-radius: 20px; background: rgba(10,15,20,0.95); box-shadow: 0 15px 30px rgba(0,0,0,0.9); border: 2px solid rgba(255,255,255,0.1); }
+        .typed { color: var(--neon-green); text-shadow: 0 0 20px var(--neon-green); }
+        .untyped { color: rgba(255,255,255,0.4); }
+        .shake { animation: shakeError 0.3s cubic-bezier(.36,.07,.19,.97) both; color: #e74c3c !important; }
+
+        /* FIT BOX */
+        .fit-box { 
+            width: 320px; 
+            height: 210px; 
+            padding: 10px; 
+            gap: 5px; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            align-content: center; 
+            overflow: hidden; 
+            border-radius: 10px;
+        }
+
+        .emoji-item { font-size: 45px; width: 50px; height: 50px; cursor: grab; display: inline-flex; justify-content: center; align-items: center; filter: drop-shadow(0 8px 8px rgba(0,0,0,0.8)); transition: 0.2s; z-index: 55; background: rgba(255,255,255,0.05); border-radius: 10px;}
+        .emoji-item:hover { transform: scale(1.2) translateY(-5px); }
+        
+        .flex-container { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 8px; box-sizing: border-box; padding: 2vh 2vw; overflow: hidden; border-radius: 20px;}
+        
+        /* Containers */
+        #plate { background: linear-gradient(135deg, #ecf0f1, #bdc3c7); border: 8px solid #95a5a6; }
+        
+        #crate { background: #8B5A2B; border: 6px solid #5C3A21; background-image: linear-gradient(90deg, rgba(0,0,0,0.1) 2px, transparent 2px); background-size: 40px 100%; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); margin: 0 auto 2vh auto;}
+        .dirt-row { display: flex; justify-content: center; align-items: center; margin: 5px auto; width: 320px; min-height: 55px; }
+
+        #staging-area { width: 320px; height: 160px; background: rgba(0,0,0,0.6); margin: 0 auto 2vh auto; border: 3px dashed rgba(52, 152, 219, 0.6); }
+        #delivery-cargo { width: 320px; height: 250px; background: linear-gradient(to bottom, #ecf0f1, #bdc3c7); border: 10px solid #2c3e50; position: relative; margin: 1vh auto 0 auto; padding-top: 45px; }
+        #delivery-cargo::before { content: '📦 LOGISTICS HUB'; position: absolute; top: -10px; left: -10px; width: calc(100% + 20px); height: 45px; display:flex; justify-content:center; align-items:center; font-size: 20px; font-weight: 900; background: linear-gradient(135deg, #2980b9, #2c3e50); color: white; border-radius: 5px 5px 0 0; }
+
+        /* Level 2: Orchard Tree */
+        .pulse { animation: pulseAnim 1.5s infinite; }
+        @keyframes pulseAnim { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.15); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        /* Level 3: Dessert */
+        #ice-cream-truck { width: 90vw; max-width: 600px; height: 60vh; background: linear-gradient(to bottom, #ecf0f1, #bdc3c7); border-radius: 40px 40px 15px 15px; position: relative; border: 8px solid #7f8c8d; display: flex; flex-direction: column; align-items: center;}
+        .truck-window { width: 90%; height: 50vh; background: #2c3e50; border: 8px solid #1a252f; border-radius: 15px; margin-top: 4vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: hidden; padding-top: 15px;}
+        #silhouette { font-size: 70px; filter: brightness(0) drop-shadow(0 10px 10px rgba(0,0,0,0.9)); transition: 0.5s; margin-bottom: 2vh; }
+        .revealed { filter: brightness(1) drop-shadow(0 0 40px rgba(255,255,255,1)) !important; transform: scale(1.15); }
+        #dessert-shelf { background: rgba(0,0,0,0.7); box-shadow: inset 0 0 15px rgba(0,0,0,0.9); margin: auto auto 30px auto; }
+        
+        /* Delivery Scene */
+        #delivery-scene { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #1a252f 0%, #2c3e50 60%, #555 60%, #222 100%); z-index: 600; display: none; flex-direction: column; justify-content: flex-end; overflow: hidden; border-bottom: 8vh solid #333; box-shadow: inset 0 -2vh 0 #e67e22;}
+        #city-bg { position: absolute; bottom: 38vh; width: 100vw; display: flex; justify-content: space-evenly; align-items: flex-end; }
+        .building-end { width: 12vw; border: 4px solid #000; border-bottom: none; position: relative; border-radius: 15px 15px 0 0; display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 10px; padding: 15px 5px;}
+        
+        #driving-truck { position: absolute; bottom: 38vh; left: -20vw; font-size: clamp(50px, 8vw, 90px); transform: scaleX(-1); transition: left 1s ease-in-out; z-index: 10;}
+        
+        #deliver-btn { 
+            position: absolute; bottom: 12vh; left: 50%; transform: translateX(-50%); 
+            font-size: clamp(16px, 2vw, 24px); padding: 1.5vh 4vw; 
+            background: linear-gradient(135deg, #00f2fe, #4facfe); 
+            color: white; border: none; border-radius: 50px; 
+            font-weight: 900; cursor: pointer; display:flex; align-items:center; justify-content: center; gap: 10px; 
+            z-index: 1000; letter-spacing: 2px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 0 20px rgba(0, 242, 254, 0.4);
+            transition: all 0.3s ease;
+        }
+        #deliver-btn:hover:not(:disabled) {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.6), 0 0 30px rgba(0, 242, 254, 0.7);
+        }
+        #deliver-btn:active:not(:disabled) { transform: translateX(-50%) scale(0.95); }
+        #deliver-btn:disabled { filter: grayscale(1); opacity: 0.7; cursor: not-allowed; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="start-screen" class="overlay-modal" style="z-index: 3000;">
+        <div class="modal-card" style="border:none;">
+            <h1 style="font-size: clamp(40px, 6vw, 80px); color: white;">Typing Adventure</h1>
+            <h2 style="color: var(--neon-gold); font-size: clamp(24px, 3vw, 40px); margin-bottom: 3vh;">URBAN EDITION</h2>
+            <div style="display: flex; gap: 4vw;">
+                <div class="char-card" onclick="startGame('👨')"><span style="font-size: 60px;">👨</span> MAN</div>
+                <div class="char-card girl" onclick="startGame('👩')"><span style="font-size: 60px;">👩</span> WOMAN</div>
+            </div>
+            <p style="margin-top: 3vh; background: rgba(0,0,0,0.6); padding: 2vh; border-radius: 15px;">Use <b style="color:var(--neon-green)">W A S D</b> or <b style="color:var(--neon-green)">Arrows</b> to navigate.</p>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="prompt-modal" class="overlay-modal hidden" style="z-index: 1800;">
+        <div class="modal-card">
+            <h2 style="color: var(--neon-gold); font-size: 45px; margin-bottom: 2vh;">Enter Level?</h2>
+            <p id="prompt-text" style="font-size: 28px; color: #fff; margin-bottom: 3vh;"></p>
+            <div style="display: flex; gap: 2vw;">
+                <button class="action-btn" onclick="confirmEnterLevel(true)">Yes ✅</button>
+                <button class="action-btn cancel" onclick="confirmEnterLevel(false)">No ❌</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="overlay-modal hidden" style="z-index: 1500;">
+        <div class="modal-card">
+            <h2 style="color: var(--neon-gold); font-size: 40px;">Admin Override</h2>
+            <input type="password" id="admin-pw" class="admin-input" placeholder="***" maxlength="3">
+            <div style="display: flex; gap: 2vw;">
+                <button class="action-btn cancel" onclick="document.getElementById('admin-modal').classList.add('hidden')">Cancel</button>
+                <button class="action-btn" onclick="checkAdmin()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ready-modal" class="overlay-modal hidden" style="z-index: 1500;">
+        <div class="modal-card">
+            <div style="font-size: 80px;">🚚</div>
+            <h2 style="font-size: 40px; color: #2ecc71;">Shipment Ready!</h2>
+            <button class="action-btn" onclick="startDeliveryDrive()">Dispatch</button>
+        </div>
+    </div>
+
+    <div id="level-cleared-modal" class="overlay-modal hidden" style="z-index: 1900;" onclick="collectKey()">
+        <div class="modal-card">
+            <h1 style="font-size: 60px; color: white;">Sector Cleared!</h1>
+            <div style="font-size: 100px;">🔑</div>
+            <h2 style="color: white;">+1 Access Key</h2>
+            <div class="mouse-icon-anim">🖱️ Left Click to Collect</div>
+        </div>
+    </div>
+    
+    <div id="win-modal" class="overlay-modal hidden" style="z-index: 2000;">
+        <div class="modal-card">
+            <h1 style="font-size: 80px; color: var(--neon-gold);">🎉 SUCCESS 🎉</h1>
+            <button class="action-btn" onclick="location.reload()">Restart System</button>
+        </div>
+    </div>
+
+    <!-- UI -->
+    <button id="admin-next-btn" class="action-btn hidden" onclick="forceWinLevel()">Next ⏭️</button>
+    <button id="exit-level-btn" class="action-btn hidden" onclick="exitLevel()">Back to Map 🗺️</button>
+    
+    <div id="hud" class="glass-panel">🔑 Keys: <span id="key-count">0</span> / 4</div>
+    <div id="admin-btn" class="admin-btn hidden" onclick="openAdmin()">⚙️</div>
+
+    <div id="weather-ui" class="glass-panel" style="position: absolute; top: 3vh; right: 8vw; padding: 1.5vh 2vw; z-index: 20; font-size: clamp(16px, 1.8vw, 22px); font-weight: bold; color: white; display: flex; align-items: center; gap: 8px;">
+        <span id="w-icon">☀️</span> <span id="w-text">Morning</span>
+    </div>
+
+    <div id="minimap-container" class="glass-panel">
+        <div id="minimap-inner" style="position: relative; width: 100%; height: 100%; background: rgba(0,0,0,0.6);">
+            <div id="mini-player"></div>
+        </div>
+    </div>
+    
+    <!-- Overworld Map 2000x2000 -->
+    <div id="overworld">
+        <div id="weather-overlay"></div> 
+        <div id="rain-overlay" class="rain-overlay"></div> <!-- Lớp Overlay mưa -->
+        
+        <div id="buildings-container"></div>
+        
+        <div class="road-h" style="width: 2000px; height: 140px; left: 0px; top: 400px;"></div>
+        <div class="road-h" style="width: 2000px; height: 140px; left: 0px; top: 1400px;"></div>
+        <div class="road-v" style="width: 140px; height: 2000px; left: 400px; top: 0px;"></div>
+        <div class="road-v" style="width: 140px; height: 2000px; left: 1400px; top: 0px;"></div>
+        
+        <div class="intersection" style="width: 140px; height: 140px; left: 400px; top: 400px;"></div>
+        <div class="intersection" style="width: 140px; height: 140px; left: 1400px; top: 400px;"></div>
+        <div class="intersection" style="width: 140px; height: 140px; left: 400px; top: 1400px;"></div>
+        <div class="intersection" style="width: 140px; height: 140px; left: 1400px; top: 1400px;"></div>
+
+        <div id="ambient-truck">🚚</div>
+
+        <div class="level-zone" id="zone-1" style="left: 380px; top: 380px; width: 180px; height: 180px; border-color: rgba(231, 76, 60, 0.6);">
+            Burger Diner<br><span style="font-size: 60px;">🍟</span>
+            <div class="zone-key" id="zone-key-1">🔑</div>
+        </div>
+        <div class="level-zone" id="zone-2" style="left: 1380px; top: 380px; width: 180px; height: 180px; border-color: rgba(52, 152, 219, 0.6);">
+            Fruit Orchard<br><span style="font-size: 60px;">🍎</span>
+            <div class="zone-key" id="zone-key-2">🔑</div>
+        </div>
+        <div class="level-zone" id="zone-3" style="left: 380px; top: 1380px; width: 180px; height: 180px; border-color: rgba(155, 89, 182, 0.6);">
+            Sweet Truck<br><span style="font-size: 60px;">🍦</span>
+            <div class="zone-key" id="zone-key-3">🔑</div>
+        </div>
+        <div class="level-zone" id="zone-4" style="left: 1380px; top: 1380px; width: 180px; height: 180px; border-color: rgba(26, 188, 156, 0.6);">
+            Root Farm<br><span style="font-size: 60px;">🥕</span>
+            <div class="zone-key" id="zone-key-4">🔑</div>
+        </div>
+
+        <div id="gate-container" style="left: 750px; top: 750px; width: 500px; height: 500px;">
+            <div class="gate-key-slots">
+                <div class="key-slot" id="k-slot-1"></div>
+                <div class="key-slot" id="k-slot-2"></div>
+                <div class="key-slot" id="k-slot-3"></div>
+                <div class="key-slot" id="k-slot-4"></div>
+            </div>
+            <div id="gate">
+                <span id="gate-lock" onclick="openOverworldAdmin()">🔒</span>
+                <span style="font-size: 30px;">AREA LOCKED</span>
+            </div>
+        </div>
+        
+        <div class="level-zone hidden" id="zone-5" style="left: 910px; top: 910px; width: 180px; height: 180px; border-color: rgba(52, 152, 219, 0.6); z-index:4;">
+            Logistics<br><span style="font-size: 60px;">🚚</span>
+            <div class="zone-key" id="zone-key-5" style="display:none;">🔑</div>
+        </div>
+        
+        <div id="player"></div>
+    </div>
+    
+    <!-- LEVEL UI -->
+    <div id="level-ui">
+        <div class="bg-effect" id="bg-effect"></div>
+        <div id="level-header">
+            <h2 id="level-title">Title</h2>
+            <div id="progress-container"><div id="progress-bar"></div></div>
+        </div>
+        
+        <div id="level-content"></div>
+
+        <div id="typing-wrapper" class="hidden">
+            <div class="typing-display" id="type-container"><span id="type-display"></span></div>
+        </div>
+    </div>
+
+    <!-- Delivery Scene -->
+    <div id="delivery-scene">
+        <div id="city-bg"></div>
+        <div id="driving-truck">🚚</div>
+        <button id="deliver-btn" ondblclick="deliverBox()" disabled>
+            DOUBLE CLICK TO DELIVER
+        </button>
+    </div>
+</div>
+
+<script>
+let W = window.innerWidth;
+let H = window.innerHeight;
+
+window.addEventListener('resize', () => { W = window.innerWidth; H = window.innerHeight; });
+
+let currentLevelId = null, currentWordList = [], wordIndex = 0, targetWord = "", typedWord = "", levelPhase = 1;
+let dropScore = 0;
+let bIndex = 0;
+let isOverworldAdmin = false;
+let pendingLevelId = null;
+
+// Thời tiết
+const weathers = [
+    { icon: '☀️', text: 'Morning', color: 'rgba(255, 255, 255, 0)' },
+    { icon: '🌞', text: 'Noon', color: 'rgba(255, 220, 150, 0.1)' },
+    { icon: '🌇', text: 'Afternoon', color: 'rgba(255, 120, 50, 0.25)' },
+    { icon: '🌧️', text: 'Rain', color: 'rgba(50, 80, 120, 0.4)' },
+    { icon: '🌙', text: 'Night', color: 'rgba(10, 15, 40, 0.6)' }
+];
+let weatherIndex = 0;
+setInterval(() => {
+    weatherIndex = (weatherIndex + 1) % weathers.length;
+    document.getElementById('w-icon').innerText = weathers[weatherIndex].icon;
+    document.getElementById('w-text').innerText = weathers[weatherIndex].text;
+    document.getElementById('weather-overlay').style.background = weathers[weatherIndex].color;
+    
+    // Bật tắt hiệu ứng mưa
+    const rainOverlay = document.getElementById('rain-overlay');
+    if (weathers[weatherIndex].text === 'Rain') {
+        rainOverlay.classList.add('active');
+    } else {
+        rainOverlay.classList.remove('active');
+    }
+}, 10000);
+
+// Âm thanh
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    
+    if (type === 'type') {
+        osc.frequency.setValueAtTime(900, now); osc.frequency.exponentialRampToValueAtTime(1400, now + 0.08);
+        gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now); osc.stop(now + 0.08);
+    } else if (type === 'error') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+    } else if (type === 'success' || type === 'drop') {
+        osc.type = 'square'; osc.frequency.setValueAtTime(400, now); osc.frequency.setValueAtTime(600, now + 0.1);
+        gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+    } else if (type === 'win') {
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => { 
+            setTimeout(() => {
+                const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+                o.connect(g); g.connect(audioCtx.destination);
+                o.frequency.value = freq; g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                o.start(); o.stop(audioCtx.currentTime + 0.4);
+            }, i * 120);
+        });
+    } else if (type === 'unlock') {
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(800, now); osc.frequency.linearRampToValueAtTime(1200, now + 0.5);
+        gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(now); osc.stop(now+0.5);
+    }
+}
+
+// Dữ liệu Levels
+const levelData = {
+    1: { name: "Burger Diner", words: [
+        {w:"fries", e:"🍟"}, {w:"chicken", e:"🍗"}, {w:"shrimp", e:"🍤"}, {w:"bacon", e:"🥓"}, {w:"egg", e:"🍳"},
+        {w:"meat", e:"🥩"}, {w:"churros", e:"🥖"}, {w:"donut", e:"🍩"}, {w:"taco", e:"🌮"}, {w:"hotdog", e:"🌭"},
+        {w:"falafel", e:"🧆"}, {w:"dumpling", e:"🥟"}, {w:"calamari", e:"🦑"}, {w:"onion", e:"🧅"}, {w:"fish", e:"🐟"}
+    ]},
+    2: { name: "Fruit Orchard", words: [
+        {w:"apple", e:"🍎"}, {w:"banana", e:"🍌"}, {w:"orange", e:"🍊"}, {w:"grape", e:"🍇"}, {w:"cherry", e:"🍒"},
+        {w:"peach", e:"🍑"}, {w:"mango", e:"🥭"}, {w:"lemon", e:"🍋"}, {w:"melon", e:"🍈"}, {w:"kiwi", e:"🥝"},
+        {w:"pear", e:"🍐"}, {w:"honey", e:"🍯"}, {w:"coconut", e:"🥥"}, {w:"papaya", e:"🥭"}, {w:"guava", e:"🍐"}
+    ]},
+    3: { name: "Sweet Truck", words: [
+        {w:"cake", e:"🎂"}, {w:"donut", e:"🍩"}, {w:"cookie", e:"🍪"}, {w:"muffin", e:"🧁"}, {w:"pie", e:"🥧"},
+        {w:"candy", e:"🍬"}, {w:"lollipop", e:"🍭"}, {w:"flan", e:"🍮"}, {w:"icecream", e:"🍦"}, {w:"shavedice", e:"🍧"},
+        {w:"shortcake", e:"🍰"}, {w:"croissant", e:"🥐"}, {w:"chocolate", e:"🍫"}, {w:"tart", e:"🥮"}, {w:"pretzel", e:"🥨"}
+    ]},
+    4: { name: "Root Farm", words: [
+        {w:"carrot", e:"🥕"}, {w:"potato", e:"🥔"}, {w:"onion", e:"🧅"}, {w:"garlic", e:"🧄"}, {w:"sweetpotato", e:"🍠"},
+        {w:"chestnut", e:"🌰"}, {w:"cabbage", e:"🥬"}, {w:"broccoli", e:"🥦"}, {w:"cucumber", e:"🥒"}, {w:"tomato", e:"🍅"},
+        {w:"bambooshoot", e:"🎋"}, {w:"chili", e:"🌶️"}, {w:"corn", e:"🌽"}, {w:"eggplant", e:"🍆"}, {w:"parsley", e:"🌿"}
+    ]},
+    5: { name: "Logistics Hub", words: [
+        {w:"burger", e:"🍔"}, {w:"file", e:"📁"}, {w:"cake", e:"🎂"}, {w:"carrot", e:"🥕"}, {w:"pizza", e:"🍕"},
+        {w:"apple", e:"🍎"}, {w:"donut", e:"🍩"}, {w:"potato", e:"🥔"}, {w:"taco", e:"🌮"}, {w:"banana", e:"🍌"},
+        {w:"cookie", e:"🍪"}, {w:"garlic", e:"🧄"}, {w:"hotdog", e:"🌭"}, {w:"mango", e:"🥭"}, {w:"pie", e:"🥧"}
+    ]}
+};
+
+const zones = [
+    { id: 1, x: 380, y: 380 }, { id: 2, x: 1380, y: 380 },
+    { id: 3, x: 380, y: 1380 }, { id: 4, x: 1380, y: 1380 },
+    { id: 5, x: 910, y: 910 } 
+];
+const zoneEmojis = ['🍟', '🍎', '🍦', '🥕', '🚚'];
+const gateBounds = { x: 750, y: 750, w: 500, h: 500 };
+const state = { keys: 0, playerX: 470, playerY: 600, speed: 15, cameraX: 0, cameraY: 0, mode: 'MENU', currentZone: null, completed: {1:false,2:false,3:false,4:false,5:false} };
+const input = { w:false, a:false, s:false, d:false, ArrowUp:false, ArrowLeft:false, ArrowDown:false, ArrowRight:false };
+
+function generateScenery() {
+    const map = document.getElementById('buildings-container');
+    map.innerHTML = '';
+    const emojis_bldg = ['🏢', '🏬', '🏫', '🏥', '🏨', '🏦', '🏭'];
+    const emojis_tree = ['🌳', '🌲'];
+    const flowerIcons = ['🌼', '🌻'];
+    
+    let cellSize = 60; 
+    for(let x = 0; x < 2000; x += cellSize) {
+        for(let y = 0; y < 2000; y += cellSize) {
+            
+            let isRoad = false;
+            if ((y > 300 && y < 600) || (y > 1300 && y < 1600)) isRoad = true;
+            if ((x > 300 && x < 600) || (x > 1300 && x < 1600)) isRoad = true;
+            
+            // Xử lý tạo khoảng cách an toàn (cách biệt nhất định) ở khu vực System Locked
+            // Cổng và Hàng rào hoa nằm từ toạ độ 680 đến 1320
+            if (x >= 540 && x <= 1400 && y >= 540 && y <= 1400) isRoad = true;
+
+            if (isRoad) continue;
+
+            let r = Math.random();
+            if (r > 0.8) { 
+                let el = document.createElement('div');
+                el.className = 'scenery';
+                let oX = Math.random() * 20;
+                let oY = Math.random() * 20;
+                el.style.left = (x + oX) + 'px';
+                el.style.top = (y + oY) + 'px';
+                
+                if (Math.random() > 0.4) { 
+                    el.innerText = emojis_bldg[Math.floor(Math.random() * emojis_bldg.length)];
+                    el.style.fontSize = (55 + Math.random() * 20) + 'px';
+                    el.style.zIndex = Math.floor(y + oY);
+                } else { 
+                    el.innerText = emojis_tree[Math.floor(Math.random() * emojis_tree.length)];
+                    el.style.fontSize = (45 + Math.random() * 15) + 'px';
+                    el.style.zIndex = Math.floor(y + oY);
+                }
+                map.appendChild(el);
+            }
+        }
+    }
+    
+    // Hàng rào hoa xen kẽ không xếp chồng (sử dụng bước nhảy 40px)
+    let fIndex = 0;
+    for(let fx = 680; fx <= 1320; fx += 40) { addFlower(fx, 680); addFlower(fx, 1320); }
+    for(let fy = 720; fy < 1320; fy += 40) { addFlower(680, fy); addFlower(1320, fy); }
+
+    function addFlower(x, y) {
+        let el = document.createElement('div');
+        el.className = 'scenery';
+        el.style.left = x + 'px'; el.style.top = y + 'px';
+        el.style.fontSize = '35px';
+        el.style.width = '35px'; 
+        el.style.height = '35px';
+        el.style.display = 'flex'; 
+        el.style.justifyContent = 'center'; 
+        el.style.alignItems = 'center';
+        el.innerText = flowerIcons[fIndex % 2];
+        fIndex++;
+        el.style.zIndex = Math.floor(y);
+        map.appendChild(el);
+    }
+}
+generateScenery();
+
+function startGame(char) {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    document.getElementById('player').innerText = char;
+    document.getElementById('start-screen').style.display = 'none';
+    state.mode = 'OVERWORLD';
+    
+    const mm = document.getElementById('minimap-inner');
+    let ratio = 2000 / 200; 
+    zones.forEach((z, idx) => {
+        let mdiv = document.createElement('div');
+        mdiv.className = 'mini-zone';
+        mdiv.style.left = ((z.x + 90) / ratio) + 'px'; 
+        mdiv.style.top = ((z.y + 90) / ratio) + 'px';
+        mdiv.innerText = zoneEmojis[idx];
+        mm.appendChild(mdiv);
+    });
+
+    gameLoop();
+}
+
+window.addEventListener('keydown', (e) => {
+    if (state.mode === 'OVERWORLD') {
+        let k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        if (input.hasOwnProperty(k)) { input[k] = true; document.getElementById('player').classList.add('walking'); }
+    } else if (state.mode === 'LEVEL') {
+        if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
+        if (e.key.length === 1 && e.key.match(/[a-z]/i) && document.getElementById('admin-modal').classList.contains('hidden')) {
+            if (!document.getElementById('typing-wrapper').classList.contains('hidden')) {
+                handleTyping(e.key);
+            }
+        }
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (state.mode === 'OVERWORLD') {
+        let k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        if (input.hasOwnProperty(k)) input[k] = false;
+        if (!input.w && !input.a && !input.s && !input.d && !input.ArrowUp && !input.ArrowDown && !input.ArrowLeft && !input.ArrowRight) {
+            document.getElementById('player').classList.remove('walking');
+        }
+    }
+});
+
+function updateOverworld() {
+    if (state.mode !== 'OVERWORLD') return;
+    let dx = 0, dy = 0;
+    if (input.w || input.ArrowUp) dy = -state.speed;
+    if (input.s || input.ArrowDown) dy = state.speed;
+    if (input.a || input.ArrowLeft) { dx = -state.speed; document.getElementById('player').style.transform = 'scaleX(-1)'; }
+    if (input.d || input.ArrowRight) { dx = state.speed; document.getElementById('player').style.transform = 'scaleX(1)'; }
+
+    let nx = Math.max(0, Math.min(1950, state.playerX + dx)), ny = Math.max(0, Math.min(1950, state.playerY + dy));
+    if (state.keys < 4 && nx+45 > gateBounds.x && nx < gateBounds.x+gateBounds.w && ny+45 > gateBounds.y && ny < gateBounds.y+gateBounds.h) {
+        nx = state.playerX; ny = state.playerY;
+    }
+
+    state.playerX = nx; state.playerY = ny;
+    const p = document.getElementById('player'); p.style.left = nx+'px'; p.style.top = ny+'px';
+    document.getElementById('mini-player').style.left = ((nx+22)/10)+'px'; document.getElementById('mini-player').style.top = ((ny+22)/10)+'px';
+
+    state.cameraX = Math.max(0, Math.min(2000 - W, nx - W/2));
+    state.cameraY = Math.max(0, Math.min(2000 - H, ny - H/2));
+    document.getElementById('overworld').style.transform = `translate(${-state.cameraX}px, ${-state.cameraY}px)`;
+    
+    let inZone = null;
+    for (let z of zones) {
+        if (Math.hypot((nx+22.5)-(z.x+90), (ny+22.5)-(z.y+90)) < 100) { inZone = z.id; break; }
+    }
+    
+    if (inZone) {
+        if (inZone === 5 && state.keys < 4) return;
+        if (state.currentZone !== inZone) {
+            state.currentZone = inZone;
+            promptEnterLevel(inZone);
+        }
+    } else {
+        state.currentZone = null;
+    }
+}
+
+function gameLoop() {
+    updateOverworld();
+    requestAnimationFrame(gameLoop);
+}
+
+function promptEnterLevel(id) {
+    state.mode = 'PROMPT';
+    input.w = input.a = input.s = input.d = input.ArrowUp = input.ArrowLeft = input.ArrowDown = input.ArrowRight = false;
+    document.getElementById('player').classList.remove('walking');
+    
+    pendingLevelId = id;
+    let msg = state.completed[id] ? "Do you want to review the results for " : "Do you want to play ";
+    document.getElementById('prompt-text').innerText = msg + levelData[id].name + "?";
+    document.getElementById('prompt-modal').classList.remove('hidden');
+}
+
+function confirmEnterLevel(isYes) {
+    document.getElementById('prompt-modal').classList.add('hidden');
+    if (isYes) {
+        if (state.completed[pendingLevelId] && pendingLevelId !== 5) {
+            renderCompletedLevel(pendingLevelId);
+        } else {
+            startLevel(pendingLevelId);
+        }
+    } else {
+        state.mode = 'OVERWORLD';
+    }
+}
+
+function startLevel(id) {
+    state.mode = 'LEVEL'; currentLevelId = id; currentWordList = [...levelData[id].words];
+    wordIndex = 0; levelPhase = 1; dropScore = 0;
+    
+    document.getElementById('admin-btn').classList.remove('hidden');
+    document.getElementById('typing-wrapper').classList.remove('hidden');
+    
+    const ui = document.getElementById('level-ui');
+    ui.style.display = 'flex';
+    ui.className = 'bg-l' + id;
+    
+    let bge = document.getElementById('bg-effect'); bge.innerHTML = '';
+    for(let i=0; i<25; i++) {
+        bge.innerHTML += `<div class="effect-particle" style="left:${Math.random()*100}%; background:rgba(255,255,255,0.2); width:${Math.random()*20+5}px; height:${Math.random()*20+5}px; border-radius:50%; animation-duration:${Math.random()*3+2}s;"></div>`;
+    }
+
+    document.getElementById('level-title').innerText = levelData[id].name;
+    document.getElementById('progress-bar').style.width = '0%';
+    
+    const content = document.getElementById('level-content');
+    
+    if(id===1) {
+        content.innerHTML = `<div id="plate" class="fit-box"></div>`;
+    } else if(id===2) { 
+        content.innerHTML = `
+        <div style="display:flex; width: 90vw; max-width: 800px; height: 60vh; justify-content: space-around; align-items: center; padding-bottom: 2vh;">
+            <div id="orchard-crate" class="fit-box" style="background: linear-gradient(to right, #8b5a2b, #6b4423); border: 8px solid #4a2e15; box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 5px 5px 15px rgba(0,0,0,0.5); position: relative;">
+                <div style="position:absolute; top:-15px; left:-15px; right:-15px; height:20px; background: #5c3a21; border-radius: 3px; box-shadow: 0 5px 5px rgba(0,0,0,0.5);"></div>
+                <div style="position:absolute; bottom:20px; left:-15px; right:-15px; height:10px; background: rgba(0,0,0,0.3);"></div>
+            </div>
+            <div id="orchard-tree" style="position: relative; display: inline-block;">
+                <div style="font-size: 260px; line-height: 1; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6));">🌳</div>
+                <div id="clickable-fruit" onclick="onFruitClick()" class="pulse" style="position:absolute; top: 22%; left: 50%; transform: translate(-50%, -50%); font-size: 60px; cursor:pointer; z-index:10; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));"></div>
+            </div>
+        </div>`;
+        document.getElementById('typing-wrapper').classList.add('hidden');
+    } else if(id===3) {
+        content.innerHTML = `
+        <div id="ice-cream-truck">
+            <div class="truck-window">
+                <div id="silhouette"></div>
+                <div id="dessert-shelf" class="fit-box"></div>
+            </div>
+        </div>`;
+    } else if(id===4) { 
+        content.innerHTML = `
+        <div id="crate" class="fit-box"></div>
+        <div class="dirt-row" id="row-1"></div>
+        <div class="dirt-row" id="row-2"></div>
+        <div class="dirt-row" id="row-3"></div>`;
+        for(let i=0; i<15; i++) {
+            let rIndex = (i % 3) + 1;
+            document.getElementById(`row-${rIndex}`).innerHTML += `<div class="emoji-item" id="item-${i}" style="margin: 2px; transition: 0.5s;">${levelData[4].words[i].e}</div>`;
+        }
+    } else if(id===5) {
+        content.innerHTML = `<div id="staging-area" class="fit-box"></div>`;
+    }
+    nextWord();
+}
+
+function handleTyping(key) {
+    if(levelPhase !== 1) return;
+    
+    if(key.toLowerCase() === targetWord[typedWord.length].toLowerCase()) {
+        typedWord += key.toLowerCase(); playSound('type');
+        document.getElementById('type-display').innerHTML = `<span class="typed">${typedWord}</span><span class="untyped">${targetWord.substring(typedWord.length)}</span>`;
+        if(typedWord === targetWord) wordComplete();
+    } else {
+        const c = document.getElementById('type-container');
+        if(c) { c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); }
+        playSound('error');
+    }
+}
+
+function wordComplete() {
+    playSound('success');
+    const d = currentWordList[wordIndex];
+    
+    if(currentLevelId === 1) {
+        document.getElementById('plate').innerHTML += `<div class="emoji-item" id="item-${wordIndex}">${d.e}</div>`; advanceWord();
+    } else if(currentLevelId === 2) {
+        const cf = document.getElementById('clickable-fruit');
+        document.getElementById('typing-wrapper').classList.add('hidden');
+        cf.classList.add('hidden');
+        
+        let clone = document.createElement('div');
+        clone.innerText = d.e;
+        clone.style.position = 'absolute';
+        clone.style.fontSize = cf.style.fontSize;
+        clone.style.left = cf.getBoundingClientRect().left + 'px';
+        clone.style.top = cf.getBoundingClientRect().top + 'px';
+        clone.style.transition = 'all 0.5s ease-in-out';
+        clone.style.zIndex = 100;
+        document.body.appendChild(clone);
+        
+        playSound('drop');
+        setTimeout(() => {
+            const crate = document.getElementById('orchard-crate');
+            const rect = crate.getBoundingClientRect();
+            clone.style.left = (rect.left + rect.width/2 - 25) + 'px';
+            clone.style.top = (rect.top + rect.height/2 - 25) + 'px';
+            clone.style.transform = 'scale(0.8)';
+        }, 10);
+        
+        setTimeout(() => {
+            clone.remove();
+            let m = document.createElement('div');
+            m.innerText = d.e;
+            m.className = 'emoji-item';
+            m.style.cursor = 'default';
+            document.getElementById('orchard-crate').appendChild(m);
+            advanceWord();
+        }, 500);
+
+    } else if(currentLevelId === 3) {
+        const sil = document.getElementById('silhouette'); sil.classList.add('revealed');
+        setTimeout(() => {
+            document.getElementById('dessert-shelf').innerHTML += `<div class="emoji-item">${d.e}</div>`;
+            advanceWord();
+        }, 600);
+    } else if(currentLevelId === 4) {
+        let item = document.getElementById(`item-${wordIndex}`);
+        document.getElementById('crate').appendChild(item);
+        advanceWord();
+    } else if(currentLevelId === 5) {
+        document.getElementById('staging-area').innerHTML += `<div class="emoji-item" id="item-${wordIndex}">${d.e}</div>`; advanceWord();
+    }
+}
+
+function advanceWord() {
+    wordIndex++; 
+    document.getElementById('progress-bar').style.width = `${(wordIndex/15)*100}%`;
+    if(wordIndex < 15) {
+        nextWord(); 
+    } else {
+        if(currentLevelId === 1 || currentLevelId === 5) setTimeout(startDragPhase, 600);
+        else setTimeout(winLevel, 800); 
+    }
+}
+
+function nextWord() {
+    targetWord = currentWordList[wordIndex].w; typedWord = "";
+    document.getElementById('type-display').innerHTML = `<span class="untyped">${targetWord}</span>`;
+    
+    if(currentLevelId === 3) {
+        const sil = document.getElementById('silhouette'); sil.innerText = currentWordList[wordIndex].e; sil.classList.remove('revealed');
+    } else if(currentLevelId === 2) {
+        const cf = document.getElementById('clickable-fruit');
+        if(cf) {
+            cf.innerText = currentWordList[wordIndex].e;
+            cf.classList.remove('hidden');
+            cf.classList.add('pulse');
+        }
+        document.getElementById('typing-wrapper').classList.add('hidden');
+    }
+}
+
+function onFruitClick() {
+    if(currentLevelId !== 2) return;
+    const cf = document.getElementById('clickable-fruit');
+    if(!cf || cf.classList.contains('hidden')) return;
+    cf.classList.remove('pulse');
+    document.getElementById('typing-wrapper').classList.remove('hidden');
+    playSound('type');
+}
+
+function setupDrag(id) {
+    const el = document.getElementById(id);
+    if(el) { el.draggable = true; el.ondragstart = (e) => { e.dataTransfer.setData("text", e.target.id); playSound('type'); }; }
+}
+function setupDropZone(zId) {
+    const zone = document.getElementById(zId);
+    zone.ondragover = (e) => { e.preventDefault(); };
+    zone.ondrop = (e) => {
+        e.preventDefault(); 
+        const el = document.getElementById(e.dataTransfer.getData("text"));
+        if(el) {
+            playSound('drop'); zone.appendChild(el); el.draggable = false; el.style.cursor = 'default'; dropScore++;
+            if(dropScore === 15) {
+                if (currentLevelId === 5) setTimeout(() => document.getElementById('ready-modal').classList.remove('hidden'), 500);
+                else setTimeout(winLevel, 600);
+            }
+        }
+    };
+}
+
+function startDragPhase() {
+    levelPhase = 2; const content = document.getElementById('level-content');
+    document.getElementById('typing-wrapper').classList.add('hidden');
+    
+    let ins = `<h3 class="glass-panel" style="padding: 1vh 2vw; font-size: 24px; color: white; margin-bottom: 2vh;">Drag & Drop all 15 items!</h3>`;
+    
+    if(currentLevelId === 1) {
+        content.insertAdjacentHTML('afterbegin', ins);
+        document.getElementById('plate').innerHTML = ''; 
+        content.insertAdjacentHTML('beforeend', `<div id="plate" class="fit-box" style="margin-top: 2vh;"></div>`);
+        for(let i=0; i<15; i++) setupDrag(`item-${i}`); setupDropZone('plate');
+    } else if(currentLevelId === 5) {
+        content.insertAdjacentHTML('afterbegin', ins);
+        content.insertAdjacentHTML('beforeend', `<div id="delivery-cargo" class="fit-box"></div>`);
+        for(let i=0; i<15; i++) setupDrag(`item-${i}`); setupDropZone('delivery-cargo');
+    }
+}
+
+function startDeliveryDrive() {
+    document.getElementById('ready-modal').classList.add('hidden');
+    document.getElementById('level-ui').style.display = 'none';
+    const sc = document.getElementById('delivery-scene'); sc.style.display = 'flex';
+    
+    let bHTML = '';
+    for(let i=0; i<6; i++) {
+        let h = Math.floor(Math.random() * 25) + 20; 
+        let winCount = Math.floor(Math.random() * 4) + 2; 
+        let windows = Array(winCount).fill('<div style="width: 25px; height: 35px; background: #f1c40f; box-shadow: 0 0 10px #f1c40f;"></div>').join('');
+        
+        bHTML += `
+        <div id="bldg-${i}" class="building-end" style="background: linear-gradient(to bottom, #2980b9, #2c3e50); height: ${h}vh;">
+            <div id="b-stat-${i}" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%) scale(0); background: #2ecc71; color: white; padding: 5px 12px; border-radius: 5px; font-weight: 900; font-size: 18px; text-transform: uppercase; box-shadow: 0 5px 10px rgba(0,0,0,0.5); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; white-space: nowrap;">Delivered!</div>
+            ${windows}
+        </div>`;
+    }
+    document.getElementById('city-bg').innerHTML = bHTML;
+    
+    bIndex = 0;
+    setTimeout(() => moveTruckToBuilding(), 800);
+}
+
+function moveTruckToBuilding() {
+    const tr = document.getElementById('driving-truck');
+    const btn = document.getElementById('deliver-btn');
+    btn.disabled = true;
+    
+    const bldg = document.getElementById(`bldg-${bIndex}`);
+    const bRect = bldg.getBoundingClientRect();
+    const tWidth = tr.offsetWidth;
+    
+    let targetX = bRect.left + (bRect.width / 2) - (tWidth / 2); 
+    tr.style.left = targetX + 'px';
+    
+    setTimeout(() => { btn.disabled = false; }, 1400);
+}
+
+function deliverBox() {
+    playSound('success');
+    document.getElementById('deliver-btn').disabled = true;
+    
+    const stat = document.getElementById(`b-stat-${bIndex}`);
+    stat.style.transform = 'translateX(-50%) scale(1)';
+    
+    bIndex++;
+    if(bIndex < 6) setTimeout(moveTruckToBuilding, 800);
+    else setTimeout(winLevel, 1500);
+}
+
+function renderCompletedLevel(id) {
+    state.mode = 'LEVEL_VIEW';
+    const ui = document.getElementById('level-ui');
+    ui.style.display = 'flex';
+    ui.className = 'bg-l' + id;
+    
+    document.getElementById('level-title').innerText = levelData[id].name + " (Completed)";
+    document.getElementById('progress-bar').style.width = '100%';
+    document.getElementById('typing-wrapper').classList.add('hidden');
+    document.getElementById('admin-btn').classList.add('hidden');
+    document.getElementById('exit-level-btn').classList.remove('hidden');
+
+    const content = document.getElementById('level-content');
+    let emojis = levelData[id].words.map(w => `<div class="emoji-item" style="cursor:default;">${w.e}</div>`).join('');
+    
+    if (id === 1) {
+        content.innerHTML = `<div id="plate" class="fit-box">${emojis}</div>`;
+    } else if (id === 2) {
+        content.innerHTML = `
+        <div style="display:flex; width: 90vw; max-width: 800px; height: 60vh; justify-content: space-around; align-items: center; padding-bottom: 2vh;">
+            <div class="fit-box" style="background: linear-gradient(to right, #8b5a2b, #6b4423); border: 8px solid #4a2e15; border-radius: 5px; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);">${emojis}</div>
+            <div style="position: relative; display: inline-block;">
+                <div style="font-size: 260px; line-height: 1; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6));">🌳</div>
+            </div>
+        </div>`;
+    } else if (id === 3) {
+        content.innerHTML = `
+        <div id="ice-cream-truck">
+            <div class="truck-window"><div id="dessert-shelf" class="fit-box">${emojis}</div></div>
+        </div>`;
+    } else if (id === 4) {
+        content.innerHTML = `<div id="crate" class="fit-box">${emojis}</div>`;
+    }
+}
+
+function exitLevel() {
+    document.getElementById('level-ui').style.display = 'none';
+    document.getElementById('exit-level-btn').classList.add('hidden');
+    state.mode = 'OVERWORLD';
+}
+
+function updateKeys() {
+    document.getElementById('key-count').innerText = state.keys;
+    for(let i=1; i<=4; i++) {
+        const slot = document.getElementById(`k-slot-${i}`);
+        if(i <= state.keys) {
+            if(!slot.classList.contains('active')) { slot.classList.add('active'); playSound('unlock'); }
+        }
+    }
+    if(state.keys >= 4) {
+        document.getElementById('gate').style.transform = 'scale(0) rotate(360deg)';
+        document.getElementById('zone-5').classList.remove('hidden');
+        setTimeout(() => { document.getElementById('gate-container').style.display = 'none'; }, 1500);
+    }
+}
+
+function collectKey() {
+    playSound('unlock');
+    document.getElementById('level-cleared-modal').classList.add('hidden');
+    document.getElementById('level-ui').style.display = 'none'; 
+    state.mode = 'OVERWORLD';
+    
+    const zk = document.getElementById('zone-key-' + currentLevelId);
+    if(zk) zk.classList.add('collected');
+
+    updateKeys();
+}
+
+function winLevel() {
+    if(!state.completed[currentLevelId]) {
+        state.completed[currentLevelId] = true;
+        if(currentLevelId !== 5) state.keys++;
+    }
+    document.getElementById(`zone-${currentLevelId}`).classList.add('completed-zone');
+    
+    if (currentLevelId === 5) {
+        playSound('win');
+        setTimeout(()=> document.getElementById('win-modal').classList.remove('hidden'), 500);
+    } else {
+        playSound('win');
+        document.getElementById('level-cleared-modal').classList.remove('hidden');
+    }
+}
+
+function openAdmin() {
+    isOverworldAdmin = false;
+    document.getElementById('admin-modal').classList.remove('hidden');
+    document.getElementById('admin-pw').value = '';
+    document.getElementById('admin-pw').focus();
+}
+function openOverworldAdmin() {
+    if(state.keys >= 4) return;
+    isOverworldAdmin = true;
+    document.getElementById('admin-modal').classList.remove('hidden');
+    document.getElementById('admin-pw').value = '';
+    document.getElementById('admin-pw').focus();
+}
+function checkAdmin() {
+    const pw = document.getElementById('admin-pw').value;
+    if(pw === '456') {
+        document.getElementById('admin-modal').classList.add('hidden');
+        if(isOverworldAdmin) { state.keys = 4; updateKeys(); } 
+        else { fastPassLevel(); }
+    } else {
+        alert('Invalid Passcode!');
+    }
+}
+function fastPassLevel() {
+    wordIndex = 15; dropScore = 15;
+    document.getElementById('progress-bar').style.width = '100%';
+    document.getElementById('typing-wrapper').classList.add('hidden');
+    
+    if (currentLevelId === 4) { 
+        let crate = document.getElementById('crate');
+        crate.innerHTML = levelData[4].words.map(w => `<div class="emoji-item">${w.e}</div>`).join('');
+    } else if (currentLevelId === 2) { 
+        const crate = document.getElementById('orchard-crate');
+        crate.innerHTML = levelData[2].words.map(w => `<div class="emoji-item">${w.e}</div>`).join('');
+        document.getElementById('clickable-fruit').classList.add('hidden');
+    } else if (currentLevelId === 3) { 
+        document.getElementById('dessert-shelf').innerHTML = levelData[3].words.map(w => `<div class="emoji-item">${w.e}</div>`).join('');
+    } else if (currentLevelId === 1) { 
+        let plate = document.getElementById('plate');
+        if(!plate) { startDragPhase(); plate = document.getElementById('plate'); }
+        plate.innerHTML = levelData[1].words.map(w => `<div class="emoji-item">${w.e}</div>`).join('');
+    } else if (currentLevelId === 5) { 
+        let cargo = document.getElementById('delivery-cargo');
+        if(!cargo) { startDragPhase(); cargo = document.getElementById('delivery-cargo'); }
+        cargo.innerHTML = levelData[5].words.map(w => `<div class="emoji-item">${w.e}</div>`).join('');
+    }
+    
+    playSound('success');
+    document.getElementById('admin-next-btn').classList.remove('hidden');
+}
+function forceWinLevel() {
+    document.getElementById('admin-next-btn').classList.add('hidden');
+    if(currentLevelId === 5) document.getElementById('ready-modal').classList.remove('hidden');
+    else winLevel();
+}
+</script>
+</body>
+</html>
