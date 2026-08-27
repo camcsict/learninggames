@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rhythm Fishing - Final Version</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; text-transform: capitalize; }
+        body { 
+            overflow: hidden; background: #cce7ff;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            user-select: none; color: #222;
+        }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        #ui-layer { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; display: flex; flex-direction: column;
+        }
+
+        /* Top bar */
+        #top-bar {
+            display: flex; justify-content: space-between; padding: 15px 40px;
+            font-size: 18px; font-weight: 700;
+            background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.2));
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .highlight-text { color: #ff5722; font-weight: 900; font-size: 24px; text-shadow: 0 2px 8px rgba(255,87,34,0.3); }
+        #weather-info { color: #0288d1; font-weight: 700; font-size: 15px; margin-top: 4px; }
+        
+        /* Score Box - Nautical Theme */
+        #score-box {
+            position: absolute; top: 90px; left: 40px;
+            background: linear-gradient(135deg, rgba(2, 136, 209, 0.85), rgba(2, 136, 209, 0.5));
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 16px; padding: 12px 25px; pointer-events: auto;
+            box-shadow: 0 10px 25px rgba(2, 136, 209, 0.3);
+            color: #fff; display: flex; align-items: center; gap: 15px; z-index: 5;
+        }
+        #score-box .score-label { color: #e1f5fe; text-transform: uppercase; font-size: 13px; font-weight: 800; letter-spacing: 1px; }
+        #current-score { font-size: 32px; font-weight: 900; color: #ffeb3b; text-shadow: 0 2px 10px rgba(255, 235, 59, 0.6); }
+        .score-icon { font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+
+        /* Inventory */
+        #inventory {
+            position: absolute; right: 30px; top: 90px; width: 320px; height: calc(100% - 120px);
+            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
+            border: 1px solid rgba(255,255,255,0.9); border-radius: 20px;
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            padding: 20px; display: flex; flex-direction: column; pointer-events: auto;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        #inv-title {
+            text-align: center; font-size: 18px; margin-bottom: 15px; color: #0288d1; font-weight: 800;
+            border-bottom: 2px dashed rgba(2,136,209,0.3); padding-bottom: 10px; letter-spacing: 1px; text-transform: uppercase;
+        }
+        #inv-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        #inv-list::-webkit-scrollbar { width: 5px; }
+        #inv-list::-webkit-scrollbar-thumb { background: rgba(2,136,209,0.4); border-radius: 5px; }
+        .inv-item {
+            background: rgba(255,255,255,0.7); padding: 10px 15px; border-radius: 14px;
+            border-left: 5px solid; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); animation: slidein 0.3s ease-out;
+        }
+        @keyframes slidein { 0% { opacity: 0; transform: translateX(20px); } 100% { opacity: 1; transform: translateX(0); } }
+
+        /* Highlight Messages */
+        #message {
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 36px; font-weight: 800; color: #fff;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.2s; text-align: center; z-index: 5;
+        }
+
+        /* Rhythm Bar */
+        #timing-container {
+            position: absolute; bottom: 80px; left: calc(50% - 200px); transform: translateX(-50%);
+            width: 600px; height: 22px; background: rgba(0,0,0,0.5);
+            border-radius: 11px; overflow: hidden; display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3), inset 0 2px 6px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.6); backdrop-filter: blur(4px);
+        }
+        #zone-miss { position: absolute; width: 100%; height: 100%; background: rgba(239,83,80,0.85); }
+        #zone-good {
+            position: absolute; left: 20%; width: 60%; height: 100%; 
+            background: linear-gradient(90deg, #4caf50, #81c784, #4caf50);
+            box-shadow: 0 0 12px rgba(76,175,80,0.7);
+        }
+        #zone-perfect {
+            position: absolute; left: 45%; width: 10%; height: 100%; 
+            background: linear-gradient(90deg, #ff9800, #ffeb3b, #ff9800);
+            box-shadow: 0 0 15px #ffeb3b; z-index: 2;
+        }
+        #cursor {
+            position: absolute; top: -4px; left: 0%; width: 6px; height: 30px; 
+            background: #fff; box-shadow: 0 0 10px #fff, 0 0 15px #00e5ff; 
+            border-radius: 3px; z-index: 3; transform: translateX(-50%);
+        }
+        .timing-hint {
+            position: absolute; bottom: 110px; left: calc(50% - 200px); transform: translateX(-50%);
+            width: 600px; text-align: center; font-size: 15px; font-weight: 800; 
+            color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.7); display: none; z-index: 4; text-transform: uppercase;
+        }
+
+        /* Menus */
+        .panel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
+            padding: 40px 50px; border-radius: 24px; text-align: center; pointer-events: auto; 
+            border: 1px solid rgba(255,255,255,1); box-shadow: 0 25px 50px rgba(0,100,200,0.15); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: flex; flex-direction: column; gap: 15px; z-index: 10; min-width: 480px;
+        }
+        .panel h1 { color: #0288d1; font-size: 32px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
+        .rule { font-size: 16px; color: #444; text-align: left; font-weight: 600; line-height: 1.5; text-transform: none; }
+        
+        .time-select { display: flex; justify-content: center; gap: 12px; margin: 15px 0; }
+        .btn-time {
+            background: rgba(255,255,255,0.6); border: 2px solid #4fc3f7; color: #0288d1;
+            padding: 10px 25px; border-radius: 20px; font-family: inherit; font-weight: 700; font-size: 15px;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-time.active { background: #0288d1; color: #fff; border-color: #0288d1; transform: scale(1.05); box-shadow: 0 5px 15px rgba(2,136,209,0.3); }
+        .btn-time:hover:not(.active) { background: #e1f5fe; }
+
+        button.main-btn {
+            padding: 16px 24px; font-size: 18px; background: linear-gradient(135deg, #29b6f6, #0288d1); 
+            color: #fff; border: none; border-radius: 16px; cursor: pointer; transition: 0.2s; white-space: nowrap;
+            font-weight: 800; margin-top: 5px; font-family: inherit; box-shadow: 0 8px 20px rgba(2,136,209,0.3);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        button.main-btn:hover { box-shadow: 0 12px 25px rgba(2,136,209,0.5); transform: translateY(-3px); }
+        #end-screen { display: none; }
+    </style>
+</head>
+<body>
+
+<canvas id="game-canvas"></canvas>
+
+<div id="ui-layer">
+    <div id="top-bar">
+        <div>
+            <div id="status-text">Waiting to cast...</div>
+            <div id="weather-info">Weather: <span>☀️ Sunny Clear Sky</span></div>
+        </div>
+        <div>
+            Time left: <span id="timer" class="highlight-text">60</span>s
+        </div>
+    </div>
+    
+    <div id="score-box">
+        <span class="score-icon">🏆</span>
+        <div style="display:flex; flex-direction:column; line-height: 1.1;">
+            <span class="score-label">Total Score</span>
+            <span id="current-score">0</span>
+        </div>
+    </div>
+
+    <div id="inventory">
+        <div id="inv-title">Your Catches</div>
+        <div id="inv-list"></div>
+    </div>
+
+    <div id="message"></div>
+
+    <div id="timing-container">
+        <div id="zone-miss"></div>
+        <div id="zone-good"></div>
+        <div id="zone-perfect"></div>
+        <div id="cursor"></div>
+    </div>
+    <div class="timing-hint" id="timing-hint">Press SPACE or CLICK to Hook!</div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="panel">
+        <h1>Relaxing Fishing</h1>
+        <div class="rule">🕒 Select duration for the fishing trip.</div>
+        <div class="rule">🌊 Click or press Space on the water to cast bait.</div>
+        <div class="rule">🐟 When the fish bites 💬, act immediately to hook it.</div>
+        <div class="rule">☀️ Graphics and weather change every 10s.</div>
+        
+        <div class="time-select">
+            <button class="btn-time active" data-time="60">60s</button>
+            <button class="btn-time" data-time="90">90s</button>
+            <button class="btn-time" data-time="120">120s</button>
+        </div>
+        
+        <button id="btn-start" class="main-btn">Start Fishing</button>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="panel">
+        <h1>Trip Ended!</h1>
+        <div class="rule" style="text-align:center; font-size:18px; text-transform: capitalize;">You collected <span id="final-caught" class="highlight-text">0</span> catches.</div>
+        <div class="rule" style="text-align:center; font-size:22px; color:#0288d1; font-weight:800; margin-bottom: 10px;">Final Score: <span id="final-score" class="highlight-text">0</span></div>
+        <button id="btn-restart" class="main-btn">Play Again</button>
+    </div>
+</div>
+
+<script>
+// --- Time Selection ---
+let selectedtime = 60;
+const timebtns = document.querySelectorAll('.btn-time');
+timebtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        timebtns.forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        selectedtime = parseInt(e.target.getAttribute('data-time'));
+    });
+});
+
+// --- Audio System ---
+let audioctx;
+function initaudio() { if(!audioctx) audioctx = new (window.AudioContext || window.webkitAudioContext)(); }
+function playsound(type) {
+    if (!audioctx) return;
+    const osc = audioctx.createOscillator(); const gain = audioctx.createGain();
+    osc.connect(gain); gain.connect(audioctx.destination); const now = audioctx.currentTime;
+    
+    if (type === 'cast') {
+        osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+        gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.3, now + 0.1); gain.gain.linearRampToValueAtTime(0, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+    } else if (type === 'splash') {
+        osc.type = 'square'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(20, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+    } else if (type === 'perfect') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1); osc.frequency.setValueAtTime(1046.50, now + 0.2);
+        gain.gain.setValueAtTime(0.4, now); gain.gain.linearRampToValueAtTime(0, now + 0.6);
+        osc.start(now); osc.stop(now + 0.6);
+    } else if (type === 'good') {
+        osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(659, now + 0.1);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+    } else if (type === 'miss') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(60, now + 0.3);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+    }
+}
+
+// --- Fireworks Effect ---
+let fireworks = [];
+class particle {
+    constructor(x, y, color) {
+        this.x = x; this.y = y;
+        this.vx = (Math.random() - 0.5) * 14;
+        this.vy = (Math.random() - 0.5) * 14 - 3;
+        this.life = 1; this.color = color;
+        this.size = Math.random() * 4 + 2;
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy; this.vy += 0.2; 
+        this.life -= 0.015;
+    }
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.fillStyle = this.color;
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+}
+function spawnfireworks() {
+    const colors = ['#fff', '#ffea00', '#00e676', '#00e5ff', '#ff1744'];
+    for(let i=0; i<60; i++) {
+        fireworks.push(new particle(w/2, h/3, colors[Math.floor(Math.random() * colors.length)]));
+    }
+}
+
+// --- Canvas & Logic ---
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const uimsg = document.getElementById('message');
+const uitiming = document.getElementById('timing-container');
+const uitiminghint = document.getElementById('timing-hint');
+const uicursor = document.getElementById('cursor');
+const invlist = document.getElementById('inv-list');
+const statustext = document.getElementById('status-text');
+const weathertext = document.querySelector('#weather-info span');
+const scoredisplay = document.getElementById('current-score');
+
+let w, h;
+function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+const state = { idle: 0, casting: 1, waiting: 2, biting: 3, minigame: 4, gameover: 5 };
+let currentstate = state.idle;
+let waittimer = 0; let timeleft = 0; let timeinterval = null; 
+let totalcaught = 0; let totalScore = 0;
+let lastweatherchangetime = -1;
+let time_elapsed = 0;
+
+// Weather Database
+const weather_types = [
+    { name: "☀️ Sunny Clear Sky", sky1: "#4fc3f7", sky2: "#e1f5fe", water: "#29b6f6", type: "sunny" },
+    { name: "🌅 Sunset", sky1: "#ffb74d", sky2: "#ffe0b2", water: "#ffa726", type: "sunset" },
+    { name: "🌧️ Light Rain", sky1: "#90a4ae", sky2: "#cfd8dc", water: "#78909c", type: "rain" },
+    { name: "🌙 Starry Night", sky1: "#1a237e", sky2: "#3949ab", water: "#283593", type: "night" }
+];
+let currentweather = weather_types[0];
+let raindrops = []; let clouds = []; let stars = [];
+
+// Clouds initialization
+for(let i=0; i<6; i++) clouds.push({x: Math.random()*2000, y: Math.random()*200 + 50, s: Math.random()*0.4 + 0.2});
+
+// Rod and Bobber Data
+let rod = { bx: -20, by: h, length: 300, angle: -Math.PI/3.5 }; 
+let bobber = { x: 0, y: 0, tx: 0, ty: 0, active: false, dip: 0 };
+let ripples = [];
+
+// Minigame Variables
+let cursorx = 0; let cursordir = 1; let cursorspeed = 50000;
+
+// Fish / Items Database (Added Scoring)
+const db_perfect = [
+    { name: "Baby Shark", emoji: "🦈", color: "#e65100", box: "rgba(255,235,59,0.4)", border: "#ff9800", score: 150 },
+    { name: "Mermaid", emoji: "🧜‍♀️", color: "#e65100", box: "rgba(255,235,59,0.4)", border: "#ff9800", score: 200 },
+    { name: "Sea Turtle", emoji: "🐢", color: "#e65100", box: "rgba(255,235,59,0.4)", border: "#ff9800", score: 120 }
+];
+const db_good = [
+    { name: "Clownfish", emoji: "🐠", color: "#1b5e20", box: "rgba(200,230,201,0.5)", border: "#4caf50", score: 50 },
+    { name: "Octopus", emoji: "🐙", color: "#1b5e20", box: "rgba(200,230,201,0.5)", border: "#4caf50", score: 70 },
+    { name: "Sea Crab", emoji: "🦀", color: "#1b5e20", box: "rgba(200,230,201,0.5)", border: "#4caf50", score: 40 }
+];
+const db_miss = [
+    { name: "Plastic Bottle", emoji: "🍾", color: "#c62828", box: "rgba(255,205,210,0.5)", border: "#f44336", score: 0 },
+    { name: "Old Sock", emoji: "🧦", color: "#c62828", box: "rgba(255,205,210,0.5)", border: "#f44336", score: 0 },
+    { name: "Fish Bone", emoji: "☠️", color: "#c62828", box: "rgba(255,205,210,0.5)", border: "#f44336", score: 0 }
+];
+
+function showmsg(text, color) {
+    uimsg.innerHTML = `<span style="color:${color}">${text}</span>`;
+    uimsg.style.opacity = 1; setTimeout(() => uimsg.style.opacity = 0, 1500);
+}
+
+function addtoinventory(item, rating) {
+    totalcaught++;
+    totalScore += item.score;
+    scoredisplay.innerText = totalScore; // Update Score Box
+
+    let div = document.createElement('div'); div.className = 'inv-item';
+    div.style.background = item.box; div.style.borderLeftColor = item.border;
+    
+    // UI logic format for items
+    let scoreText = item.score > 0 ? ` (+${item.score} pts)` : '';
+    
+    div.innerHTML = `<span style="font-size:32px;">${item.emoji}</span> 
+                     <div style="display:flex; flex-direction:column;">
+                        <span style="font-size:12px; color:#555; font-weight:700; text-transform:none;">${rating}${scoreText}</span>
+                        <span style="color:${item.color}; font-weight:800; font-size: 16px;">${item.name}</span>
+                     </div>`;
+    invlist.prepend(div);
+}
+
+function checkweather() {
+    if (timeleft % 10 === 0 && timeleft !== lastweatherchangetime && timeleft !== selectedtime) {
+        lastweatherchangetime = timeleft;
+        let next = Math.floor(Math.random() * weather_types.length);
+        currentweather = weather_types[next];
+        weathertext.innerText = currentweather.name;
+        
+        if(currentweather.type === 'night') {
+            stars = [];
+            for(let i=0; i<80; i++) {
+                stars.push({
+                    x: Math.random()*w, y: Math.random()*(h/2), 
+                    r: Math.random()*1.5 + 0.5, 
+                    blinks: Math.random()*0.05 + 0.02, 
+                    offset: Math.random()*Math.PI*2
+                });
+            }
+        }
+    }
+}
+
+function endminigame(dist) {
+    currentstate = state.idle; bobber.active = false; statustext.innerText = "Waiting to cast...";
+    uitiming.style.display = 'none'; uitiminghint.style.display = 'none';
+    
+    if (dist <= 5) { 
+        playsound('perfect'); let item = db_perfect[Math.floor(Math.random() * db_perfect.length)];
+        showmsg(`Perfect! ${item.emoji}`, "#ffeb3b"); addtoinventory(item, "Excellent");
+        spawnfireworks();
+        cursorspeed += 2500; 
+    } else if (dist <= 30) {
+        playsound('good'); let item = db_good[Math.floor(Math.random() * db_good.length)];
+        showmsg(`Caught! ${item.emoji}`, "#69f0ae"); addtoinventory(item, "Success");
+        spawnfireworks();
+        cursorspeed += 2500; 
+    } else {
+        playsound('miss'); let item = db_miss[Math.floor(Math.random() * db_miss.length)];
+        showmsg(`Missed! ${item.emoji}`, "#ff5252"); addtoinventory(item, "Missed beat");
+    }
+}
+
+function update() {
+    time_elapsed++;
+    if (currentstate === state.gameover) return;
+    rod.by = h + 50; 
+
+    ripples.forEach(r => { r.r += 0.8; r.a -= 0.015; }); ripples = ripples.filter(r => r.a > 0);
+    fireworks.forEach(f => f.update()); fireworks = fireworks.filter(f => f.life > 0);
+    clouds.forEach(c => { c.x -= c.s; if(c.x < -150) c.x = w + 150; });
+
+    if (currentweather.type === 'rain') {
+        if(Math.random() < 0.4) raindrops.push({x: Math.random()*w, y: -10, s: 12 + Math.random()*8});
+        raindrops.forEach(r => { r.y += r.s; r.x -= 1.5; }); raindrops = raindrops.filter(r => r.y < h);
+    }
+
+    let tipx = rod.bx + Math.cos(rod.angle) * rod.length; let tipy = rod.by + Math.sin(rod.angle) * rod.length;
+
+    if (currentstate === state.casting) {
+        let dx = bobber.tx - bobber.x; let dy = bobber.ty - bobber.y;
+        bobber.x += dx * 0.12; bobber.y += dy * 0.12;
+        if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+            currentstate = state.waiting; playsound('splash');
+            ripples.push({x: bobber.x, y: bobber.y, r: 0, a: 1});
+            waittimer = Date.now() + 1000 + Math.random() * 2000; statustext.innerText = "Waiting for a bite...";
+        }
+    }
+    
+    if (currentstate === state.waiting) {
+        bobber.dip = Math.sin(Date.now() / 200) * 3;
+        if (Date.now() > waittimer) {
+            currentstate = state.biting; playsound('splash');
+            waittimer = Date.now() + 1500; ripples.push({x: bobber.x, y: bobber.y, r: 0, a: 1});
+            statustext.innerText = "Fish on! Hook it now!";
+        }
+    }
+    
+    if (currentstate === state.biting) {
+        bobber.dip = Math.random() * 12 - 6;
+        if (Date.now() > waittimer) {
+            currentstate = state.idle; bobber.active = false; showmsg("The fish got away...", "#fff");
+            statustext.innerText = "Waiting to cast...";
+        }
+    }
+    
+    if (currentstate === state.minigame) {
+        uitiming.style.display = 'block'; uitiminghint.style.display = 'block';
+        bobber.dip = Math.random() * 5;
+        cursorx += cursorspeed * cursordir;
+        if (cursorx >= 100) { cursorx = 100; cursordir = -1; }
+        if (cursorx <= 0) { cursorx = 0; cursordir = 1; }
+        uicursor.style.left = cursorx + '%';
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, w, h);
+    
+    // --- Sky ---
+    let skygrad = ctx.createLinearGradient(0, 0, 0, h/2);
+    skygrad.addColorStop(0, currentweather.sky1); skygrad.addColorStop(1, currentweather.sky2);
+    ctx.fillStyle = skygrad; ctx.fillRect(0, 0, w, h);
+
+    let sunx = w - 120; let suny = 120; 
+    
+    if(currentweather.type === 'night') {
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(sunx, suny, 35, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = currentweather.sky1; ctx.beginPath(); ctx.arc(sunx - 12, suny - 12, 35, 0, Math.PI*2); ctx.fill();
+        
+        stars.forEach(s => { 
+            ctx.globalAlpha = 0.4 + Math.sin(time_elapsed * s.blinks + s.offset) * 0.6;
+            ctx.fillStyle = "#fff";
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill(); 
+        });
+        ctx.globalAlpha = 1.0;
+    } else {
+        ctx.beginPath(); ctx.arc(sunx, suny, 40, 0, Math.PI*2);
+        ctx.fillStyle = (currentweather.type === 'sunset') ? "#ffb300" : "#fff9c4"; ctx.fill();
+        ctx.shadowBlur = 40; ctx.shadowColor = (currentweather.type === 'sunset') ? "#ff5722" : "#fff";
+        ctx.fill(); ctx.shadowBlur = 0;
+        
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        clouds.forEach(c => {
+            ctx.beginPath(); ctx.arc(c.x, c.y, 35, 0, Math.PI*2);
+            ctx.arc(c.x + 35, c.y + 10, 25, 0, Math.PI*2);
+            ctx.arc(c.x - 25, c.y + 15, 20, 0, Math.PI*2); ctx.fill();
+        });
+    }
+
+    // --- Water ---
+    let watery = h / 2 + 30;
+    ctx.fillStyle = currentweather.water;
+    ctx.beginPath(); ctx.moveTo(0, watery);
+    for(let i=0; i<=w; i+=40) {
+        ctx.lineTo(i, watery + Math.sin(time_elapsed*0.04 + i/150) * 6);
+    }
+    ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.fill();
+
+    // --- Rod ---
+    let tipx = rod.bx + Math.cos(rod.angle) * rod.length; let tipy = rod.by + Math.sin(rod.angle) * rod.length;
+    let rodgrad = ctx.createLinearGradient(rod.bx, rod.by, tipx, tipy);
+    rodgrad.addColorStop(0, "#222"); rodgrad.addColorStop(0.5, "#444"); rodgrad.addColorStop(1, "#111");
+    
+    ctx.strokeStyle = rodgrad; ctx.lineWidth = 6; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(rod.bx, rod.by);
+    if (currentstate === state.minigame) {
+        ctx.quadraticCurveTo(rod.bx + 150, rod.by - 80, tipx, tipy + 60); tipy += 60;
+    } else { ctx.lineTo(tipx, tipy); }
+    ctx.stroke();
+
+    let handlex = rod.bx + Math.cos(rod.angle) * 70; let handley = rod.by + Math.sin(rod.angle) * 70;
+    ctx.strokeStyle = "#1a1a1a"; ctx.lineWidth = 18; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(rod.bx, rod.by); ctx.lineTo(handlex, handley); ctx.stroke();
+    ctx.fillStyle = "#999"; ctx.beginPath(); ctx.arc(handlex, handley, 10, 0, Math.PI*2); ctx.fill();
+
+    // Reel
+    let reelx = rod.bx + 40; let reely = rod.by - 30;
+    ctx.strokeStyle = "#444"; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(rod.bx + 40, rod.by - 25); ctx.lineTo(reelx, reely - 10); ctx.stroke();
+    ctx.fillStyle = "#ddd"; ctx.beginPath(); ctx.arc(reelx, reely - 15, 14, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "#777"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#d4af37"; ctx.fillRect(reelx - 18, reely - 25, 12, 20);
+    
+    let reelangle = (currentstate === state.minigame) ? time_elapsed * 0.2 : 0;
+    let knobx = reelx + Math.cos(reelangle)*18; let knoby = reely - 15 + Math.sin(reelangle)*18;
+    ctx.strokeStyle = "#444"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(reelx, reely - 15); ctx.lineTo(knobx, knoby); ctx.stroke();
+    ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(knobx, knoby, 6, 0, Math.PI*2); ctx.fill();
+
+    // --- Weather Effects (Ripples & Rain) ---
+    ripples.forEach(r => {
+        ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(255,255,255,${r.a})`; ctx.lineWidth = 2; ctx.stroke();
+    });
+
+    if (currentweather.type === 'rain') {
+        ctx.strokeStyle = "rgba(255,255,255,0.4)"; ctx.lineWidth = 1.5;
+        raindrops.forEach(r => {
+            ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - 1.5, r.y + r.s); ctx.stroke();
+        });
+    }
+
+    // --- Bobber & Line ---
+    if (bobber.active) {
+        ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(tipx, tipy);
+        let slack = (currentstate === state.casting || currentstate === state.waiting) ? 25 : 0;
+        if (slack > 0) ctx.quadraticCurveTo((tipx + bobber.x)/2, (tipy + bobber.y)/2 + slack, bobber.x, bobber.y + bobber.dip);
+        else ctx.lineTo(bobber.x, bobber.y + bobber.dip);
+        ctx.stroke();
+
+        let py = bobber.y + bobber.dip;
+        ctx.fillStyle = "#ff5252"; ctx.beginPath(); ctx.arc(bobber.x, py, 5, 0, Math.PI); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(bobber.x, py, 5, Math.PI, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "#111"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(bobber.x, py - 8); ctx.lineTo(bobber.x, py + 8); ctx.stroke();
+
+        if (currentstate === state.biting) {
+            ctx.font = "28px sans-serif"; ctx.textAlign = "center";
+            ctx.fillText("💬", bobber.x, py - 22);
+        }
+    }
+
+    fireworks.forEach(f => f.draw(ctx));
+}
+
+function loop() { 
+    if(currentstate !== state.gameover) { update(); draw(); requestAnimationFrame(loop); }
+}
+
+function action(tx, ty) {
+    if (currentstate === state.gameover) return;
+    
+    if (currentstate === state.idle) {
+        if (ty > h/3) {
+            playsound('cast'); bobber.active = true;
+            bobber.x = rod.bx + Math.cos(rod.angle) * rod.length; bobber.y = rod.by + Math.sin(rod.angle) * rod.length;
+            bobber.tx = tx; bobber.ty = ty; bobber.dip = 0; currentstate = state.casting;
+            statustext.innerText = "Casting...";
+        }
+    } 
+    else if (currentstate === state.biting) {
+        currentstate = state.minigame; 
+        cursorx = 0; cursordir = 1; cursorspeed = 1.3 + Math.random()*0.3; 
+        statustext.innerText = "Reeling in!";
+    } 
+    else if (currentstate === state.minigame) {
+        let dist = Math.abs(cursorx - 50); endminigame(dist);
+    }
+}
+
+window.addEventListener('mousedown', (e) => {
+    // Prevent casting if clicking inventory or score boxes
+    if(e.clientX > w - 380 && e.clientY > 90) return; 
+    if(e.clientX < 240 && e.clientY > 90 && e.clientY < 200) return;
+    action(e.clientX, e.clientY);
+});
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); action(w/2, h/2 + 100); }
+});
+
+function startgame() {
+    initaudio();
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('end-screen').style.display = 'none';
+    invlist.innerHTML = ''; totalcaught = 0; totalScore = 0; fireworks = [];
+    
+    timeleft = selectedtime; lastweatherchangetime = -1; currentweather = weather_types[0]; time_elapsed = 0;
+    document.getElementById('timer').innerText = timeleft; weathertext.innerText = currentweather.name;
+    scoredisplay.innerText = "0";
+    
+    currentstate = state.idle; bobber.active = false; statustext.innerText = "Waiting to cast...";
+    uitiming.style.display = 'none'; uitiminghint.style.display = 'none';
+    
+    if (timeinterval) clearInterval(timeinterval);
+    timeinterval = setInterval(() => {
+        timeleft--; document.getElementById('timer').innerText = timeleft; checkweather();
+        if (timeleft <= 0) {
+            clearInterval(timeinterval); currentstate = state.gameover;
+            document.getElementById('final-caught').innerText = totalcaught;
+            document.getElementById('final-score').innerText = totalScore;
+            document.getElementById('end-screen').style.display = 'flex';
+        }
+    }, 1000);
+    
+    loop();
+}
+
+document.getElementById('btn-start').addEventListener('click', (e) => { e.stopPropagation(); startgame(); });
+document.getElementById('btn-restart').addEventListener('click', (e) => { e.stopPropagation(); startgame(); });
+</script>
+</body>
+</html>
