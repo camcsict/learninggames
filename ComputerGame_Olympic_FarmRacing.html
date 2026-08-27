@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>maze racing</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'segoe ui', arial, sans-serif;
+            user-select: none;
+            text-transform: lowercase; /* force all text to lowercase */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #hud-container {
+            flex: 0 0 auto;
+            padding: 10px 20px;
+            background-color: #2a1b12;
+            border-bottom: 4px solid #1a0f0a;
+            z-index: 5;
+        }
+
+        #hud {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 20px; font-weight: bold;
+        }
+
+        #game-area {
+            flex: 1 1 auto;
+            position: relative;
+            width: 100%;
+        }
+
+        canvas { 
+            display: block; 
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%; 
+        }
+        
+        .wood-panel {
+            background: linear-gradient(to bottom, #8b5a2b, #6b421a);
+            border: 3px solid #3d230e;
+            border-radius: 8px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5);
+            color: #fdf5e6;
+        }
+
+        .hud-item {
+            padding: 8px 15px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        #ui {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.75); z-index: 999;
+        }
+
+        h1 {
+            color: #ffd700; font-size: 50px; text-shadow: 4px 4px 0 #8b4513, 0 0 15px #ff8c00;
+            margin-bottom: 10px; text-align: center;
+        }
+
+        .menu-box {
+            padding: 30px; text-align: center; width: 650px;
+            position: relative; border-width: 4px;
+        }
+        .nail {
+            width: 12px; height: 12px; background: #999;
+            border-radius: 50%; position: absolute;
+            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.8), 1px 1px 2px rgba(255,255,255,0.4);
+        }
+        .n1 { top: 10px; left: 10px; } .n2 { top: 10px; right: 10px; }
+        .n3 { bottom: 10px; left: 10px; } .n4 { bottom: 10px; right: 10px; }
+
+        .btn {
+            background: linear-gradient(to bottom, #4caf50, #2e7d32);
+            color: white; border: 2px solid #1b5e20;
+            padding: 15px 30px; font-size: 20px; font-weight: bold;
+            border-radius: 8px; cursor: pointer; margin: 10px;
+            transition: all 0.2s; box-shadow: 0 5px 0 #1b5e20, 0 8px 10px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 2px #000;
+            text-transform: lowercase;
+        }
+        .btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 #1b5e20, 0 5px 8px rgba(0,0,0,0.3); }
+        .btn:active { transform: translateY(5px); box-shadow: none; }
+
+        .instructions {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;
+            margin-top: 20px; text-align: left; line-height: 1.6; font-size: 18px;
+            border: 1px dashed #deb887;
+        }
+        
+        #win-message { color: #ffeb3b; font-size: 32px; display: none; margin-bottom: 20px; text-shadow: 2px 2px 4px #000;}
+        .highlight { color: #ff9800; font-weight: bold; font-size: 24px; }
+    </style>
+</head>
+<body>
+
+    <div id="hud-container">
+        <div id="hud">
+            <div id="level-info" class="wood-panel hud-item">level 1: sunflower field</div>
+            <div id="weather-info" class="wood-panel hud-item">☀️ weather: sunny</div>
+            <div id="timer" class="wood-panel hud-item">⏳ 0.00s</div>
+        </div>
+    </div>
+
+    <div id="game-area">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="ui">
+        <h1>🌾 farm racing 🌾</h1>
+        
+        <div class="wood-panel menu-box">
+            <div class="nail n1"></div><div class="nail n2"></div>
+            <div class="nail n3"></div><div class="nail n4"></div>
+            
+            <div id="win-message"></div>
+            
+            <div id="menu-buttons">
+                <button class="btn" onclick="startGame(1)">🚘 1 player</button>
+                <button class="btn" onclick="startGame(2)">🚘 + 🚍 2 players</button>
+            </div>
+            
+            <button id="next-level-btn" class="btn" style="display:none;" onclick="nextLevel()">⏭️ next level</button>
+            <button id="restart-btn" class="btn" style="display:none;" onclick="startGame(modeNumPlayers)">🔄 restart game</button>
+
+            <div class="instructions" id="guide">
+                <p>🚘 <strong>1 player:</strong> use <span class="highlight">w, a, s, d</span> or <span class="highlight">arrow keys</span>.</p>
+                <p>🚍 <strong>2 players:</strong><br> - player 1 (🚘): use <span class="highlight">w, a, s, d</span><br> - player 2 (🚍): use <span class="highlight">arrow keys</span></p>
+                <p>📍 <strong>rules:</strong> find your way to the goal (houses/factories) at the end of the map.<br>⚠️ <em>rain makes the road slippery, night makes it hard to see!</em></p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    const bgCanvas = document.createElement("canvas");
+    const bgCtx = bgCanvas.getContext("2d");
+
+    let TILE_W, TILE_H;
+    
+    // audio setup
+    let audioCtx;
+    function initAudio() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playCrashSound() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function playWinSound() {
+        if (!audioCtx) return;
+        const notes = [
+            {f: 392.00, d: 0.1}, {f: 523.25, d: 0.1}, {f: 659.25, d: 0.1}, 
+            {f: 783.99, d: 0.2}, {f: 659.25, d: 0.1}, {f: 1046.50, d: 0.4}
+        ];
+        let t = audioCtx.currentTime;
+        notes.forEach(note => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(note.f, t);
+            gain.gain.setValueAtTime(0.3, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + note.d);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + note.d);
+            t += note.d;
+        });
+    }
+
+    function playFireworkPop() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600 + Math.random()*400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+    }
+
+    // data for 5 separate levels - 100% guaranteed path to goal
+    const levels = [
+        {
+            name: "level 1: sunflower field", ground: "#8d6e63", grass: "#558b2f", wallEmoji: "🌻", goal: "🏡",
+            map: [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+                [1,0,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+                [1,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1],
+                [1,1,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1],
+                [1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,1,0,1,0,1],
+                [1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,0,1],
+                [1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,0,1,1,1,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,3,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        },
+        {
+            name: "level 2: corn kingdom", ground: "#795548", grass: "#689f38", wallEmoji: "🌽", goal: "🏭",
+            map: [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,3,1],
+                [1,1,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+                [1,0,1,1,1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1],
+                [1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,0,1,1,1,0,1,1,1,0,1,1,1,1,1,1,0,1],
+                [1,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,1,0,1],
+                [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,1,0,1,0,1],
+                [1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,1,0,1],
+                [1,1,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,1,0,1],
+                [1,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        },
+        {
+            name: "level 3: rose valley", ground: "#5d4037", grass: "#33691e", wallEmoji: "🌹", goal: "🏕️",
+            map: [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,3,1],
+                [1,0,1,1,1,1,1,1,0,1,0,1,1,1,0,1,0,1,0,1],
+                [1,0,1,0,0,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,1,0,0,1,0,0,0,1,0,1,0,0,0,1,0,1],
+                [1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+                [1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,1,0,1],
+                [1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,1,0,1,0,1],
+                [1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,1,0,1,0,1],
+                [1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        },
+        {
+            name: "level 4: wheat prairie", ground: "#8d6e63", grass: "#558b2f", wallEmoji: "🌾", goal: "🏠",
+            map: [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        },
+        {
+            name: "level 5: carrot field", ground: "#795548", grass: "#689f38", wallEmoji: "🥕", goal: "🏰",
+            map: [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+                [1,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,0,0,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,1,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+                [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,1,1],
+                [1,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,0,0,1],
+                [1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,1,1,0,1],
+                [1,0,1,1,1,1,0,1,1,1,0,1,1,1,0,0,0,0,0,1],
+                [1,0,0,0,0,1,0,0,0,0,0,0,0,1,1,1,1,1,0,1],
+                [1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,1],
+                [1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,3,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        }
+    ];
+
+    let currentLevel = 0;
+    let modeNumPlayers = 1;
+    let map = [];
+    let players = [], keys = {}, gameLoop, startTime, isPlaying = false;
+    let isCelebrating = false;
+    let weather = "sun", weatherTimer = 0, rainDrops = [];
+    let fireworks = []; 
+
+    function resizeCanvas() {
+        const gameArea = document.getElementById("game-area");
+        canvas.width = gameArea.clientWidth;
+        canvas.height = gameArea.clientHeight;
+        bgCanvas.width = canvas.width;
+        bgCanvas.height = canvas.height;
+        map = levels[currentLevel].map;
+        TILE_W = canvas.width / map[0].length;
+        TILE_H = canvas.height / map.length;
+        renderBackground(); 
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function renderBackground() {
+        let lvl = levels[currentLevel];
+        for (let r=0; r<map.length; r++) {
+            for (let c=0; c<map[r].length; c++) {
+                let x = c * TILE_W, y = r * TILE_H;
+                if (map[r][c] === 1) { 
+                    bgCtx.fillStyle = lvl.grass; 
+                    bgCtx.fillRect(x, y, TILE_W, TILE_H);
+                    
+                    if ((r + c) % 2 === 0 || r === 0 || r === map.length - 1 || c === 0 || c === map[0].length - 1) {
+                        bgCtx.font = `${Math.min(TILE_W,TILE_H)*0.65}px arial`;
+                        bgCtx.textAlign = "center"; 
+                        bgCtx.textBaseline = "middle";
+                        bgCtx.shadowColor = "rgba(0,0,0,0.6)"; 
+                        bgCtx.shadowBlur = 4;
+                        bgCtx.fillText(lvl.wallEmoji, x + TILE_W/2, y + TILE_H/2);
+                        bgCtx.shadowBlur = 0;
+                    }
+                } else { 
+                    bgCtx.fillStyle = lvl.ground; 
+                    bgCtx.fillRect(x, y, TILE_W, TILE_H);
+                }
+                
+                if (map[r][c] === 3) {
+                    let cx = x + TILE_W/2, cy = y + TILE_H/2;
+                    let grad = bgCtx.createRadialGradient(cx, cy, 5, cx, cy, TILE_W);
+                    grad.addColorStop(0, "rgba(255, 215, 0, 0.6)");
+                    grad.addColorStop(1, "rgba(255, 215, 0, 0)");
+                    bgCtx.fillStyle = grad; 
+                    bgCtx.fillRect(x, y, TILE_W, TILE_H);
+                    bgCtx.font = `${Math.min(TILE_W,TILE_H)*0.8}px arial`;
+                    bgCtx.fillText(lvl.goal, cx, cy);
+                }
+            }
+        }
+    }
+
+    class Player {
+        constructor(col, row, icon, controls, name, isP1) {
+            this.x = col; this.y = row;
+            this.hitboxSize = 0.60;
+            this.icon = icon;
+            this.controls = controls;
+            this.name = name.toLowerCase(); 
+            this.isP1 = isP1;
+            this.vx = 0; this.vy = 0;
+            this.speed = 0.12; 
+        }
+
+        update() {
+            if (!isPlaying) return;
+            
+            let friction = weather === "rain" ? 0.98 : 0.82; 
+            let accel = weather === "rain" ? 0.006 : 0.025;
+            let up = keys[this.controls.up], down = keys[this.controls.down];
+            let left = keys[this.controls.left], right = keys[this.controls.right];
+
+            if (modeNumPlayers === 1 && this.isP1) {
+                up = up || keys['ArrowUp']; down = down || keys['ArrowDown'];
+                left = left || keys['ArrowLeft']; right = right || keys['ArrowRight'];
+            }
+
+            if (up) this.vy -= accel; if (down) this.vy += accel;
+            if (left) this.vx -= accel; if (right) this.vx += accel;
+
+            this.vx = Math.max(-this.speed, Math.min(this.speed, this.vx));
+            this.vy = Math.max(-this.speed, Math.min(this.speed, this.vy));
+            this.vx *= friction; this.vy *= friction;
+
+            if (!this.collide(this.x + this.vx, this.y)) { this.x += this.vx; } 
+            else { if(Math.abs(this.vx) > 0.06) playCrashSound(); this.vx = 0; }
+
+            if (!this.collide(this.x, this.y + this.vy)) { this.y += this.vy; } 
+            else { if(Math.abs(this.vy) > 0.06) playCrashSound(); this.vy = 0; }
+
+            this.checkWin();
+        }
+
+        collide(nx, ny) {
+            let padding = (1 - this.hitboxSize) / 2;
+            let l = nx + padding + 0.1, r = nx + 1 - padding - 0.1;
+            let t = ny + padding + 0.1, b = ny + 1 - padding - 0.1;
+            return [this.getTile(l, t), this.getTile(r, t), this.getTile(l, b), this.getTile(r, b)].includes(1);
+        }
+
+        getTile(x, y) {
+            let c = Math.floor(x), r = Math.floor(y);
+            if(r<0 || r>=map.length || c<0 || c>=map[0].length) return 1;
+            return map[r][c];
+        }
+
+        checkWin() {
+            let cx = this.x + 0.5, cy = this.y + 0.5;
+            if (this.getTile(cx, cy) === 3) {
+                isPlaying = false;
+                playWinSound();
+                let time = ((Date.now() - startTime)/1000).toFixed(2);
+                
+                document.getElementById("ui").style.display = "flex";
+                document.getElementById("guide").style.display = "none";
+                document.querySelector("h1").style.display = "none";
+                
+                let winMsg = document.getElementById("win-message");
+                winMsg.style.display = "block";
+
+                if (currentLevel < levels.length - 1) {
+                    winMsg.innerHTML = `🏁 awesome!<br>${this.name} reached the goal!<br>⏳ time: ${time}s`;
+                    document.getElementById("menu-buttons").style.display = "none";
+                    document.getElementById("next-level-btn").style.display = "inline-block";
+                    document.getElementById("restart-btn").style.display = "none";
+                } else {
+                    winMsg.innerHTML = `🏆 champion! 🏆<br>congratulations: ${this.name}<br>you have completed all 5 levels!`;
+                    document.getElementById("menu-buttons").style.display = "none";
+                    document.getElementById("next-level-btn").style.display = "none";
+                    document.getElementById("restart-btn").style.display = "inline-block";
+                    
+                    isCelebrating = true; 
+                    currentLevel = 0; 
+                }
+            }
+        }
+
+        draw() {
+            let px = this.x * TILE_W + TILE_W/2;
+            let py = this.y * TILE_H + TILE_H/2;
+            let visualSize = Math.min(TILE_W, TILE_H) * 0.9; 
+
+            ctx.font = `${visualSize}px arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(this.icon, px, py);
+        }
+    }
+
+    function spawnFirework(x, y) {
+        playFireworkPop();
+        const colors = ["#ff3333", "#33ff33", "#3333ff", "#ffff33", "#ff33ff", "#33ffff"];
+        let color = colors[Math.floor(Math.random() * colors.length)];
+        for(let i=0; i<40; i++) {
+            fireworks.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 12,
+                vy: (Math.random() - 0.5) * 12,
+                life: 1.0,
+                color: color
+            });
+        }
+    }
+
+    function drawFireworks() {
+        fireworks.forEach((p, index) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.15; 
+            p.life -= 0.02;
+            if(p.life <= 0) {
+                fireworks.splice(index, 1);
+            } else {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
+                ctx.fill();
+            }
+        });
+        ctx.globalAlpha = 1.0;
+    }
+
+    function initRain() {
+        rainDrops = [];
+        for(let i=0; i<200; i++) rainDrops.push({
+            x: Math.random() * canvas.width, 
+            y: Math.random() * canvas.height, 
+            speed: 15 + Math.random()*10, len: 15 + Math.random()*20
+        });
+    }
+
+    function updateWeather() {
+        weatherTimer++;
+        if (weatherTimer > 600) { 
+            weatherTimer = 0;
+            let states = ["sun", "sun", "rain", "night"]; 
+            weather = states[Math.floor(Math.random() * states.length)];
+            let wInfo = document.getElementById("weather-info");
+            
+            if(weather === "sun") wInfo.innerText = "☀️ weather: sunny";
+            if(weather === "rain") { wInfo.innerText = "🌧️ weather: rainy"; initRain(); }
+            if(weather === "night") wInfo.innerText = "🌙 weather: night";
+        }
+
+        if (weather === "rain") {
+            ctx.strokeStyle = "rgba(200, 220, 255, 0.6)";
+            ctx.lineWidth = 2; ctx.lineCap = "round";
+            ctx.beginPath();
+            rainDrops.forEach(drop => {
+                ctx.moveTo(drop.x, drop.y);
+                ctx.lineTo(drop.x - drop.len/3, drop.y + drop.len);
+                drop.y += drop.speed; drop.x -= drop.speed/3;
+                if(drop.y > canvas.height) { drop.y = -20; drop.x = Math.random() * canvas.width + 50; }
+            });
+            ctx.stroke();
+
+        } else if (weather === "night") {
+            ctx.fillStyle = "rgba(0, 10, 25, 0.95)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.globalCompositeOperation = 'destination-out';
+            players.forEach(p => {
+                let px = p.x * TILE_W + TILE_W/2;
+                let py = p.y * TILE_H + TILE_H/2;
+                let radius = Math.max(TILE_W, TILE_H) * 3.5; 
+                
+                let grad = ctx.createRadialGradient(px, py, 10, px, py, radius);
+                grad.addColorStop(0, "rgba(255,255,255,1)");
+                grad.addColorStop(0.5, "rgba(255,255,255,0.7)");
+                grad.addColorStop(1, "rgba(255,255,255,0)");
+                
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.globalCompositeOperation = 'source-over';
+        }
+    }
+
+    window.addEventListener("keydown", e => { keys[e.code] = true; });
+    window.addEventListener("keyup", e => { keys[e.code] = false; });
+
+    function startGame(numPlayers) {
+        initAudio(); 
+        modeNumPlayers = numPlayers;
+        document.getElementById("ui").style.display = "none";
+        document.getElementById("win-message").style.display = "none";
+        
+        resizeCanvas(); 
+        document.getElementById("level-info").innerText = levels[currentLevel].name.toLowerCase();
+
+        let sc = 1, sr = 1;
+        for(let r=0; r<map.length; r++)
+            for(let c=0; c<map[r].length; c++)
+                if(map[r][c] === 2) { sc = c; sr = r; }
+
+        players = [];
+        players.push(new Player(sc, sr, "🚘", {up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD"}, "player 1 (car)", true));
+        if (numPlayers === 2) {
+            players.push(new Player(sc, sr, "🚍", {up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight"}, "player 2 (bus)", false));
+        }
+
+        weather = "sun"; weatherTimer = 0;
+        document.getElementById("weather-info").innerText = "☀️ weather: sunny";
+        
+        startTime = Date.now();
+        isPlaying = true;
+        isCelebrating = false;
+        fireworks = [];
+        keys = {};
+        
+        if(gameLoop) cancelAnimationFrame(gameLoop);
+        loop();
+    }
+
+    function nextLevel() {
+        currentLevel++;
+        startGame(modeNumPlayers);
+    }
+
+    function loop() {
+        if (isPlaying) {
+            players.forEach(p => p.update());
+            let t = ((Date.now() - startTime)/1000).toFixed(2);
+            document.getElementById("timer").innerText = `⏳ ${t}s`;
+        }
+        
+        ctx.drawImage(bgCanvas, 0, 0);
+        updateWeather();
+        players.forEach(p => p.draw());
+
+        if (isCelebrating) {
+            if (Math.random() < 0.05) { 
+                spawnFirework(Math.random() * canvas.width, Math.random() * (canvas.height * 0.6));
+            }
+            drawFireworks();
+        }
+
+        gameLoop = requestAnimationFrame(loop);
+    }
+    
+    resizeCanvas();
+    ctx.drawImage(bgCanvas, 0, 0);
+</script>
+
+</body>
+</html>
