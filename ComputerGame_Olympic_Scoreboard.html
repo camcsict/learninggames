@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Esports Scoreboard</title>
+    <!-- Import Google Font for Gaming Look -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-red: #ff003c;
+            --dark-overlay: rgba(0, 0, 0, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #0b0c10;
+            color: #ffffff;
+        }
+
+        /* Container splitting the screen */
+        .scoreboard-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Versus badge in the center */
+        .vs-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3.5rem;
+            font-weight: 900;
+            font-style: italic;
+            background: #111;
+            padding: 20px;
+            border: 4px solid #fff;
+            border-radius: 50%;
+            z-index: 100;
+            text-shadow: 0 0 10px #fff;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+
+        /* Individual Player/Team Section */
+        .side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Overlay to add dark gaming vignette effect */
+        .side::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Divider line */
+        #side-left {
+            border-right: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Content Wrapper to stay above overlay */
+        .content {
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Header containing Name Input and Color Picker */
+        .settings-header {
+            position: absolute;
+            top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .team-name-input {
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid rgba(255,255,255,0.3);
+            color: #fff;
+            font-size: 2.5rem;
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: 900;
+            width: 80%;
+            max-width: 400px;
+            outline: none;
+            transition: border-color 0.3s, text-shadow 0.3s;
+            letter-spacing: 2px;
+        }
+
+        .team-name-input:focus {
+            border-bottom-color: #fff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            background: transparent;
+        }
+        
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid #fff;
+            border-radius: 50%;
+        }
+
+        /* Giant Score Display */
+        .score-display {
+            font-size: 15rem;
+            font-weight: 900;
+            line-height: 1;
+            margin: 40px 0;
+            text-shadow: 10px 10px 0px rgba(0,0,0,0.5), 0 0 40px rgba(255,255,255,0.3);
+        }
+
+        /* Plus and Minus Controls */
+        .controls {
+            display: flex;
+            gap: 30px;
+        }
+
+        .btn {
+            background: transparent;
+            border: 3px solid #fff;
+            color: #fff;
+            width: 90px;
+            height: 70px;
+            font-size: 3rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s all ease;
+            backdrop-filter: blur(5px);
+            /* Slanted gaming edges */
+            clip-path: polygon(15% 0, 100% 0, 85% 100%, 0% 100%);
+        }
+
+        .btn:hover {
+            background: #fff;
+            color: #000;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Customizing Focus for specific sides */
+        #side-left .team-name-input:focus { border-bottom-color: var(--neon-blue); }
+        #side-right .team-name-input:focus { border-bottom-color: var(--neon-red); }
+        
+        #side-left .btn:hover { background: var(--neon-blue); border-color: var(--neon-blue); box-shadow: 0 0 20px var(--neon-blue); }
+        #side-right .btn:hover { background: var(--neon-red); border-color: var(--neon-red); box-shadow: 0 0 20px var(--neon-red); }
+    </style>
+</head>
+<body>
+
+    <div class="scoreboard-container">
+        
+        <!-- Center VS Badge -->
+        <div class="vs-badge">VS</div>
+
+        <!-- Left Side (Team 1) -->
+        <div class="side" id="side-left">
+            <div class="settings-header">
+                <input type="text" class="team-name-input" placeholder="TEAM 1" value="BLUE TEAM">
+                <label class="color-picker-container">
+                    BG Color
+                    <input type="color" class="bg-picker" value="#0f172a">
+                </label>
+            </div>
+            
+            <div class="content">
+                <div class="score-display" id="score-left">0</div>
+                <div class="controls">
+                    <button class="btn btn-minus" data-target="left">-</button>
+                    <button class="btn btn-plus" data-target="left">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side (Team 2) -->
+        <div class="side" id="side-right">
+            <div class="settings-header">
+                <input type="text" class="team-name-input" placeholder="TEAM 2" value="RED TEAM">
+                <label class="color-picker-container">
+                    BG Color
+                    <input type="color" class="bg-picker" value="#3f0812">
+                </label>
+            </div>
+
+            <div class="content">
+                <div class="score-display" id="score-right">0</div>
+                <div class="controls">
+                    <button class="btn btn-minus" data-target="right">-</button>
+                    <button class="btn btn-plus" data-target="right">+</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Setup State for Scores
+        const scores = {
+            left: 0,
+            right: 0
+        };
+
+        // Initialize Sides
+        function setupSide(sideId, targetKey) {
+            const sideEl = document.getElementById(sideId);
+            const scoreEl = document.getElementById(`score-${targetKey}`);
+            const btnPlus = sideEl.querySelector('.btn-plus');
+            const btnMinus = sideEl.querySelector('.btn-minus');
+            const colorPicker = sideEl.querySelector('.bg-picker');
+            
+            // Set Initial Background Color from HTML value
+            sideEl.style.backgroundColor = colorPicker.value;
+
+            // Handle Background Color Change
+            colorPicker.addEventListener('input', (e) => {
+                sideEl.style.backgroundColor = e.target.value;
+            });
+
+            // Handle Plus Button
+            btnPlus.addEventListener('click', () => {
+                scores[targetKey]++;
+                scoreEl.textContent = scores[targetKey];
+            });
+
+            // Handle Minus Button
+            btnMinus.addEventListener('click', () => {
+                // Prevent negative scores (optional) - remove the if statement to allow negatives
+                if (scores[targetKey] > 0) {
+                    scores[targetKey]--;
+                    scoreEl.textContent = scores[targetKey];
+                }
+            });
+        }
+
+        // Run Setup for both left and right sides
+        setupSide('side-left', 'left');
+        setupSide('side-right', 'right');
+    </script>
+</body>
+</html>
