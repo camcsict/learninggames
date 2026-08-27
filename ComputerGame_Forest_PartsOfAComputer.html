@@ -252,6 +252,31 @@
       font-weight: 900;
     }
 
+    /* ================= SPEED BOOST TIMER ================= */
+    #speed-boost-timer {
+      position: absolute;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #d32f2f, #b71c1c);
+      border: 3px solid #ffeb3b;
+      border-radius: 20px;
+      padding: 8px 18px;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 900;
+      z-index: 20;
+      display: none; /* Hidden by default */
+      box-shadow: 0 4px 15px rgba(211, 47, 47, 0.8);
+      animation: pulseRed 1s infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes pulseRed {
+      from { box-shadow: 0 4px 10px rgba(211, 47, 47, 0.6); transform: translateX(-50%) scale(1); }
+      to { box-shadow: 0 4px 20px rgba(255, 82, 82, 0.9); transform: translateX(-50%) scale(1.05); }
+    }
+
     /* ================= WOODEN SHELF TRACKER ================= */
     .shelf-container {
       width: 100%;
@@ -374,7 +399,7 @@
     /* Toast Notification */
     #toast-notification {
       position: absolute;
-      top: 130px;
+      top: 150px;
       left: 50%;
       transform: translateX(-50%) translateY(-20px);
       padding: 10px 24px;
@@ -710,6 +735,9 @@
       </div>
     </div>
 
+    <!-- Speed Boost Countdown Element -->
+    <div id="speed-boost-timer">⚡ Speed x3! Time Left: <span id="boost-time-left">10.0</span>s</div>
+
     <!-- Bottom HUD (Wooden Shelf Tracker) -->
     <div class="shelf-container">
       <div class="wooden-shelf" id="vocabulary-shelf"></div>
@@ -855,7 +883,7 @@
     const sound = new SoundEngine();
 
     /* =========================================================
-       VOCABULARY DATA (12 Verified Items + 3 Word Guess Clues)
+       VOCABULARY DATA
        ========================================================= */
     const VOCABULARY_LIST = [
       { id: 'laptop', name: 'Laptop', emoji: '💻', clue: 'Laptop' },
@@ -870,7 +898,6 @@
       { id: 'television', name: 'Television', emoji: '📺', clue: 'Television' },
       { id: 'wifi', name: 'WiFi', emoji: '📶', clue: 'WiFi' },
       { id: 'speaker', name: 'Speaker', emoji: '🔊', clue: 'Speaker' },
-      // 3 Word Guess Questions
       { id: 'screen', name: 'Screen', emoji: '🖥️', clue: 'scr**n  ➜  Screen' },
       { id: 'tablet', name: 'Tablet', emoji: '📱', clue: 'tab**t  ➜  Tablet' },
       { id: 'smartboard', name: 'Smart Board', emoji: '📋', clue: 'smart boa*d  ➜  Smart Board' }
@@ -962,7 +989,9 @@
       x: -60,
       y: -60,
       size: 32,
-      speed: 5.5,
+      baseSpeed: 7.5, // Increased default speed
+      currentSpeed: 7.5,
+      speedBoostTimer: 0, // Apple timer variable
       isMoving: false,
       stepTimer: 0
     };
@@ -1117,6 +1146,7 @@
         this.bushes = [];
         this.flowers = [];
         this.animals = [];
+        this.apples = []; // Magic Apples storage
         this.generate();
       }
 
@@ -1170,6 +1200,22 @@
               x: fx,
               y: fy,
               emoji: biome.flora[Math.floor(pseudoRandom(s++) * biome.flora.length)]
+            });
+          }
+        }
+        
+        // Speed Boost Apples (1-2 per chunk)
+        const appleCount = 1 + Math.floor(pseudoRandom(s++) * 2);
+        for (let i = 0; i < appleCount; i++) {
+          const ax = this.cx * CHUNK_SIZE + pseudoRandom(s++) * CHUNK_SIZE;
+          const ay = this.cy * CHUNK_SIZE + pseudoRandom(s++) * CHUNK_SIZE;
+          if (Math.abs(ax) > RIVER_WIDTH / 2 + 10 && Math.abs(ay) > RIVER_WIDTH / 2 + 10) {
+            this.apples.push({
+              x: ax,
+              y: ay,
+              emoji: pseudoRandom(s++) > 0.5 ? '🍎' : '🍏',
+              collected: false,
+              bobOffset: pseudoRandom(s++) * Math.PI * 2
             });
           }
         }
@@ -1635,7 +1681,7 @@
     /* =========================================================
        COLLISION & GAMEPLAY INTERACTIONS
        ========================================================= */
-    function checkAnimalCollisions() {
+    function checkInteractions() {
       if (gameWon || isFrozen) return;
 
       const playerChunkX = Math.floor(player.x / CHUNK_SIZE);
@@ -1645,6 +1691,8 @@
       for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
           const chunk = getChunk(playerChunkX + dx, playerChunkY + dy);
+          
+          // Check Animal Collisions (Missions)
           for (const animal of chunk.animals) {
             const dist = Math.hypot(player.x - animal.x, player.y - animal.y);
             
@@ -1688,6 +1736,21 @@
                 player.y += (player.y - animal.y) * 0.3;
               }
               return;
+            }
+          }
+
+          // Check Apple Collisions (Speed Boost)
+          for (const apple of chunk.apples) {
+            const dist = Math.hypot(player.x - apple.x, player.y - apple.y);
+            if (dist < 35 && !apple.collected) {
+              apple.collected = true;
+              player.speedBoostTimer = 10.0; // Apply 10s boost
+              sound.playCorrect(); // Use correct sound as a chime
+              
+              const screenX = apple.x - player.x + width / 2;
+              const screenY = apple.y - player.y + height / 2;
+              spawnTeleportSparkles(screenX, screenY);
+              addFloatingText(`⚡ Speed x3!`, screenX, screenY - 30, '#ffeb3b');
             }
           }
         }
@@ -1736,6 +1799,25 @@
 
       waterWaveTime += deltaTime * 2;
 
+      // Handle Speed Boost Timer
+      const timerUI = document.getElementById('speed-boost-timer');
+      if (player.speedBoostTimer > 0) {
+        player.speedBoostTimer -= deltaTime;
+        player.currentSpeed = player.baseSpeed * 3; // Triple speed
+        
+        timerUI.style.display = 'block';
+        document.getElementById('boost-time-left').textContent = player.speedBoostTimer.toFixed(1);
+
+        if (player.speedBoostTimer <= 0) {
+          player.speedBoostTimer = 0;
+          timerUI.style.display = 'none';
+        }
+      } else {
+        player.currentSpeed = player.baseSpeed;
+        timerUI.style.display = 'none';
+      }
+
+      // Player Movement Logic
       let moveX = 0;
       let moveY = 0;
 
@@ -1751,8 +1833,9 @@
 
       const len = Math.hypot(moveX, moveY);
       if (len > 0) {
-        player.x += (moveX / len) * player.speed;
-        player.y += (moveY / len) * player.speed;
+        // Utilize currentSpeed (buffed or base)
+        player.x += (moveX / len) * player.currentSpeed;
+        player.y += (moveY / len) * player.currentSpeed;
         player.isMoving = true;
         player.stepTimer += deltaTime;
       } else {
@@ -1820,7 +1903,7 @@
         }
       }
 
-      checkAnimalCollisions();
+      checkInteractions();
       updateRadarCompass();
       updateHUD();
     }
@@ -1891,6 +1974,7 @@
       for (let cx = minChunkX; cx <= maxChunkX; cx++) {
         for (let cy = minChunkY; cy <= maxChunkY; cy++) {
           const chunk = getChunk(cx, cy);
+          
           for (const tree of chunk.trees) {
             const sx = tree.x + camX;
             const sy = tree.y + camY;
@@ -1901,12 +1985,7 @@
               });
             }
           }
-        }
-      }
-
-      for (let cx = minChunkX; cx <= maxChunkX; cx++) {
-        for (let cy = minChunkY; cy <= maxChunkY; cy++) {
-          const chunk = getChunk(cx, cy);
+          
           for (const animal of chunk.animals) {
             const sx = animal.x + camX;
             const sy = animal.y + camY;
@@ -1915,6 +1994,19 @@
                 y: animal.y,
                 draw: () => drawAnimal(animal, sx, sy)
               });
+            }
+          }
+
+          for (const apple of chunk.apples) {
+            if (!apple.collected) {
+              const sx = apple.x + camX;
+              const sy = apple.y + camY;
+              if (sx >= -50 && sx <= width + 50 && sy >= -50 && sy <= height + 50) {
+                renderEntities.push({
+                  y: apple.y,
+                  draw: () => drawApple(apple, sx, sy)
+                });
+              }
             }
           }
         }
@@ -1985,6 +2077,22 @@
       ctx.textBaseline = 'middle';
       const playerBob = player.isMoving ? Math.sin(player.stepTimer * 14) * 3 : 0;
       ctx.fillText('🤠', pScreenX, pScreenY + playerBob);
+      ctx.restore();
+    }
+
+    function drawApple(apple, sx, sy) {
+      ctx.save();
+      const bob = Math.sin(apple.bobOffset + waterWaveTime * 2.5) * 4;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(sx, sy + 14, 14, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = '28px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(apple.emoji, sx, sy - 5 + bob);
       ctx.restore();
     }
 
@@ -2200,6 +2308,7 @@
     function initGame() {
       player.x = -80;
       player.y = -80;
+      player.speedBoostTimer = 0;
       currentVocabIndex = 0;
       currentCollectedCount = 0;
       teleportAssistsLeft = 5;
@@ -2210,6 +2319,7 @@
 
       document.getElementById('freeze-modal').classList.remove('active');
       document.getElementById('victory-modal').classList.remove('active');
+      document.getElementById('speed-boost-timer').style.display = 'none';
       buildVocabularyShelf();
       updateHUD();
       requestAnimationFrame(gameLoop);
