@@ -568,7 +568,8 @@ function action(tx, ty) {
     if (currentstate === state.gameover) return;
     
     if (currentstate === state.idle) {
-        if (ty > h/3) {
+        // Chỉ cho phép quăng cần câu khi tọa độ y (ty) lớn hơn ranh giới mặt nước (h/2 + 30)
+        if (ty > h/2 + 30) {
             playsound('cast'); bobber.active = true;
             bobber.x = rod.bx + Math.cos(rod.angle) * rod.length; bobber.y = rod.by + Math.sin(rod.angle) * rod.length;
             bobber.tx = tx; bobber.ty = ty; bobber.dip = 0; currentstate = state.casting;
