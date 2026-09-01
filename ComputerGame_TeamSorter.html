@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futuristic Team Sorter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --panel-bg: rgba(10, 15, 30, 0.8);
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --text-color: #ffffff;
+        }
+
+        /* Default Root Font Size for Scaling */
+        html {
+            font-size: 16px;
+            transition: font-size 0.3s ease;
+        }
+
+        /* Font Size Classes */
+        html.size-normal { font-size: 16px; }
+        html.size-large { font-size: 20px; }
+        html.size-xlarge { font-size: 24px; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- FUTURISTIC SCROLLBAR --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505;
+            border-left: 1px solid rgba(0, 243, 255, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-magenta);
+            box-shadow: 0 0 15px var(--neon-magenta);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--text-color);
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255, 255, 255, 0.02);
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100vh); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* --- FONT SIZE CONTROLS --- */
+        .font-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            background: rgba(0,0,0,0.5);
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid var(--neon-cyan);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-font {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 5px 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 3px;
+        }
+
+        .btn-font:hover, .btn-font.active {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top: 40px;
+            text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+            letter-spacing: 2px;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
+            to { text-shadow: 0 0 15px var(--neon-cyan), 0 0 30px var(--neon-magenta); }
+        }
+
+        /* --- SETUP PANEL --- */
+        #setup-panel {
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2) inset;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 10px;
+            color: var(--neon-cyan);
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--neon-cyan);
+            color: #fff;
+            font-family: monospace;
+            font-size: 1.1rem;
+            padding: 15px;
+            border-radius: 5px;
+            resize: vertical;
+            outline: none;
+            transition: box-shadow 0.3s;
+        }
+
+        textarea:focus {
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-btn {
+            display: none;
+        }
+
+        .radio-label {
+            padding: 10px 15px;
+            border: 1px solid var(--neon-magenta);
+            color: var(--neon-magenta);
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .radio-btn:checked + .radio-label {
+            background: var(--neon-magenta);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-magenta);
+        }
+
+        .btn-sort {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-sort:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        /* --- RESULT PANEL --- */
+        #result-panel {
+            display: none;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .teams-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .teams-grid[data-teams="2"] { grid-template-columns: 1fr 1fr; }
+        .teams-grid[data-teams="3"] { grid-template-columns: 1fr 1fr 1fr; }
+        .teams-grid[data-teams="4"] { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+        @media (max-width: 800px) {
+            .teams-grid[data-teams] { grid-template-columns: 1fr; }
+        }
+
+        .team-box {
+            background: rgba(10, 15, 30, 0.9);
+            border: 2px solid;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .team-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .team-name {
+            font-size: 1.5rem;
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        .team-color-picker {
+            width: 30px;
+            height: 30px;
+            border: none;
+            cursor: pointer;
+            background: none;
+        }
+
+        .score-board {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .btn-score {
+            background: transparent;
+            border: 1px solid currentColor;
+            color: currentColor;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-score:hover {
+            background: currentColor;
+            color: #000;
+        }
+
+        .team-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .member-list {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .member-item {
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.05);
+            margin-bottom: 5px;
+            border-left: 3px solid currentColor;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+        }
+
+        .member-score-badge {
+            background: rgba(0,0,0,0.5);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .btn-reset {
+            margin-top: 30px;
+            background: transparent;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 10px 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: #ff4444;
+            color: #000;
+            box-shadow: 0 0 15px #ff4444;
+        }
+
+        /* --- ANIMATION ELEMENTS --- */
+        #fx-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .floating-name {
+            position: fixed;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-cyan);
+            pointer-events: none;
+            z-index: 100;
+            white-space: nowrap;
+        }
+
+        .screen-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-5px, 0, 0); }
+            20%, 80% { transform: translate3d(5px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-10px, 0, 0); }
+            40%, 60% { transform: translate3d(10px, 0, 0); }
+        }
+
+        .flash-bang {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #fff;
+            z-index: 200;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        @keyframes flash {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TEXT SIZE CONTROLS -->
+    <div class="font-controls">
+        <button class="btn-font active" id="btn-size-normal" onclick="setTextSize('normal')">A</button>
+        <button class="btn-font" id="btn-size-large" onclick="setTextSize('large')">A+</button>
+        <button class="btn-font" id="btn-size-xlarge" onclick="setTextSize('xlarge')">A++</button>
+    </div>
+
+    <div class="flash-bang" id="flash-bang"></div>
+    <canvas id="fx-canvas"></canvas>
+
+    <div class="container" id="main-container">
+        <h1 class="header">SYSTEM.TEAM_SORTING_PROTOCOL</h1>
+
+        <div id="setup-panel">
+            <div class="form-group">
+                <label>SORTING MODE</label>
+                <div class="radio-group">
+                    <input type="radio" name="mode" id="mode1" value="1" class="radio-btn" checked onchange="updateInputData()">
+                    <label for="mode1" class="radio-label">MODE 1: RANDOM</label>
+                    <input type="radio" name="mode" id="mode2" value="2" class="radio-btn" onchange="updateInputData()">
+                    <label for="mode2" class="radio-label">MODE 2: BALANCED</label>
+                    <input type="radio" name="mode" id="mode3" value="3" class="radio-btn" onchange="updateInputData()">
+                    <label for="mode3" class="radio-label">MODE 3: BLIND BALANCED</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>NUMBER OF TEAMS</label>
+                <div class="radio-group" style="border-color: var(--neon-cyan);">
+                    <input type="radio" name="teams" id="team2" value="2" class="radio-btn">
+                    <label for="team2" class="radio-label" style="border-color: var(--neon-cyan); color: var(--neon-cyan);">2 TEAMS</label>
+                    <input type="radio" name="teams" id="team3" value="3" class="radio-btn" checked>
+                    <label for="team3" class="radio-label" style="border-color: var(--neon-cyan); color: var(--neon-cyan);">3 TEAMS</label>
+                    <input type="radio" name="teams" id="team4" value="4" class="radio-btn">
+                    <label for="team4" class="radio-label" style="border-color: var(--neon-cyan); color: var(--neon-cyan);">4 TEAMS</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>DATA INPUT (Member List)</label>
+                <textarea id="data-input"></textarea>
+            </div>
+
+            <button class="btn-sort" onclick="executeSorting()">INITIALIZE SORTING PROTOCOL</button>
+        </div>
+
+        <div id="result-panel">
+            <h2 class="header" style="margin-top: 20px;">ALLOCATION RESULTS</h2>
+            <div id="teams-container" class="teams-grid">
+                <!-- Teams will be injected here -->
+            </div>
+            <button class="btn-reset" onclick="resetSystem()">[ REBOOT SYSTEM ]</button>
+        </div>
+    </div>
+
+<script>
+    // --- WEB AUDIO API SOUND ENGINE ---
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playSound(type) {
+        try {
+            initAudio();
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            let now = audioCtx.currentTime;
+
+            if (type === 'beep') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'chaos') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150 + Math.random() * 300, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'explosion') {
+                // Sub-bass boom for explosion
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.8);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.8);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            }
+        } catch (e) {
+            console.log("Audio not allowed yet");
+        }
+    }
+
+    // --- SAMPLE DATA SETS (20 Members) ---
+    const sampleMode1 = "Alex\nSarah\nMike\nEmma\nChris\nKatie\nDavid\nLaura\nJohn\nAnna\nTom\nLisa\nJames\nEmily\nMark\nChloe\nBrian\nZoe\nKevin\nMia";
+    const sampleMode23 = "Alex 85\nSarah 92\nMike 78\nEmma 95\nChris 64\nKatie 88\nDavid 73\nLaura 90\nJohn 82\nAnna 79\nTom 85\nLisa 91\nJames 77\nEmily 89\nMark 68\nChloe 84\nBrian 72\nZoe 96\nKevin 81\nMia 93";
+
+    let isCustomData = false;
+
+    function setTextSize(sizeClass) {
+        playSound('beep');
+        document.documentElement.className = `size-${sizeClass}`;
+        document.querySelectorAll('.btn-font').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-size-${sizeClass}`).classList.add('active');
+    }
+
+    function updateInputData() {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const textarea = document.getElementById('data-input');
+        
+        if (mode === '1') {
+            textarea.placeholder = "Enter member names (one per line)...\nExample:\nJohn\nAlice\nBob";
+            if (!isCustomData) textarea.value = sampleMode1;
+        } else if (mode === '2') {
+            textarea.placeholder = "Enter names and scores (one per line, separated by space)...\nExample:\nJohn 20\nAlice 50\nBob 30";
+            if (!isCustomData) textarea.value = sampleMode23;
+        } else {
+            textarea.placeholder = "Blind Balanced Mode (Scores are hidden from viewers)...\nExample:\nJohn 20\nAlice 50\nBob 30";
+            if (!isCustomData) textarea.value = sampleMode23;
+        }
+    }
+
+    document.getElementById('data-input').addEventListener('input', (e) => {
+        isCustomData = true;
+        if (e.target.value.trim() === '') {
+            isCustomData = false;
+        }
+    });
+
+    updateInputData();
+
+    const defaultColors = ['#00f3ff', '#ff00ff', '#00ff33', '#ffaa00'];
+
+    // --- ALGORITHM: PARSE & SORT ---
+    function processSorting() {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const numTeams = parseInt(document.querySelector('input[name="teams"]:checked').value);
+        const text = document.getElementById('data-input').value;
+
+        let lines = text.trim().split('\n').filter(l => l.trim().length > 0);
+        if (lines.length < numTeams) {
+            alert("System Error: Number of members must be greater than or equal to the number of teams!");
+            return null;
+        }
+
+        let students = lines.map(line => {
+            if (mode === '2' || mode === '3') {
+                let parts = line.trim().split(/\s+/);
+                let score = 0;
+                let name = line.trim();
+                
+                if (parts.length > 1 && !isNaN(parts[parts.length - 1])) {
+                    score = parseInt(parts.pop(), 10);
+                    name = parts.join(" ");
+                }
+                return { name, score, id: Math.random().toString(36).substr(2, 9) };
+            }
+            return { name: line.trim(), score: 0, id: Math.random().toString(36).substr(2, 9) };
+        });
+
+        let teams = Array.from({ length: numTeams }, (_, i) => ({
+            id: i + 1,
+            color: defaultColors[i],
+            totalScore: 0,
+            members: []
+        }));
+
+        if (mode === '1') {
+            students = students.sort(() => Math.random() - 0.5);
+            students.forEach((s, index) => {
+                let teamIndex = index % numTeams;
+                teams[teamIndex].members.push(s);
+            });
+        } else {
+            // Mode 2 & 3: Balanced Sort using Greedy Algorithm
+            students.sort((a, b) => b.score - a.score);
+            students.forEach(s => {
+                teams.sort((a, b) => a.totalScore - b.totalScore);
+                teams[0].members.push(s);
+                teams[0].totalScore += s.score;
+            });
+            teams.sort((a, b) => a.id - b.id);
+        }
+
+        return { teams, numTeams, mode };
+    }
+
+    // --- RENDER DOM ---
+    function renderTeamsDOM(teamsData) {
+        const container = document.getElementById('teams-container');
+        container.setAttribute('data-teams', teamsData.numTeams);
+        container.innerHTML = '';
+
+        teamsData.teams.forEach(team => {
+            const teamBox = document.createElement('div');
+            teamBox.className = 'team-box';
+            teamBox.style.borderColor = team.color;
+            teamBox.style.boxShadow = `0 0 15px ${team.color}40 inset`;
+            teamBox.style.color = team.color;
+            teamBox.id = `team-box-${team.id}`;
+
+            let membersHTML = team.members.map(m => `
+                <li class="member-item" id="member-slot-${m.id}" style="color: ${team.color}">
+                    <span>${m.name}</span>
+                    ${teamsData.mode === '2' ? `<span class="member-score-badge">${m.score}</span>` : ''}
+                </li>
+            `).join('');
+
+            teamBox.innerHTML = `
+                <div class="team-header">
+                    <h3 class="team-name">TEAM ${team.id}</h3>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <input type="color" class="team-color-picker" value="${team.color}" onchange="changeTeamColor(${team.id}, this.value)">
+                        <div class="score-board">
+                            <button class="btn-score" onclick="updateScore(${team.id}, -1)">-</button>
+                            <span class="team-score" id="score-${team.id}">${team.totalScore}</span>
+                            <button class="btn-score" onclick="updateScore(${team.id}, 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <ul class="member-list">
+                    ${membersHTML}
+                </ul>
+            `;
+            container.appendChild(teamBox);
+        });
+    }
+
+    // --- INTERACTIVE FUNCTIONS ---
+    function changeTeamColor(teamId, color) {
+        playSound('beep');
+        const box = document.getElementById(`team-box-${teamId}`);
+        box.style.borderColor = color;
+        box.style.color = color;
+        box.style.boxShadow = `0 0 15px ${color}40 inset`;
+        const items = box.querySelectorAll('.member-item');
+        items.forEach(item => item.style.color = color);
+    }
+
+    function updateScore(teamId, delta) {
+        playSound('beep');
+        const scoreEl = document.getElementById(`score-${teamId}`);
+        let current = parseInt(scoreEl.innerText);
+        scoreEl.innerText = current + delta;
+    }
+
+    function resetSystem() {
+        playSound('beep');
+        document.getElementById('result-panel').style.display = 'none';
+        document.getElementById('result-panel').style.opacity = '0';
+        const setup = document.getElementById('setup-panel');
+        setup.style.display = 'block';
+        setTimeout(() => {
+            setup.style.opacity = '1';
+            setup.style.transform = 'scale(1)';
+        }, 50);
+    }
+
+    // --- THEATRICAL ANIMATION ENGINE ---
+    async function executeSorting() {
+        playSound('beep');
+        const result = processSorting();
+        if (!result) return;
+
+        const setup = document.getElementById('setup-panel');
+        setup.style.opacity = '0';
+        setup.style.transform = 'scale(0.8)';
+        
+        setTimeout(() => {
+            setup.style.display = 'none';
+            startTheatricalAnimation(result);
+        }, 500);
+    }
+
+    function startTheatricalAnimation(data) {
+        let allStudents = [];
+        data.teams.forEach(t => {
+            t.members.forEach(m => {
+                allStudents.push({ ...m, teamColor: t.color, targetId: `member-slot-${m.id}` });
+            });
+        });
+
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        
+        let floatingDivs = [];
+
+        allStudents.forEach(stu => {
+            let el = document.createElement('div');
+            el.className = 'floating-name';
+            el.innerText = stu.name;
+            el.style.left = cx + 'px';
+            el.style.top = cy + 'px';
+            el.style.transform = 'translate(-50%, -50%) scale(0.1)';
+            document.body.appendChild(el);
+            
+            floatingDivs.push({ el, stu });
+        });
+
+        document.body.classList.add('screen-shake');
+        
+        // Loop chaotic sounds
+        let soundTimer = 0;
+        let chaoticInterval = setInterval(() => {
+            playSound('chaos');
+            floatingDivs.forEach(obj => {
+                let rx = (Math.random() - 0.5) * window.innerWidth * 0.8;
+                let ry = (Math.random() - 0.5) * window.innerHeight * 0.8;
+                let rot = Math.random() * 720 - 360;
+                let scale = 1 + Math.random() * 1.5;
+                obj.el.style.transition = 'transform 0.3s ease-out, color 0.1s';
+                obj.el.style.transform = `translate(calc(-50% + ${rx}px), calc(-50% + ${ry}px)) rotate(${rot}deg) scale(${scale})`;
+                obj.el.style.color = ['#00f3ff', '#ff00ff', '#ffffff', '#ffaa00'][Math.floor(Math.random()*4)];
+            });
+        }, 300);
+
+        renderTeamsDOM(data);
+        const resultPanel = document.getElementById('result-panel');
+        resultPanel.style.display = 'block';
+        resultPanel.style.opacity = '0'; 
+
+        setTimeout(() => {
+            clearInterval(chaoticInterval);
+            document.body.classList.remove('screen-shake');
+            
+            // Trigger Explosion Sound & Flash
+            playSound('explosion');
+            const flash = document.getElementById('flash-bang');
+            flash.style.animation = 'flash 0.8s ease-out forwards';
+            
+            triggerFireworks();
+
+            floatingDivs.forEach(obj => {
+                const targetSlot = document.getElementById(obj.stu.targetId);
+                const rect = targetSlot.getBoundingClientRect();
+                
+                obj.el.style.transition = 'all 0.8s cubic-bezier(0.25, 1, 0.3, 1)';
+                obj.el.style.left = rect.left + 'px';
+                obj.el.style.top = rect.top + 'px';
+                obj.el.style.transform = 'translate(0, 0) rotate(0deg) scale(1)';
+                obj.el.style.color = obj.stu.teamColor;
+                obj.el.style.textShadow = `0 0 10px ${obj.stu.teamColor}`;
+            });
+
+            setTimeout(() => {
+                resultPanel.style.opacity = '1';
+                floatingDivs.forEach(obj => obj.el.remove());
+                flash.style.animation = 'none'; 
+            }, 800);
+
+        }, 2500);
+    }
+
+    // --- CANVAS FIREWORKS ENGINE ---
+    function triggerFireworks() {
+        const canvas = document.getElementById('fx-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const colors = ['#00f3ff', '#ff00ff', '#00ff33', '#ffffff', '#ffaa00'];
+
+        for(let i=0; i<300; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * (Math.random() * 40),
+                vy: (Math.random() - 0.5) * (Math.random() * 40),
+                size: Math.random() * 4 + 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life: 1,
+                decay: Math.random() * 0.02 + 0.015
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+            particles.forEach(p => {
+                if(p.life > 0) {
+                    alive = true;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.5; 
+                    p.life -= p.decay;
+                    
+                    ctx.globalAlpha = Math.max(0, p.life);
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = p.color;
+                }
+            });
+
+            if(alive) {
+                requestAnimationFrame(animate);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        animate();
+    }
+</script>
+</body>
+</html>
