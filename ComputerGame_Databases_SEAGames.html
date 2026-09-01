@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEA Games DB Simulator</title>
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #f4f6f9;
+            overflow: hidden; 
+        }
+        
+        /* Sidebar container */
+        #sidebar {
+            width: 120px;
+            background-color: #1a365d; /* Dark blue for sports theme */
+            color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 20;
+        }
+        #score-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        /* Vertical Progress Bar */
+        .progress-container {
+            flex-grow: 1;
+            width: 30px;
+            background-color: #2c5282;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 0%;
+            background-color: #f6ad55; /* Gold/Orange progress for medals */
+            transition: height 0.5s ease-in-out;
+        }
+        #progress-text {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        
+        /* Main Application Area */
+        #app-area {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        /* Main Game Area */
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        .game-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            color: #2b6cb0;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-box {
+            background-color: #ebf8ff;
+            padding: 15px;
+            border-left: 4px solid #3182ce;
+            margin-bottom: 20px;
+        }
+        .info-box p {
+            margin: 5px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 1rem;
+            outline: none;
+        }
+        select:focus {
+            border-color: #3182ce;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #e53e3e; /* Sporty red button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #c53030;
+        }
+        #feedback {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        .success { color: #38a169; }
+        .error { color: #e53e3e; }
+        
+        #end-screen {
+            display: none;
+            text-align: center;
+        }
+        #end-screen h2 {
+            color: #38a169;
+            margin-bottom: 15px;
+        }
+
+        /* Live Database Schema Visualization Area */
+        #schema-area {
+            flex: 1;
+            background-color: #edf2f7;
+            border-left: 2px solid #cbd5e0;
+            padding: 20px;
+            position: relative;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        #schema-area h2 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+        .schema-table {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 1px solid #cbd5e0;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            z-index: 5;
+        }
+        .schema-table h3 {
+            background: #2b6cb0;
+            color: white;
+            padding: 10px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .schema-field {
+            padding: 10px 15px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .schema-field:last-child {
+            border-bottom: none;
+        }
+        .schema-field .field-name {
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .schema-field .field-type {
+            color: #718096;
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-left: 10px;
+        }
+        .pk-badge {
+            background-color: #d69e2e;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .fk-badge {
+            background-color: #805ad5;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div id="score-display">Score<br><span id="score-val">0</span></div>
+        <div class="progress-container">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+        <div id="progress-text">0%</div>
+    </div>
+
+    <div id="app-area">
+        <!-- Main Game Interactive Panel -->
+        <div id="main">
+            <div class="game-card" id="game-screen">
+                <h1>SEA Games DB Architect</h1>
+                
+                <div class="info-box">
+                    <p><strong>Table:</strong> <span id="lbl-table">Athletes</span></p>
+                    <p><strong>Field Name:</strong> <span id="lbl-field">AthleteID</span></p>
+                    <p><strong>Description:</strong> <span id="lbl-desc">Unique identifier for each athlete.</span></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="dataType">Select Data Type:</label>
+                    <select id="dataType">
+                        <option value="">-- Choose Type --</option>
+                        <option value="Text">Text</option>
+                        <option value="Numeric">Numeric</option>
+                        <option value="Date/Time">Date/Time</option>
+                        <option value="Boolean">Boolean (Yes/No)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="keyRole">Select Key Role:</label>
+                    <select id="keyRole">
+                        <option value="">-- Choose Key --</option>
+                        <option value="None">None</option>
+                        <option value="Primary Key">Primary Key (PK)</option>
+                        <option value="Foreign Key">Foreign Key (FK)</option>
+                    </select>
+                </div>
+
+                <button onclick="checkAnswer()">Submit Field Definition</button>
+                <p id="feedback"></p>
+            </div>
+
+            <div class="game-card" id="end-screen">
+                <h2>Database Completed!</h2>
+                <p>Congratulations! You have successfully mapped the SEA Games Database.</p>
+                <p>Final Score: <strong id="final-score">100</strong></p>
+                <button onclick="location.reload()">Play Again</button>
+            </div>
+        </div>
+
+        <!-- Live Schema Visualization Panel -->
+        <div id="schema-area">
+            <h2>Live Database Schema</h2>
+            <div id="schema-tables">
+                <!-- Tables will be dynamically injected here upon correct answers -->
+            </div>
+            
+            <!-- SVG Canvas for drawing relationships at the end -->
+            <svg id="lines-svg" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1;"></svg>
+        </div>
+    </div>
+
+    <script>
+        // Game Data Logic for SEA Games Theme
+        const tasks = [
+            { table: "Athletes", field: "AthleteID", type: "Numeric", key: "Primary Key", desc: "A unique identifier for each SEA Games athlete." },
+            { table: "Athletes", field: "FullName", type: "Text", key: "None", desc: "The official full name of the athlete." },
+            { table: "Athletes", field: "DateOfBirth", type: "Date/Time", key: "None", desc: "The birth date of the athlete." },
+            { table: "Sports", field: "EventID", type: "Numeric", key: "Primary Key", desc: "A unique identifier for each sport event record." },
+            { table: "Sports", field: "AthleteID", type: "Numeric", key: "Foreign Key", desc: "Links the event record to a specific athlete participating." },
+            { table: "Sports", field: "SportName", type: "Text", key: "None", desc: "The name of the sport (e.g., Swimming, Athletics, Football)." },
+            { table: "Sports", field: "IsMedalWon", type: "Boolean", key: "None", desc: "True if the athlete won a medal in this event, False otherwise." },
+            { table: "Brands", field: "BrandID", type: "Numeric", key: "Primary Key", desc: "Unique identifier for the brand endorsement contract." },
+            { table: "Brands", field: "AthleteID", type: "Numeric", key: "Foreign Key", desc: "Links the sponsorship contract back to the athlete ambassador." },
+            { table: "Brands", field: "BrandName", type: "Text", key: "None", desc: "The name of the brand or sponsor." },
+            { table: "Brands", field: "ContractValue", type: "Numeric", key: "None", desc: "The monetary value of the sponsorship contract." }
+        ];
+
+        let currentTaskIndex = 0;
+        let score = 0;
+        const maxScore = tasks.length * 10;
+        
+        // Track created tables for the Live Schema
+        let createdTables = {};
+        
+        // DOM Elements
+        const lblTable = document.getElementById("lbl-table");
+        const lblField = document.getElementById("lbl-field");
+        const lblDesc = document.getElementById("lbl-desc");
+        const selDataType = document.getElementById("dataType");
+        const selKeyRole = document.getElementById("keyRole");
+        const feedback = document.getElementById("feedback");
+        const scoreVal = document.getElementById("score-val");
+        const progressBar = document.getElementById("progress-bar");
+        const progressText = document.getElementById("progress-text");
+        
+        const gameScreen = document.getElementById("game-screen");
+        const endScreen = document.getElementById("end-screen");
+        const finalScore = document.getElementById("final-score");
+        const schemaTables = document.getElementById("schema-tables");
+
+        function loadTask() {
+            const task = tasks[currentTaskIndex];
+            lblTable.innerText = task.table;
+            lblField.innerText = task.field;
+            lblDesc.innerText = task.desc;
+            
+            // Reset fields
+            selDataType.value = "";
+            selKeyRole.value = "";
+            feedback.innerText = "";
+            feedback.className = "";
+        }
+
+        function updateProgress() {
+            let percentage = Math.round((currentTaskIndex / tasks.length) * 100);
+            progressBar.style.height = percentage + "%";
+            progressText.innerText = percentage + "%";
+            scoreVal.innerText = score;
+        }
+
+        function addFieldToSchema(task) {
+            // Create table container if it doesn't exist
+            if (!createdTables[task.table]) {
+                createdTables[task.table] = true;
+                const tableDiv = document.createElement('div');
+                tableDiv.className = 'schema-table';
+                tableDiv.id = 'table-' + task.table;
+                tableDiv.innerHTML = `
+                    <h3>${task.table}</h3>
+                    <div id="fields-${task.table}"></div>
+                `;
+                schemaTables.appendChild(tableDiv);
+            }
+
+            // Determine badge HTML
+            let badgeHTML = '';
+            if (task.key === 'Primary Key') {
+                badgeHTML = `<span class="pk-badge">PK</span>`;
+            } else if (task.key === 'Foreign Key') {
+                badgeHTML = `<span class="fk-badge">FK</span>`;
+            }
+
+            // Create field row
+            const fieldId = `field-${task.table}-${task.field}`;
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'schema-field';
+            fieldDiv.id = fieldId;
+            fieldDiv.innerHTML = `
+                <div>
+                    <span class="field-name">${task.field}</span>
+                    <span class="field-type">(${task.type})</span>
+                </div>
+                ${badgeHTML}
+            `;
+
+            // Append to respective table
+            document.getElementById(`fields-${task.table}`).appendChild(fieldDiv);
+        }
+
+        function checkAnswer() {
+            const selectedType = selDataType.value;
+            const selectedKey = selKeyRole.value;
+            const task = tasks[currentTaskIndex];
+
+            if (selectedType === "" || selectedKey === "") {
+                feedback.innerText = "Please select both Data Type and Key Role!";
+                feedback.className = "error";
+                return;
+            }
+
+            if (selectedType === task.type && selectedKey === task.key) {
+                // Correct Answer
+                feedback.innerText = "Correct! Great job.";
+                feedback.className = "success";
+                score += 10;
+                
+                // Fire Confetti!
+                confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+
+                // Add the correct field to the live schema view
+                addFieldToSchema(task);
+
+                currentTaskIndex++;
+                updateProgress();
+
+                // Move to next task or end game
+                if (currentTaskIndex < tasks.length) {
+                    setTimeout(loadTask, 1200);
+                } else {
+                    setTimeout(showWinScreen, 1200);
+                }
+            } else {
+                // Incorrect Answer
+                feedback.innerText = "Incorrect match. Think about the data logically and try again!";
+                feedback.className = "error";
+            }
+        }
+
+        function showWinScreen() {
+            gameScreen.style.display = "none";
+            endScreen.style.display = "block";
+            finalScore.innerText = score + " / " + maxScore;
+            
+            progressBar.style.height = "100%";
+            progressText.innerText = "100%";
+
+            // Draw connecting lines between Primary Key and Foreign Keys
+            setTimeout(drawConnections, 300);
+        }
+
+        function drawConnections() {
+            const svg = document.getElementById('lines-svg');
+            svg.innerHTML = ''; 
+            
+            const schemaAreaRect = document.getElementById('schema-area').getBoundingClientRect();
+            
+            // Elements to connect
+            const pkElement = document.getElementById('field-Athletes-AthleteID');
+            const fkSports = document.getElementById('field-Sports-AthleteID');
+            const fkBrands = document.getElementById('field-Brands-AthleteID');
+
+            if (pkElement && fkSports) {
+                drawLine(pkElement, fkSports, svg, schemaAreaRect, "#e53e3e");
+            }
+            if (pkElement && fkBrands) {
+                drawLine(pkElement, fkBrands, svg, schemaAreaRect, "#e53e3e");
+            }
+        }
+
+        function drawLine(elem1, elem2, svg, schemaAreaRect, color) {
+            const rect1 = elem1.getBoundingClientRect();
+            const rect2 = elem2.getBoundingClientRect();
+            
+            const x1 = rect1.right - schemaAreaRect.left; 
+            const y1 = rect1.top + (rect1.height / 2) - schemaAreaRect.top;
+            
+            const x2 = rect2.right - schemaAreaRect.left;
+            const y2 = rect2.top + (rect2.height / 2) - schemaAreaRect.top;
+
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            
+            const curveOffset = 60 + Math.random() * 40; 
+            const d = `M ${x1} ${y1} C ${x1 + curveOffset} ${y1}, ${x2 + curveOffset} ${y2}, ${x2} ${y2}`;
+            
+            path.setAttribute("d", d);
+            path.setAttribute("stroke", color);
+            path.setAttribute("stroke-width", "3");
+            path.setAttribute("fill", "none");
+            path.setAttribute("stroke-dasharray", "5,5"); 
+            
+            svg.appendChild(path);
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentTaskIndex >= tasks.length) {
+                drawConnections();
+            }
+        });
+
+        // Initialize Game
+        loadTask();
+    </script>
+</body>
+</html>
