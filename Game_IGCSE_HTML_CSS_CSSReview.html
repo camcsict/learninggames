@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌊 HTML/CSS CSS</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-vsc-dark-plus.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+
+    <style>
+        :root {
+            /* Ocean Theme Palette */
+            --primary: #0284C7;       /* Light Blue / Sky Blue */
+            --primary-hover: #0369A1; /* Deep Ocean Blue */
+            --bg-gradient: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+            --text-main: #0F172A;
+            --panel-bg: #FFFFFF;
+            
+            /* Dynamic Font Variables */
+            --base-font: 14px;
+            --code-font: 13.5px;
+            --heading-font: 1.1em;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 16px; 
+            background: var(--bg-gradient); 
+            color: var(--text-main); 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; /* Strictly fit to screen */
+            overflow: hidden; /* No body scroll */
+            font-size: var(--base-font);
+        }
+        
+        /* Start Screen */
+        #start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 47, 73, 0.95); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; backdrop-filter: blur(4px); }
+        .mode-btn { background: var(--primary); color: white; border: 2px solid #38BDF8; padding: 16px 32px; margin: 10px; font-size: 1.1em; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; width: 280px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.5); }
+        .mode-btn:hover { background: var(--primary-hover); transform: translateY(-2px); border-color: #7DD3FC; }
+
+        /* Anti-Guessing Penalty (Biển Động) */
+        @keyframes rough-sea {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-10px, -10px) rotate(-1deg); }
+            20% { transform: translate(10px, 10px) rotate(1deg); }
+            30% { transform: translate(-15px, 5px) rotate(-2deg); }
+            40% { transform: translate(15px, -5px) rotate(2deg); }
+            50% { transform: translate(-10px, 10px) rotate(-1deg); }
+            60% { transform: translate(10px, -10px) rotate(1deg); }
+            70% { transform: translate(-5px, -15px) rotate(-1deg); }
+            80% { transform: translate(5px, 15px) rotate(1deg); }
+            90% { transform: translate(-5px, 5px) rotate(-1deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .sea-shake { animation: rough-sea 0.6s infinite; }
+        
+        #penalty-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(3, 105, 161, 0.85); z-index: 3000;
+            flex-direction: column; align-items: center; justify-content: center; color: white;
+            backdrop-filter: blur(8px);
+        }
+        #penalty-overlay h2 { font-size: 3em; margin: 0 0 10px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); color: #F8FAFC; }
+        #penalty-overlay p { font-size: 1.5em; margin: 0 0 30px 0; }
+        #countdown-text { font-size: 7em; font-weight: bold; text-shadow: 2px 2px 8px rgba(0,0,0,0.6); margin: 0; color: #38BDF8; }
+
+        /* Game UI */
+        #game-ui { display: none; flex-direction: column; flex: 1; min-height: 0; gap: 16px; }
+        
+        /* Top Navigation Bar */
+        .top-bar-container { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: white; padding: 8px 16px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex-shrink: 0; }
+        
+        .tabs-wrapper { display: flex; gap: 8px; overflow-x: auto; flex: 1; padding-bottom: 4px; }
+        .tabs-wrapper::-webkit-scrollbar { height: 6px; }
+        .tabs-wrapper::-webkit-scrollbar-track { background: #F1F5F9; border-radius: 4px; }
+        .tabs-wrapper::-webkit-scrollbar-thumb { background: #94A3B8; border-radius: 4px; }
+        
+        .level-tab { padding: 6px 14px; background: #F0F9FF; border: 2px solid #BAE6FD; border-radius: 6px; cursor: pointer; font-weight: bold; color: var(--primary); transition: 0.2s; white-space: nowrap; font-size: 0.9em; }
+        .level-tab:hover { background: #E0F2FE; }
+        .level-tab.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4); }
+        .level-tab.completed { border-color: #10B981; color: #059669; }
+        .level-tab.completed.active { color: white; background: #10B981; border-color: #059669; }
+
+        .font-controls { display: flex; gap: 6px; flex-shrink: 0; align-items: center; border-left: 2px solid #E2E8F0; padding-left: 16px; }
+        .font-btn { padding: 4px 12px; font-weight: bold; cursor: pointer; border: 1px solid var(--primary); background: white; color: var(--primary); border-radius: 6px; transition: 0.2s; }
+        .font-btn:hover { background: #F0F9FF; }
+        .font-btn.active { background: var(--primary); color: white; }
+        
+        /* Main Grid restricted to remaining height */
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; min-height: 0; }
+        
+        .panel { background: var(--panel-bg); border-radius: 12px; box-shadow: 0 8px 16px rgba(2, 132, 199, 0.1); display: flex; flex-direction: column; overflow: hidden; border: 2px solid #E0F2FE; min-height: 0; }
+        .panel-header { background: var(--primary); color: white; padding: 12px 20px; margin: 0; font-size: var(--heading-font); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        
+        .mission-box { padding: 16px; background: #F0F9FF; border-bottom: 2px solid #BAE6FD; flex-shrink: 0; }
+        .mission-box h3 { margin: 0 0 8px 0; color: #0369A1; font-size: 1.1em; }
+        
+        .interaction-area { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+        
+        .hint-badge { display: inline-block; background: #FEF08A; color: #854D0E; padding: 4px 10px; border-radius: 6px; font-size: 0.9em; font-weight: bold; margin-bottom: 8px; }
+        
+        /* Input Step 1 */
+        .link-step { padding: 16px; background: #F8FAFC; border: 2px dashed #94A3B8; border-radius: 8px; text-align: center; transition: 0.3s; flex-shrink: 0; }
+        .link-step input { padding: 6px; font-family: monospace; font-size: var(--code-font); border: 2px solid #CBD5E1; border-radius: 6px; width: auto; min-width: 180px; text-align: center; outline: none; }
+        .link-step input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2,132,199,0.2); }
+        .connect-btn { margin-top: 12px; background: #0284C7; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.95em; }
+        .connect-btn:hover { background: #0369A1; }
+        .link-step.connected { background: #F0FDF4; border-color: #22C55E; border-style: solid; }
+        .link-step.error { border-color: #EF4444; animation: shake 0.4s; }
+
+        /* Distinct Option Styles */
+        .css-options { display: none; flex-direction: column; gap: 14px; padding-bottom: 10px; }
+        .css-option { 
+            background: #0F172A; 
+            border-radius: 8px; 
+            border: 3px solid #38BDF8; /* Distinct border */
+            cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: relative; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .css-option:hover { transform: translateX(8px); border-color: #FBBF24; box-shadow: 0 6px 12px rgba(245, 158, 11, 0.2); }
+        .css-option pre { margin: 0 !important; padding: 12px 16px !important; background: transparent !important; font-size: var(--code-font); text-shadow: none; }
+        .css-option.correct-pick { border-color: #10B981; background: #064E3B; }
+        .css-option.wrong-pick { border-color: #EF4444; animation: shake 0.4s; }
+        
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+        /* Preview Panel */
+        #preview-container { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        #html-structure { padding: 12px 16px; background: #1E293B; color: #E2E8F0; font-family: monospace; font-size: var(--code-font); margin: 0; border-bottom: 3px solid #0F172A; flex-shrink: 0; overflow-y: auto; max-height: 120px; }
+        #preview-iframe { flex: 1; border: none; width: 100%; background: #FFFFFF; }
+    </style>
+</head>
+<body>
+    <!-- START SCREEN -->
+    <div id="start-screen">
+        <h1 style="font-size: 3.5em; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.5);">🌊 CSS Ocean Explorer</h1>
+        <p style="font-size: 1.3em; margin-bottom: 40px; color: #BAE6FD;">Select your dive depth</p>
+        <button class="mode-btn" onclick="startGame(0, 9)">Shallows (Levels 1 - 10)</button>
+        <button class="mode-btn" onclick="startGame(10, 19)">Deep Sea (Levels 11 - 20)</button>
+        <button class="mode-btn" onclick="startGame(0, 19)">Full Ocean (All 20 Levels)</button>
+    </div>
+
+    <!-- PENALTY OVERLAY -->
+    <div id="penalty-overlay">
+        <h2>⚠️ ROUGH SEAS AHEAD! ⚠️</h2>
+        <p>Too many incorrect guesses. Stabilizing ship...</p>
+        <div id="countdown-text">5</div>
+    </div>
+
+    <!-- MAIN GAME UI -->
+    <div id="game-ui">
+        <div class="top-bar-container">
+            <div class="tabs-wrapper" id="level-tabs"></div>
+            <div class="font-controls">
+                <button class="font-btn active" id="btn-sm" onclick="setFontSize('sm')">A</button>
+                <button class="font-btn" id="btn-md" onclick="setFontSize('md')">A+</button>
+                <button class="font-btn" id="btn-lg" onclick="setFontSize('lg')">A++</button>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- LEFT PANEL -->
+            <div class="panel">
+                <h2 class="panel-header">
+                    <span id="lvl-title">Level 1</span>
+                    <span id="lvl-status">❌</span>
+                </h2>
+                <div class="mission-box">
+                    <h3>🎯 Mission:</h3>
+                    <p id="lvl-desc" style="margin: 0; line-height: 1.5;"></p>
+                    <p style="margin: 10px 0 0 0; font-weight: bold; color: #0369A1;">Required CSS File: <code id="req-css-file" style="background: #E0F2FE; padding: 3px 8px; border-radius: 4px; border: 1px solid #BAE6FD;"></code></p>
+                </div>
+                
+                <div class="interaction-area">
+                    <div>
+                        <div class="hint-badge">Step 1: Connect the CSS File</div>
+                        <div id="link-step-container" class="link-step">
+                            <span style="font-family: monospace; color: #475569;">&lt;link rel="stylesheet" type="text/css" </span>
+                            <input type="text" id="css-link-input" placeholder='href="..."' autocomplete="off">
+                            <span style="font-family: monospace; color: #475569;">&gt;</span>
+                            <br>
+                            <button class="connect-btn" onclick="connectCSS()">🔌 Connect CSS</button>
+                            <p id="link-error-msg" style="color: #DC2626; font-size: 0.9em; margin: 8px 0 0 0; display: none; font-weight: bold;">Incorrect attribute or filename!</p>
+                        </div>
+                    </div>
+
+                    <div id="css-options-container" class="css-options">
+                        <div class="hint-badge">Step 2: Hover to Live Preview, Click to Select</div>
+                        <div id="options-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL -->
+            <div class="panel">
+                <h2 class="panel-header" style="background: #0F172A;">Live Web Preview</h2>
+                <pre id="html-structure"></pre>
+                <div id="preview-container">
+                    <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const allLevels = [
+            // 1-10: Basic CSS
+            {
+                title: "Level 1: Basic Sizing", desc: "Set the width to 150px and height to 150px for the box.", cssFile: "main.css", html: `<div class="box">Content Box</div>`,
+                options: [
+                    { code: `.box {\n  width: 150px;\n  height: 150px;\n}`, correct: true }, { code: `.box {\n  width: 150%;\n  height: auto;\n}`, correct: false }, { code: `.box {\n  size: 150px;\n}`, correct: false }, { code: `.box {\n  w: 150px;\n  h: 150px;\n}`, correct: false }
+                ], baseCSS: `.box { background: #cbd5e1; display: flex; align-items: center; justify-content: center; border: 2px solid #475569; }`
+            },
+            {
+                title: "Level 2: Centering an Element", desc: "Use left and right margins set to 'auto' to horizontally center the box.", cssFile: "layout.css", html: `<div class="box">Center Me</div>`,
+                options: [
+                    { code: `.box {\n  margin-left: auto;\n  margin-right: auto;\n}`, correct: true }, { code: `.box {\n  margin-left: 50%;\n  margin-right: 50%;\n}`, correct: false }, { code: `.box {\n  align: center;\n}`, correct: false }, { code: `.box {\n  float: center;\n}`, correct: false }
+                ], baseCSS: `.box { width: 200px; height: 100px; background: #38bdf8; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; border-radius: 8px; }`
+            },
+            {
+                title: "Level 3: Text Alignment", desc: "Center the text horizontally and align it to the top vertically.", cssFile: "text.css", html: `<table width="100%" height="150" border="1">\n  <tr>\n    <td class="cell">Text Content</td>\n  </tr>\n</table>`,
+                options: [
+                    { code: `.cell {\n  text-align: center;\n  vertical-align: top;\n}`, correct: true }, { code: `.cell {\n  text-align: justify;\n  vertical-align: bottom;\n}`, correct: false }, { code: `.cell {\n  align-text: center;\n  align-vertical: top;\n}`, correct: false }, { code: `.cell {\n  justify-content: center;\n}`, correct: false }
+                ], baseCSS: `table { border-color: #94a3b8; background: #f8fafc; }`
+            },
+            {
+                title: "Level 4: Vibrant Colors", desc: "Change the background-color to deep blue (#0ea5e9) and the text color to white.", cssFile: "theme.css", html: `<div class="card">Ocean Theme</div>`,
+                options: [
+                    { code: `.card {\n  background-color: #0ea5e9;\n  color: white;\n}`, correct: true }, { code: `.card {\n  bg-color: blue;\n  text-color: white;\n}`, correct: false }, { code: `.card {\n  background-color: white;\n  color: #0ea5e9;\n}`, correct: false }, { code: `.card {\n  fill: #0ea5e9;\n  font-color: white;\n}`, correct: false }
+                ], baseCSS: `.card { width: 200px; padding: 40px; text-align: center; border-radius: 8px; font-weight: bold; border: 2px solid #ccc; }`
+            },
+            {
+                title: "Level 5: Typography", desc: "Change the font-family to 'Courier New', sans-serif and the font-size to 24px.", cssFile: "fonts.css", html: `<p class="text">Typography Design</p>`,
+                options: [
+                    { code: `.text {\n  font-family: "Courier New", sans-serif;\n  font-size: 24px;\n}`, correct: true }, { code: `.text {\n  font-family: Arial;\n  size: 24px;\n}`, correct: false }, { code: `.text {\n  text-font: "Courier New";\n  text-size: 24px;\n}`, correct: false }, { code: `.text {\n  font: "Courier New" 24px;\n}`, correct: false }
+                ], baseCSS: ``
+            },
+            {
+                title: "Level 6: Text Emphasis", desc: "Make the text bold using font-weight and italicized using font-style.", cssFile: "style.css", html: `<span class="highlight">Important text</span>`,
+                options: [
+                    { code: `.highlight {\n  font-weight: bold;\n  font-style: italic;\n}`, correct: true }, { code: `.highlight {\n  font-style: bold;\n  font-weight: italic;\n}`, correct: false }, { code: `.highlight {\n  text-weight: 700;\n  text-style: oblique;\n}`, correct: false }, { code: `.highlight {\n  decoration: bold italic;\n}`, correct: false }
+                ], baseCSS: `.highlight { font-size: 20px; color: #0369a1; }`
+            },
+            {
+                title: "Level 7: Link Formatting", desc: "Remove the default underline from the link using text-decoration.", cssFile: "link.css", html: `<a href="#" class="btn">Click Here</a>`,
+                options: [
+                    { code: `.btn {\n  text-decoration: none;\n}`, correct: true }, { code: `.btn {\n  text-decoration: underline;\n}`, correct: false }, { code: `.btn {\n  underline: none;\n}`, correct: false }, { code: `.btn {\n  text-style: none;\n}`, correct: false }
+                ], baseCSS: `body { padding: 40px; text-align: center; } .btn { font-size: 22px; color: #0284c7; font-weight: bold; }`
+            },
+            {
+                title: "Level 8: Borders", desc: "Add a solid navy border with a thickness of 4px.", cssFile: "border.css", html: `<div class="box">Border Me</div>`,
+                options: [
+                    { code: `.box {\n  border: 4px solid navy;\n}`, correct: true }, { code: `.box {\n  outline: 4px solid navy;\n}`, correct: false }, { code: `.box {\n  border-color: navy;\n  border-size: 4px;\n}`, correct: false }, { code: `.box {\n  border-width: 4px;\n}`, correct: false }
+                ], baseCSS: `.box { width: 150px; height: 50px; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: navy; font-weight: bold; }`
+            },
+            {
+                title: "Level 9: Table Collapse", desc: "Merge the table borders into a single border using border-collapse.", cssFile: "table.css", html: `<table class="tb1" border="1">\n  <tr><td>Cell 1</td><td>Cell 2</td></tr>\n</table>`,
+                options: [
+                    { code: `.tb1 {\n  border-collapse: collapse;\n}`, correct: true }, { code: `.tb1 {\n  border-collapse: separate;\n}`, correct: false }, { code: `.tb1 {\n  border-spacing: 0;\n}`, correct: false }, { code: `.tb1 {\n  border-merge: true;\n}`, correct: false }
+                ], baseCSS: `table { background: #bae6fd; } td { padding: 15px; border-color: #0284c7; }`
+            },
+            {
+                title: "Level 10: The Box Model", desc: "Apply 20px of padding inside the box and 15px of margin outside the box.", cssFile: "box.css", html: `<div class="container">\n  <div class="box">Core</div>\n</div>`,
+                options: [
+                    { code: `.box {\n  padding: 20px;\n  margin: 15px;\n}`, correct: true }, { code: `.box {\n  spacing: 20px;\n  outside: 15px;\n}`, correct: false }, { code: `.box {\n  margin: 20px;\n  padding: 15px;\n}`, correct: false }, { code: `.box {\n  inner: 20px;\n  outer: 15px;\n}`, correct: false }
+                ], baseCSS: `.container { background: #94a3b8; border: 2px solid #0f172a; } .box { background: #38bdf8; border: 2px dashed white; font-weight: bold; text-align: center; color: white; }`
+            },
+            // 11-20: Advanced CSS
+            {
+                title: "Level 11: Display Block", desc: "Change the inline span tags to block elements so they stack vertically.", cssFile: "display.css", html: `<span class="item">Item 1</span>\n<span class="item">Item 2</span>`,
+                options: [
+                    { code: `.item {\n  display: block;\n}`, correct: true }, { code: `.item {\n  display: inline;\n}`, correct: false }, { code: `.item {\n  position: vertical;\n}`, correct: false }, { code: `.item {\n  float: none;\n}`, correct: false }
+                ], baseCSS: `.item { background: #0284c7; color: white; padding: 10px; margin-bottom: 5px; border-radius: 4px; font-weight: bold; }`
+            },
+            {
+                title: "Level 12: Background Patterns", desc: "Set a background image and make it repeat only horizontally.", cssFile: "bg.css", html: `<div class="bg-box"></div>`,
+                options: [
+                    { code: `.bg-box {\n  background-image: url("https://www.transparenttextures.com/patterns/cubes.png");\n  background-repeat: repeat-x;\n}`, correct: true }, { code: `.bg-box {\n  background-image: url("...");\n  background-repeat: repeat-y;\n}`, correct: false }, { code: `.bg-box {\n  image: url("...");\n  repeat: horizontal;\n}`, correct: false }, { code: `.bg-box {\n  bg-image: url("...");\n  repeat-x: true;\n}`, correct: false }
+                ], baseCSS: `.bg-box { width: 100%; height: 150px; background-color: #0ea5e9; border: 3px solid #075985; }`
+            },
+            {
+                title: "Level 13: Flexbox Basics", desc: "Turn the container into a flex container and center the items horizontally.", cssFile: "flex.css", html: `<div class="flex-container">\n  <div class="box">1</div>\n  <div class="box">2</div>\n</div>`,
+                options: [
+                    { code: `.flex-container {\n  display: flex;\n  justify-content: center;\n}`, correct: true }, { code: `.flex-container {\n  display: block;\n  text-align: center;\n}`, correct: false }, { code: `.flex-container {\n  display: flex;\n  align-items: center;\n}`, correct: false }, { code: `.flex-container {\n  flex-direction: row-center;\n}`, correct: false }
+                ], baseCSS: `.flex-container { background: #e0f2fe; padding: 20px; border-radius: 8px; } .box { width: 50px; height: 50px; background: #0284c7; margin: 5px; color: white; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; border-radius: 8px; }`
+            },
+            {
+                title: "Level 14: Absolute Positioning", desc: "Position the star absolutely at the top-right corner (0px from top, 0px from right).", cssFile: "pos.css", html: `<div class="relative-box">\n  <div class="star">⭐</div>\n</div>`,
+                options: [
+                    { code: `.star {\n  position: absolute;\n  top: 0;\n  right: 0;\n}`, correct: true }, { code: `.star {\n  position: relative;\n  top: 0;\n  right: 0;\n}`, correct: false }, { code: `.star {\n  position: fixed;\n  top: 0;\n  left: 100%;\n}`, correct: false }, { code: `.star {\n  float: right;\n  margin-top: 0;\n}`, correct: false }
+                ], baseCSS: `.relative-box { position: relative; width: 200px; height: 100px; background: #0f172a; border-radius: 8px; margin: 20px; } .star { font-size: 24px; }`
+            },
+            {
+                title: "Level 15: Layering (Z-Index)", desc: "Bring the yellow box to the front by giving it a higher z-index.", cssFile: "layer.css", html: `<div class="blue-box"></div>\n<div class="yellow-box"></div>`,
+                options: [
+                    { code: `.yellow-box {\n  z-index: 10;\n}`, correct: true }, { code: `.yellow-box {\n  layer: front;\n}`, correct: false }, { code: `.yellow-box {\n  z-index: -1;\n}`, correct: false }, { code: `.yellow-box {\n  bring-to-front: true;\n}`, correct: false }
+                ], baseCSS: `body { position: relative; padding: 40px; } .blue-box { position: absolute; top: 30px; left: 30px; width: 100px; height: 100px; background: #0369a1; z-index: 5; border-radius: 8px; border: 2px solid white; } .yellow-box { position: absolute; top: 60px; left: 60px; width: 100px; height: 100px; background: #facc15; border-radius: 8px; border: 2px solid white; }`
+            },
+            {
+                title: "Level 16: Border Radius", desc: "Make the square a perfect circle using border-radius.", cssFile: "shape.css", html: `<div class="circle"></div>`,
+                options: [
+                    { code: `.circle {\n  border-radius: 50%;\n}`, correct: true }, { code: `.circle {\n  border-radius: 100px;\n}`, correct: false }, { code: `.circle {\n  circle: true;\n}`, correct: false }, { code: `.circle {\n  border-round: 50%;\n}`, correct: false }
+                ], baseCSS: `.circle { width: 120px; height: 120px; background: #0284c7; margin: 20px auto; box-shadow: inset 0 0 20px rgba(255,255,255,0.5); }`
+            },
+            {
+                title: "Level 17: Box Shadow", desc: "Add a deep shadow to the card using box-shadow.", cssFile: "shadow.css", html: `<div class="card">Shadow Box</div>`,
+                options: [
+                    { code: `.card {\n  box-shadow: 4px 4px 15px rgba(2, 132, 199, 0.6);\n}`, correct: true }, { code: `.card {\n  shadow: 15px blue;\n}`, correct: false }, { code: `.card {\n  filter: drop-shadow(4px 4px blue);\n}`, correct: false }, { code: `.card {\n  border-shadow: 4px 4px 15px blue;\n}`, correct: false }
+                ], baseCSS: `.card { width: 150px; height: 80px; background: white; display: flex; align-items: center; justify-content: center; margin: 30px; font-weight: bold; border-radius: 8px; color: #0369a1; } body { background: #e0f2fe; }`
+            },
+            {
+                title: "Level 18: Transitions", desc: "Make the hover color change smooth by adding a 0.5s transition.", cssFile: "anim.css", html: `<button class="btn">Hover Me</button>`,
+                options: [
+                    { code: `.btn {\n  transition: background-color 0.5s;\n}`, correct: true }, { code: `.btn {\n  animation: 0.5s;\n}`, correct: false }, { code: `.btn {\n  smooth: 0.5s;\n}`, correct: false }, { code: `.btn {\n  transition-time: 0.5s;\n}`, correct: false }
+                ], baseCSS: `.btn { padding: 12px 24px; background-color: #0284c7; color: white; border: none; font-size: 18px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 20px; } .btn:hover { background-color: #f59e0b; }`
+            },
+            {
+                title: "Level 19: Transform", desc: "Scale the submarine up by 1.5 times its size using transform.", cssFile: "transform.css", html: `<div class="icon">🌊🚤</div>`,
+                options: [
+                    { code: `.icon {\n  transform: scale(1.5);\n}`, correct: true }, { code: `.icon {\n  scale: 1.5;\n}`, correct: false }, { code: `.icon {\n  size: 150%;\n}`, correct: false }, { code: `.icon {\n  transform: zoom(1.5);\n}`, correct: false }
+                ], baseCSS: `.icon { font-size: 40px; margin: 50px; display: inline-block; background: #bae6fd; padding: 20px; border-radius: 50%; }`
+            },
+            {
+                title: "Level 20: CSS Grid Basics", desc: "Create a grid layout with exactly 3 equal columns.", cssFile: "grid.css", html: `<div class="grid">\n  <div class="cell">A</div><div class="cell">B</div><div class="cell">C</div>\n</div>`,
+                options: [
+                    { code: `.grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr 1fr;\n}`, correct: true }, { code: `.grid {\n  display: grid;\n  columns: 3;\n}`, correct: false }, { code: `.grid {\n  display: flex;\n  columns: 33% 33% 33%;\n}`, correct: false }, { code: `.grid {\n  grid-columns: repeat(3, 1fr);\n}`, correct: false }
+                ], baseCSS: `.grid { gap: 10px; background: #0369a1; padding: 10px; border-radius: 8px; } .cell { background: white; padding: 20px; text-align: center; font-weight: bold; font-size: 1.2em; color: #0284c7; border-radius: 4px; }`
+            }
+        ];
+
+        let modeStart = 0;
+        let modeEnd = 19;
+        let currentLevel = 0;
+        let isCssConnected = false;
+        let completedLevels = new Set();
+        let consecutiveWrongGuesses = 0;
+
+        // Font Sizing Controls
+        function setFontSize(size) {
+            const root = document.documentElement;
+            document.querySelectorAll('.font-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + size).classList.add('active');
+
+            if(size === 'sm') {
+                root.style.setProperty('--base-font', '14px');
+                root.style.setProperty('--code-font', '13.5px');
+                root.style.setProperty('--heading-font', '1.1em');
+            } else if (size === 'md') {
+                root.style.setProperty('--base-font', '16px');
+                root.style.setProperty('--code-font', '15px');
+                root.style.setProperty('--heading-font', '1.25em');
+            } else if (size === 'lg') {
+                root.style.setProperty('--base-font', '18px');
+                root.style.setProperty('--code-font', '17px');
+                root.style.setProperty('--heading-font', '1.4em');
+            }
+        }
+
+        function startGame(start, end) {
+            modeStart = start;
+            modeEnd = end;
+            currentLevel = start;
+            completedLevels.clear();
+            consecutiveWrongGuesses = 0;
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'flex';
+            
+            initTabs();
+            loadLevel(currentLevel);
+        }
+
+        function initTabs() {
+            const tabsContainer = document.getElementById('level-tabs');
+            tabsContainer.innerHTML = '';
+            for(let i = modeStart; i <= modeEnd; i++) {
+                const btn = document.createElement('button');
+                
+                let classes = ['level-tab'];
+                if (i === currentLevel) classes.push('active');
+                if (completedLevels.has(i)) classes.push('completed');
+                
+                btn.className = classes.join(' ');
+                btn.innerText = `Lvl ${i + 1}`;
+                btn.onclick = () => loadLevel(i);
+                tabsContainer.appendChild(btn);
+            }
+        }
+
+        function loadLevel(index) {
+            currentLevel = index;
+            isCssConnected = false;
+            consecutiveWrongGuesses = 0; // Reset penalty counter on level switch
+            
+            initTabs();
+            
+            const lvl = allLevels[currentLevel];
+            document.getElementById('lvl-title').innerText = lvl.title;
+            document.getElementById('lvl-desc').innerText = lvl.desc;
+            document.getElementById('req-css-file').innerText = lvl.cssFile;
+            
+            // Check if already completed
+            document.getElementById('lvl-status').innerText = completedLevels.has(index) ? '✅' : '❌';
+            document.getElementById('html-structure').innerText = lvl.html;
+            
+            // Reset Input Step
+            const linkStep = document.getElementById('link-step-container');
+            linkStep.className = 'link-step';
+            const inputField = document.getElementById('css-link-input');
+            inputField.value = '';
+            inputField.disabled = false;
+            document.querySelector('.connect-btn').style.display = 'inline-block';
+            document.getElementById('link-error-msg').style.display = 'none';
+            
+            document.getElementById('css-options-container').style.display = 'none';
+            
+            updateIframe(''); 
+        }
+
+        function connectCSS() {
+            if (isCssConnected) return;
+            
+            const inputField = document.getElementById('css-link-input');
+            const linkStep = document.getElementById('link-step-container');
+            const errorMsg = document.getElementById('link-error-msg');
+            const expectedFile = allLevels[currentLevel].cssFile;
+            
+            // Allow exact match: href="filename.css" or href='filename.css'
+            const val = inputField.value.trim().replace(/'/g, '"');
+            const expectedAttr = `href="${expectedFile}"`;
+
+            if (val === expectedAttr) {
+                isCssConnected = true;
+                linkStep.className = 'link-step connected';
+                inputField.disabled = true;
+                document.querySelector('.connect-btn').style.display = 'none';
+                errorMsg.style.display = 'none';
+                
+                document.getElementById('css-options-container').style.display = 'flex';
+                renderOptions();
+            } else {
+                linkStep.classList.remove('error');
+                void linkStep.offsetWidth; // trigger reflow for animation
+                linkStep.classList.add('error');
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        function renderOptions() {
+            const container = document.getElementById('options-list');
+            container.innerHTML = '';
+            
+            // Randomize options
+            const options = [...allLevels[currentLevel].options].sort(() => Math.random() - 0.5);
+            
+            options.forEach((opt) => {
+                const div = document.createElement('div');
+                div.className = 'css-option';
+                div.innerHTML = `<pre><code class="language-css">${opt.code}</code></pre>`;
+                
+                div.onmouseenter = () => updateIframe(opt.code);
+                div.onmouseleave = () => { if(!div.classList.contains('correct-pick')) updateIframe(''); }
+                
+                div.onclick = () => validateAnswer(div, opt.correct, opt.code);
+                
+                container.appendChild(div);
+            });
+            
+            Prism.highlightAllUnder(container);
+        }
+
+        function updateIframe(customCSS) {
+            const iframe = document.getElementById('preview-iframe');
+            const doc = iframe.contentWindow.document;
+            const lvl = allLevels[currentLevel];
+            
+            doc.open();
+            doc.write(`
+                <html>
+                <head>
+                    <style>
+                        body { font-family: sans-serif; padding: 20px; margin: 0; background: transparent; }
+                        ${lvl.baseCSS}
+                        ${customCSS}
+                    </style>
+                </head>
+                <body>
+                    ${lvl.html}
+                </body>
+                </html>
+            `);
+            doc.close();
+        }
+
+        function triggerPenalty() {
+            const body = document.body;
+            const overlay = document.getElementById('penalty-overlay');
+            const countdownEl = document.getElementById('countdown-text');
+            
+            body.classList.add('sea-shake');
+            overlay.style.display = 'flex';
+            
+            let timeLeft = 5;
+            countdownEl.innerText = timeLeft;
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                countdownEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    body.classList.remove('sea-shake');
+                    overlay.style.display = 'none';
+                    consecutiveWrongGuesses = 0; // Reset counter
+                    
+                    // Re-enable options
+                    const allOpts = document.querySelectorAll('.css-option');
+                    allOpts.forEach(opt => {
+                        opt.classList.remove('wrong-pick');
+                        opt.style.pointerEvents = 'auto';
+                    });
+                }
+            }, 1000);
+        }
+
+        function validateAnswer(element, isCorrect, code) {
+            const allOpts = document.querySelectorAll('.css-option');
+            allOpts.forEach(opt => opt.style.pointerEvents = 'none');
+            
+            if (isCorrect) {
+                consecutiveWrongGuesses = 0; // Reset consecutive wrongs
+                element.classList.add('correct-pick');
+                updateIframe(code);
+                document.getElementById('lvl-status').innerText = '✅';
+                completedLevels.add(currentLevel);
+                
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#0284c7', '#38bdf8', '#bae6fd'] });
+                
+                setTimeout(() => {
+                    initTabs();
+                    // Find next uncompleted level
+                    let nextLevel = currentLevel + 1;
+                    while(nextLevel <= modeEnd && completedLevels.has(nextLevel)) {
+                        nextLevel++;
+                    }
+
+                    if (nextLevel <= modeEnd) {
+                        if(confirm("Correct! Ready for the next level?")) {
+                            loadLevel(nextLevel);
+                        }
+                    } else {
+                        // Check if ALL levels in mode are completed
+                        if (completedLevels.size === (modeEnd - modeStart + 1)) {
+                            alert("🎉 CONGRATULATIONS! You have conquered the Ocean! 🎉");
+                            document.getElementById('start-screen').style.display = 'flex';
+                            document.getElementById('game-ui').style.display = 'none';
+                        }
+                    }
+                }, 800);
+                
+            } else {
+                consecutiveWrongGuesses++;
+                element.classList.add('wrong-pick');
+                
+                if (consecutiveWrongGuesses >= 2) {
+                    // Trigger the 5s penalty
+                    triggerPenalty();
+                } else {
+                    // Normal brief error state
+                    setTimeout(() => {
+                        element.classList.remove('wrong-pick');
+                        allOpts.forEach(opt => opt.style.pointerEvents = 'auto');
+                    }, 500);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
