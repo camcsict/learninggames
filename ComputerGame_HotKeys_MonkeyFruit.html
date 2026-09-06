@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monkey Fruit Harvest - Pro Keyboard Master</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        /* --- CUSTOM SCROLLBAR FOR CRATE --- */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #8B4513; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: #2E8B57; border-radius: 5px; }
+
+        /* --- GLOBAL LAYOUT (CSS GRID) --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: grid;
+            /* Cấu trúc Grid:
+               Cột 1: Progress Bar (50px)
+               Cột 2: Khu vực chính (Game + Bàn phím) - chiếm phần lớn
+               Cột 3: Bảng điều khiển bên phải (220px) 
+            */
+            grid-template-columns: 70px 1fr 240px;
+            gap: 15px;
+            padding: 15px;
+        }
+
+        /* --- FIREWORKS CANVAS --- */
+        #fireworks-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* --- START MODAL (POPUP) --- */
+        #start-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 6px solid #2E8B57;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-content h2 { color: #D84315; margin-top: 0; }
+        .input-group { margin: 15px 0; text-align: left; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .input-group input { width: 100%; padding: 10px; font-size: 18px; border: 2px solid #8B4513; border-radius: 8px; }
+
+        button.btn-primary {
+            background: #2E8B57; color: white; border: none;
+            padding: 12px 24px; font-size: 18px; font-weight: bold;
+            border-radius: 8px; cursor: pointer; box-shadow: 0 4px #004d00;
+            width: 100%; margin-top: 10px; transition: 0.1s;
+        }
+        button.btn-primary:active { transform: translateY(4px); box-shadow: 0 0 #004d00; }
+
+        /* --- LEFT COLUMN: VERTICAL PROGRESS BAR --- */
+        #left-col {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        #progress-container {
+            width: 40px;
+            height: 80%;
+            background: rgba(255, 255, 255, 0.5);
+            border: 4px solid #8B4513;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+        }
+        #progress-fill {
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(to top, #ff4e50, #f9d423);
+            transition: height 0.3s ease, background 0.3s;
+            border-radius: 15px; /* Để bo góc khớp với container */
+        }
+        #progress-text-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            pointer-events: none;
+        }
+        /* Trick để chữ hiển thị tương phản (mix-blend-mode không phải lúc nào cũng tốt, nên dùng shadow mạnh) */
+        #progress-text {
+            position: absolute;
+            top: -30px; /* Đẩy chữ lên trên đỉnh thanh (không bị đè) */
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #D84315;
+            font-size: 18px;
+            text-shadow: 1px 1px 0px white, -1px -1px 0px white, 1px -1px 0px white, -1px 1px 0px white;
+            white-space: nowrap;
+        }
+
+        /* --- MIDDLE COLUMN: GAME & KEYBOARD --- */
+        #mid-col {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: 100%;
+            min-width: 0; /* Ngăn Grid overflow */
+        }
+
+        /* Game Area (Top Half) */
+        #game-area {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            flex: 1; /* Chiếm không gian còn lại */
+            min-height: 0; /* Cho phép co lại */
+        }
+
+        #scene-container {
+            background: #fff;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            border: 3px solid #8B4513;
+            flex: 1.5; /* Rộng hơn thùng trái cây */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #scene {
+            font-size: 60px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+        }
+
+        .actor { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #fruit { position: relative; z-index: 10; }
+
+        .key-prompt {
+            display: inline-block;
+            background-color: #333;
+            color: #00FF00;
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-size: 26px;
+            font-weight: bold;
+            font-family: monospace;
+            box-shadow: 0 4px 0 #000;
+            margin: 5px 0;
+        }
+
+        #message { height: 20px; font-size: 16px; font-weight: bold; text-align: center; }
+        .success { color: #32CD32; }
+        .error { color: #DC143C; animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+
+        /* Crate */
+        #crate-container {
+            flex: 1;
+            background: #8B4513;
+            border: 6px solid #5C3317;
+            border-radius: 12px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 5px 10px rgba(0,0,0,0.3);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            background-image: repeating-linear-gradient( 90deg, transparent, transparent 30px, rgba(0,0,0,0.1) 30px, rgba(0,0,0,0.1) 32px );
+        }
+        #crate-title { color: #FFD700; text-align: center; font-weight: bold; font-size: 18px; border-bottom: 2px dashed #5C3317; padding-bottom: 5px; margin-bottom: 5px; flex-shrink: 0; }
+        #collected-fruits { display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; flex-grow: 1; overflow-y: auto; padding-right: 5px; }
+        .mini-fruit { font-size: 24px; animation: popIn 0.3s; }
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+        /* Keyboard Area (Bottom Half) */
+        #keyboard-section {
+            flex-shrink: 0; /* Không co lại */
+            text-align: center;
+            width: 100%;
+        }
+        #virtual-keyboard-wrapper {
+            display: flex; gap: 15px; justify-content: center; flex-wrap: nowrap;
+            background: #2c3e50; padding: 15px; border-radius: 15px; border: 4px solid #1a252f; position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        #vk-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); border-radius: 11px;
+            display: flex; justify-content: center; align-items: center;
+            color: white; font-size: 24px; font-weight: bold; z-index: 50; backdrop-filter: blur(2px);
+        }
+
+        .sys-warning { color: #ff9f43; font-weight: bold; margin-bottom: 5px; font-size: 16px; display: none; }
+        
+        /* Main Keyboard - BIGGER SIZES */
+        .vk-row { display: flex; justify-content: center; gap: 6px; margin-bottom: 6px; }
+        .vk-key {
+            background: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 6px;
+            padding: 5px; min-width: 40px; height: 45px;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Segoe UI', sans-serif; font-weight: bold; font-size: 15px;
+            color: #2c3e50; box-shadow: 0 4px 0 #95a5a6; cursor: pointer; user-select: none; transition: 0.1s;
+        }
+        .vk-key:active { transform: translateY(4px); box-shadow: 0 0 0 #95a5a6; background: #bdc3c7; }
+        
+        /* Active Toggles */
+        .vk-key.active-mod { background: #2ecc71; color: white; border-color: #27ae60; box-shadow: 0 4px 0 #27ae60; }
+        .vk-key.active-mod:active { box-shadow: 0 0 0 #27ae60; }
+        .vk-key.active-lock { background: #f1c40f; color: #333; border-color: #f39c12; box-shadow: 0 4px 0 #f39c12; }
+        
+        .key-wide { min-width: 65px; } .key-wider { min-width: 80px; } .key-space { width: 300px; }
+
+        /* Numpad Layout (CSS Grid) - BIGGER SIZES */
+        #numpad-layout {
+            display: grid; grid-template-columns: repeat(4, 45px); grid-template-rows: repeat(5, 45px); gap: 6px;
+        }
+        .np-key {
+            background: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 6px;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+            font-size: 15px; color: #2c3e50; box-shadow: 0 4px 0 #95a5a6; cursor: pointer;
+        }
+        .np-key:active { transform: translateY(4px); box-shadow: 0 0 0 #95a5a6; background: #bdc3c7; }
+        .np-key.dimmed { background: #95a5a6; color: #7f8c8d; box-shadow: 0 4px 0 #7f8c8d; cursor: not-allowed; }
+        .np-plus { grid-row: span 2; height: 96px; }
+        .np-enter { grid-row: span 2; height: 96px; }
+        .np-zero { grid-column: span 2; width: 96px; }
+
+        /* --- RIGHT COLUMN: TITLE & DASHBOARD --- */
+        #right-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #FFF;
+            padding: 20px 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            border: 4px solid #8B4513;
+        }
+
+        #right-col h1 {
+            color: #2E8B57;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            font-size: 24px;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        #right-col h1 span { display: block; font-size: 32px; margin-bottom: 10px;} /* Khỉ to hơn */
+
+        .stat-box { 
+            width: 100%;
+            font-size: 16px; 
+            font-weight: bold; 
+            display: flex; 
+            flex-direction: column; /* Chữ nằm trên, số nằm dưới */
+            align-items: center; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .stat-label { margin-bottom: 5px; color: #333; }
+        .stat-value { 
+            color: #D84315; 
+            font-size: 28px; 
+            background: #FFF9C4; 
+            padding: 5px 15px; 
+            border-radius: 8px; 
+            border: 2px solid #FBC02D; 
+            width: 100%;
+        }
+        
+        #time-val { color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+    <!-- Start Modal -->
+    <div id="start-modal">
+        <div class="modal-content">
+            <h2>🐒 Setup Harvest Bet</h2>
+            <p>Set your target score and time to win!</p>
+            <div class="input-group">
+                <label for="bet-score">🎯 Target Score (Bet):</label>
+                <input type="number" id="bet-score" value="100" min="10" step="10">
+            </div>
+            <div class="input-group">
+                <label for="bet-time">⏳ Time (Seconds):</label>
+                <input type="number" id="bet-time" value="60" min="10" max="300">
+            </div>
+            <button id="btn-start" class="btn-primary">Start Game</button>
+        </div>
+    </div>
+
+    <!-- Fireworks Canvas -->
+    <canvas id="fireworks-canvas"></canvas>
+
+    <!-- LEFT COLUMN -->
+    <div id="left-col">
+        <div id="progress-container">
+            <div id="progress-fill"></div>
+            <!-- Chữ phần trăm bám theo đỉnh của fill -->
+            <div id="progress-text-container">
+                <div id="progress-text">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MIDDLE COLUMN -->
+    <div id="mid-col">
+        
+        <!-- Game Area -->
+        <div id="game-area">
+            <div id="scene-container">
+                <div style="font-size: 18px; color: #333; text-align: center;">
+                    Action: <strong id="action-name" style="font-size:20px;">???</strong>
+                </div>
+                <div id="scene">
+                    <div id="monkey" class="actor">🐒</div>
+                    <div id="fruit" class="actor">❓</div>
+                </div>
+                <div style="text-align: center; width: 100%;">
+                    <span id="key-prompt" class="key-prompt">Press Start</span>
+                </div>
+                <div id="message" style="color:#555;">Waiting to start...</div>
+            </div>
+
+            <div id="crate-container">
+                <div id="crate-title">📦 Fruit Crate</div>
+                <div id="collected-fruits"></div>
+            </div>
+        </div>
+
+        <!-- Virtual Keyboard Section -->
+        <div id="keyboard-section">
+            <div class="sys-warning" id="sys-warning">⚠️ System Command! Unlock and use the VIRTUAL KEYBOARD below:</div>
+            <div id="virtual-keyboard-wrapper">
+                <div id="vk-overlay">Game not started</div>
+                
+                <!-- Main Layout -->
+                <div id="keyboard-layout"></div>
+                
+                <!-- Numpad Layout -->
+                <div id="numpad-layout"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div id="right-col">
+        <h1><span>🐒</span> Monkey Fruit Harvest</h1>
+        
+        <div class="stat-box">
+            <div class="stat-label">🎯 Target</div>
+            <div class="stat-value" id="display-target">0</div>
+        </div>
+        
+        <div class="stat-box">
+            <div class="stat-label">🏆 Score</div>
+            <div class="stat-value" id="score">0</div>
+        </div>
+        
+        <div class="stat-box" style="margin-top: auto;"> <!-- Đẩy xuống dưới cùng -->
+            <div class="stat-label">⏳ Time Left</div>
+            <div class="stat-value" id="time-val">0s</div>
+        </div>
+    </div>
+
+    <script>
+        /* ================= GAME CONFIGURATION ================= */
+        const shortcuts = [
+            // Standard
+            { display: 'Ctrl + C', ctrl: true, alt: false, meta: false, shift: false, key: 'c', isNumpad: false, action: 'Copy', fruit: '🍌', isVirtual: false },
+            { display: 'Ctrl + V', ctrl: true, alt: false, meta: false, shift: false, key: 'v', isNumpad: false, action: 'Paste', fruit: '🍎', isVirtual: false },
+            { display: 'Ctrl + X', ctrl: true, alt: false, meta: false, shift: false, key: 'x', isNumpad: false, action: 'Cut', fruit: '🍉', isVirtual: false },
+            
+            // Uppercase (requires Shift OR CapsLock)
+            { display: 'Shift + A', ctrl: false, alt: false, meta: false, shift: true, key: 'a', isNumpad: false, action: 'Type Uppercase A', fruit: '🍇', isVirtual: false },
+            { display: 'Shift + F', ctrl: false, alt: false, meta: false, shift: true, key: 'f', isNumpad: false, action: 'Type Uppercase F', fruit: '🍓', isVirtual: false },
+            
+            // Numpad (requires NumLock ON)
+            { display: 'NumPad 5', ctrl: false, alt: false, meta: false, shift: false, key: '5', isNumpad: true, action: 'Type 5 on NumPad', fruit: '🍒', isVirtual: false },
+            { display: 'NumPad 9', ctrl: false, alt: false, meta: false, shift: false, key: '9', isNumpad: true, action: 'Type 9 on NumPad', fruit: '🥭', isVirtual: false },
+            
+            // System level (requires virtual keyboard)
+            { display: 'Ctrl + T', ctrl: true, alt: false, meta: false, shift: false, key: 't', isNumpad: false, action: 'New Tab', fruit: '🥥', isVirtual: true },
+            { display: 'Alt + F4', ctrl: false, alt: true, meta: false, shift: false, key: 'f4', isNumpad: false, action: 'Close App', fruit: '🚪', isVirtual: true }
+        ];
+
+        /* ================= AUDIO ================= */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'success') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'win') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1); osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.8);
+            }
+        }
+
+        /* ================= FIREWORKS ================= */
+        const fwCanvas = document.getElementById('fireworks-canvas');
+        const fwCtx = fwCanvas.getContext('2d');
+        let fwParticles = [];
+        let fwInterval = null;
+        function resizeFw() { fwCanvas.width = window.innerWidth; fwCanvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeFw);
+        resizeFw();
+
+        function createFirework(x, y) {
+            for(let i=0; i<60; i++) {
+                fwParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`, alpha: 1
+                });
+            }
+        }
+        function drawFireworks() {
+            fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+            for (let i = fwParticles.length - 1; i >= 0; i--) {
+                let p = fwParticles[i];
+                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.alpha -= 0.015;
+                fwCtx.globalAlpha = Math.max(0, p.alpha);
+                fwCtx.fillStyle = p.color;
+                fwCtx.beginPath(); fwCtx.arc(p.x, p.y, 4, 0, Math.PI*2); fwCtx.fill();
+                if (p.alpha <= 0) fwParticles.splice(i, 1);
+            }
+            if (fwParticles.length > 0 || fwInterval) requestAnimationFrame(drawFireworks);
+            else fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+        }
+        function startFireworks() {
+            fwParticles = [];
+            requestAnimationFrame(drawFireworks);
+            fwInterval = setInterval(() => {
+                createFirework(Math.random() * fwCanvas.width, Math.random() * fwCanvas.height * 0.5);
+            }, 500);
+            setTimeout(() => { clearInterval(fwInterval); fwInterval = null; }, 4000);
+        }
+
+        /* ================= BUILD VIRTUAL KEYBOARDS ================= */
+        const keyboardMap = [
+            ['Esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'],
+            ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
+            ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
+            ['Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'", 'Enter'],
+            ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'ShiftRight'],
+            ['Ctrl', 'Win', 'Alt', 'Space', 'AltRight', 'WinRight', 'Menu', 'CtrlRight']
+        ];
+        const keyCodes = {
+            'Esc': 'escape', 'Backspace': 'backspace', 'Tab': 'tab', 'Caps': 'capslock',
+            'Enter': 'enter', 'Shift': 'shift', 'ShiftRight': 'shift', 'Ctrl': 'control',
+            'CtrlRight': 'control', 'Win': 'meta', 'WinRight': 'meta', 'Alt': 'alt',
+            'AltRight': 'alt', 'Space': ' ', 'Menu': 'contextmenu'
+        };
+
+        const vkLayout = document.getElementById('keyboard-layout');
+        let vModifiers = { control: false, alt: false, meta: false, shift: false };
+        let isCapsOn = false;
+        let isNumLockOn = true;
+        let letterButtons = [];
+
+        keyboardMap.forEach(row => {
+            const rowDiv = document.createElement('div'); rowDiv.className = 'vk-row';
+            row.forEach(keyDisplay => {
+                const btn = document.createElement('button');
+                const keyVal = keyCodes[keyDisplay] || keyDisplay.toLowerCase();
+                
+                btn.className = 'vk-key';
+                if (['Backspace', 'Tab', 'Caps', 'Enter', 'Shift', 'ShiftRight'].includes(keyDisplay)) btn.classList.add('key-wide');
+                if (['Ctrl', 'CtrlRight', 'Win', 'WinRight', 'Alt', 'AltRight'].includes(keyDisplay)) btn.classList.add('key-wider');
+                if (keyDisplay === 'Space') btn.classList.add('key-space');
+                
+                btn.textContent = keyDisplay.replace('Right', ''); 
+                btn.setAttribute('data-key', keyVal);
+                if(keyVal.length === 1 && keyVal >= 'a' && keyVal <= 'z') letterButtons.push(btn);
+                
+                btn.onclick = () => handleVirtualClick(btn, keyVal, false);
+                rowDiv.appendChild(btn);
+            });
+            vkLayout.appendChild(rowDiv);
+        });
+
+        const numpadLayout = document.getElementById('numpad-layout');
+        const numpadKeys = [
+            { label: 'Num', key: 'numlock', cls: '' }, { label: '/', key: '/', cls: '' }, { label: '*', key: '*', cls: '' }, { label: '-', key: '-', cls: '' },
+            { label: '7', key: '7', cls: 'np-num' }, { label: '8', key: '8', cls: 'np-num' }, { label: '9', key: '9', cls: 'np-num' }, { label: '+', key: '+', cls: 'np-plus' },
+            { label: '4', key: '4', cls: 'np-num' }, { label: '5', key: '5', cls: 'np-num' }, { label: '6', key: '6', cls: 'np-num' },
+            { label: '1', key: '1', cls: 'np-num' }, { label: '2', key: '2', cls: 'np-num' }, { label: '3', key: '3', cls: 'np-num' }, { label: 'Enter', key: 'enter', cls: 'np-enter' },
+            { label: '0', key: '0', cls: 'np-zero np-num' }, { label: '.', key: '.', cls: 'np-num' }
+        ];
+        
+        let numpadNumberBtns = [];
+        let numLockBtn = null;
+
+        numpadKeys.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = `np-key ${item.cls}`;
+            btn.textContent = item.label;
+            btn.setAttribute('data-key', item.key);
+            btn.onclick = () => handleVirtualClick(btn, item.key, true);
+            if (item.cls.includes('np-num') || item.key === '.') numpadNumberBtns.push(btn);
+            if (item.key === 'numlock') { numLockBtn = btn; btn.classList.add('active-lock'); }
+            numpadLayout.appendChild(btn);
+        });
+
+        function updateKeyboardUI() {
+            const shiftActive = vModifiers.shift;
+            const uppercase = (shiftActive && !isCapsOn) || (!shiftActive && isCapsOn);
+            letterButtons.forEach(btn => {
+                btn.textContent = uppercase ? btn.getAttribute('data-key').toUpperCase() : btn.getAttribute('data-key').toLowerCase();
+            });
+            
+            if (isNumLockOn) {
+                numLockBtn.classList.add('active-lock');
+                numpadNumberBtns.forEach(b => b.classList.remove('dimmed'));
+            } else {
+                numLockBtn.classList.remove('active-lock');
+                numpadNumberBtns.forEach(b => b.classList.add('dimmed'));
+            }
+        }
+
+        /* ================= GAME LOGIC ================= */
+        let score = 0;
+        let targetScore = 100;
+        let timeLeft = 0;
+        let timerInterval = null;
+        let currentTarget = null;
+        let isPlaying = false;
+
+        const scoreEl = document.getElementById('score');
+        const displayTargetEl = document.getElementById('display-target');
+        const timeValEl = document.getElementById('time-val');
+        const startModal = document.getElementById('start-modal');
+        const betScoreInput = document.getElementById('bet-score');
+        const betTimeInput = document.getElementById('bet-time');
+        
+        const monkeyEl = document.getElementById('monkey');
+        const fruitEl = document.getElementById('fruit');
+        const actionNameEl = document.getElementById('action-name');
+        const keyPromptEl = document.getElementById('key-prompt');
+        const messageEl = document.getElementById('message');
+        const crateEl = document.getElementById('collected-fruits');
+        const vkOverlay = document.getElementById('vk-overlay');
+        const sysWarning = document.getElementById('sys-warning');
+        
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+
+        document.getElementById('btn-start').onclick = startGame;
+
+        function updateProgress() {
+            let percent = Math.min((score / targetScore) * 100, 100);
+            progressFill.style.height = `${percent}%`;
+            progressText.textContent = `${Math.floor(percent)}%`;
+            
+            // Kỹ thuật đẩy text lên trên đỉnh thanh
+            // Khi height = 0%, text ở bottom, khi height 100% text ở top.
+            // Dùng bottom property tính toán theo %
+            progressText.style.bottom = `calc(${percent}% + 5px)`;
+
+            if(percent >= 100) progressFill.style.background = "linear-gradient(to top, #00b09b, #96c93d)";
+            else progressFill.style.background = "linear-gradient(to top, #ff4e50, #f9d423)";
+        }
+
+        function startGame() {
+            initAudio();
+            targetScore = parseInt(betScoreInput.value) || 100;
+            timeLeft = parseInt(betTimeInput.value) || 60;
+            score = 0;
+            isPlaying = true;
+
+            displayTargetEl.textContent = targetScore;
+            scoreEl.textContent = score;
+            timeValEl.textContent = timeLeft + 's';
+            timeValEl.style.color = '#2c3e50';
+            crateEl.innerHTML = '';
+            
+            startModal.style.display = 'none';
+            vkOverlay.style.display = 'none'; 
+            if(fwInterval) { clearInterval(fwInterval); fwInterval = null; fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height); }
+            
+            updateProgress();
+            loadNextFruit();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timeValEl.textContent = timeLeft + 's';
+                if (timeLeft <= 10) timeValEl.style.color = 'red';
+                else timeValEl.style.color = '#2c3e50';
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function endGame() {
+            isPlaying = false;
+            clearInterval(timerInterval);
+            startModal.style.display = 'flex';
+            vkOverlay.style.display = 'flex';
+            vkOverlay.textContent = 'Game Over!';
+            
+            if (score >= targetScore) {
+                document.querySelector('.modal-content h2').textContent = '🎉 YOU WON! 🎉';
+                document.querySelector('.modal-content p').innerHTML = `Incredible! You reached <strong>${score}</strong> points!<br>Play again to beat your record.`;
+                playSound('win');
+                startFireworks();
+            } else {
+                document.querySelector('.modal-content h2').textContent = '😢 Time\'s Up!';
+                document.querySelector('.modal-content p').innerHTML = `You scored <strong>${score}</strong> points. You needed ${targetScore}.<br>Try again!`;
+                playSound('error');
+            }
+        }
+
+        function loadNextFruit() {
+            if (!isPlaying) return;
+            const randomIndex = Math.floor(Math.random() * shortcuts.length);
+            currentTarget = shortcuts[randomIndex];
+
+            actionNameEl.textContent = currentTarget.action;
+            keyPromptEl.textContent = currentTarget.display;
+            fruitEl.textContent = currentTarget.fruit;
+            
+            monkeyEl.style.transform = 'scale(1)';
+            fruitEl.style.transform = 'scale(1)';
+            fruitEl.style.opacity = '1';
+
+            if (currentTarget.isVirtual) {
+                sysWarning.style.display = 'block';
+                messageEl.textContent = 'Warning: Use VIRTUAL KEYBOARD!';
+                messageEl.className = 'error';
+            } else {
+                sysWarning.style.display = 'none';
+                messageEl.textContent = 'Press the shortcut on your physical keyboard!';
+                messageEl.className = '';
+            }
+
+            vModifiers = { control: false, alt: false, meta: false, shift: false };
+            document.querySelectorAll('.active-mod').forEach(el => el.classList.remove('active-mod'));
+            updateKeyboardUI();
+        }
+
+        function showMessage(text, isSuccess) {
+            messageEl.textContent = text;
+            messageEl.className = isSuccess ? 'success' : 'error';
+        }
+
+        function createFlyingFruit(fruitChar) {
+            const flyer = document.createElement('div');
+            flyer.textContent = fruitChar;
+            flyer.style.position = 'absolute'; flyer.style.zIndex = '1000';
+            flyer.style.fontSize = '35px'; flyer.style.pointerEvents = 'none';
+
+            const startRect = fruitEl.getBoundingClientRect();
+            const endRect = crateEl.getBoundingClientRect();
+            
+            const startX = startRect.left; const startY = startRect.top;
+            const targetX = endRect.left + 15 + Math.random() * (endRect.width - 50);
+            const targetY = endRect.top + 30 + Math.random() * (endRect.height - 60);
+
+            flyer.style.left = startX + 'px'; flyer.style.top = startY + 'px';
+            document.body.appendChild(flyer);
+
+            const deltaX = targetX - startX; const deltaY = targetY - startY;
+
+            flyer.animate([
+                { transform: 'scale(1) translate(0, 0)', opacity: 1 },
+                { transform: `scale(1.3) translate(${deltaX / 2}px, -40px)`, opacity: 1 },
+                { transform: `scale(0.6) translate(${deltaX}px, ${deltaY}px)`, opacity: 0 }
+            ], { duration: 600, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' }).onfinish = () => {
+                flyer.remove();
+                const miniFruit = document.createElement('span');
+                miniFruit.className = 'mini-fruit'; miniFruit.textContent = fruitChar;
+                crateEl.appendChild(miniFruit);
+                crateEl.scrollTop = crateEl.scrollHeight;
+            };
+        }
+
+        function checkAnswer(isCtrl, isAlt, isMeta, isShiftActive, pressedKey, isFromVirtual, isNumpadActive) {
+            if (!isPlaying || !currentTarget) return;
+
+            if (currentTarget.isVirtual && !isFromVirtual) {
+                showMessage('⚠️ Danger! Use the VIRTUAL KEYBOARD for this!', false);
+                playSound('error'); return;
+            }
+
+            if (currentTarget.isNumpad) {
+                if (!isNumpadActive || pressedKey !== currentTarget.key) {
+                    showMessage('Wrong! Must use NumPad with NumLock ON.', false);
+                    playSound('error'); monkeyEl.style.transform = 'rotate(15deg)'; setTimeout(() => monkeyEl.style.transform = 'rotate(0deg)', 300);
+                    return;
+                }
+            } else if (isNumpadActive && currentTarget.key === pressedKey) {
+                 showMessage('Wrong! Use the regular number key, not NumPad.', false);
+                 playSound('error'); monkeyEl.style.transform = 'rotate(15deg)'; setTimeout(() => monkeyEl.style.transform = 'rotate(0deg)', 300);
+                 return;
+            }
+
+            const isCtrlMatch = isCtrl === currentTarget.ctrl;
+            const isAltMatch = isAlt === currentTarget.alt;
+            const isMetaMatch = isMeta === currentTarget.meta;
+            
+            let isShiftMatch = false;
+            if (currentTarget.shift) isShiftMatch = isShiftActive || isCapsOn;
+            else isShiftMatch = (isShiftActive === currentTarget.shift);
+
+            const isKeyMatch = pressedKey === currentTarget.key;
+
+            if (isCtrlMatch && isAltMatch && isMetaMatch && isShiftMatch && isKeyMatch && (!currentTarget.isNumpad || isNumpadActive)) {
+                score += 10;
+                scoreEl.textContent = score;
+                updateProgress();
+                showMessage('Great! +10 points.', true);
+                playSound('success');
+                
+                monkeyEl.style.transform = 'scale(1.2) translateY(-10px)';
+                createFlyingFruit(currentTarget.fruit);
+                fruitEl.style.opacity = '0';
+
+                setTimeout(loadNextFruit, 600);
+            } else {
+                showMessage('Wrong key or modifier! Try again.', false);
+                playSound('error');
+                monkeyEl.style.transform = 'rotate(15deg)';
+                setTimeout(() => { monkeyEl.style.transform = 'rotate(0deg)'; }, 300);
+            }
+        }
+
+        /* --- PHYSICAL KEYBOARD EVENTS --- */
+        window.addEventListener('keydown', function(e) {
+            if (!isPlaying) return;
+            e.preventDefault();
+            
+            isCapsOn = e.getModifierState('CapsLock');
+            isNumLockOn = e.getModifierState('NumLock');
+            updateKeyboardUI();
+
+            const pressedKey = e.key.toLowerCase();
+            if (['control', 'alt', 'shift', 'meta', 'os', 'capslock', 'numlock'].includes(pressedKey)) return; 
+            
+            let isNumpadEvt = e.location === 3; 
+
+            checkAnswer(e.ctrlKey, e.altKey, e.metaKey, e.shiftKey, pressedKey, false, isNumpadEvt);
+        }, { passive: false });
+
+        /* --- VIRTUAL KEYBOARD EVENTS --- */
+        function handleVirtualClick(btnElement, keyVal, isNumpadSrc) {
+            if (!isPlaying) return;
+
+            if (keyVal === 'capslock') {
+                isCapsOn = !isCapsOn;
+                btnElement.classList.toggle('active-lock');
+                updateKeyboardUI(); return;
+            }
+            if (keyVal === 'numlock') {
+                isNumLockOn = !isNumLockOn;
+                updateKeyboardUI(); return;
+            }
+
+            if (['control', 'alt', 'meta', 'shift'].includes(keyVal)) {
+                vModifiers[keyVal] = !vModifiers[keyVal];
+                btnElement.classList.toggle('active-mod');
+                if (!vModifiers[keyVal]) {
+                    document.querySelectorAll(`.vk-key[data-key="${keyVal}"]`).forEach(el => el.classList.remove('active-mod'));
+                } else {
+                    document.querySelectorAll(`.vk-key[data-key="${keyVal}"]`).forEach(el => el.classList.add('active-mod'));
+                }
+                updateKeyboardUI(); return;
+            }
+
+            if (isNumpadSrc && !isNumLockOn && (keyVal >= '0' && keyVal <= '9' || keyVal === '.')) return;
+
+            checkAnswer(vModifiers.control, vModifiers.alt, vModifiers.meta, vModifiers.shift, keyVal, true, isNumpadSrc);
+            
+            vModifiers = { control: false, alt: false, meta: false, shift: false };
+            document.querySelectorAll('.active-mod').forEach(el => el.classList.remove('active-mod'));
+            updateKeyboardUI();
+        }
+    </script>
+</body>
+</html>
