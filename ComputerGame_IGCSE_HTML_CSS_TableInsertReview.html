@@ -1,0 +1,1006 @@
+<!--
+// Level 1
+tasks: [
+    'Replace the letter "A" inside <td id="cell-A"> with an <h1> tag containing exactly the text "Heading 1".',
+    'Replace the letter "B" inside <td id="cell-B"> with an <h2> tag containing exactly the text "Heading 2".',
+    'Replace the letter "C" inside <td id="cell-C"> with a <p> tag containing exactly the text "Paragraph text".'
+]
+
+// Level 2
+tasks: [
+    'Replace the letter "D" inside <td id="cell-D"> with the chemical formula for water (H2O). Use the <sub> tag for the number 2.',
+    'Replace the letter "E" inside <td id="cell-E"> with the math equation X squared (X2). Use the <sup> tag for the number 2.'
+]
+
+// Level 3
+tasks: [
+    'Replace the letter "F" inside <td id="cell-F"> with an <img> tag.',
+    'Add the attribute src="image.jpg" to the <img> tag.',
+    'Add the attribute alt="Missing picture" to the <img> tag.',
+    'Set the width attribute to "50" and the height attribute to "90" (Use ONLY numbers, do NOT add "px").'
+]
+
+// Level 4
+tasks: [
+    'Replace the letter "G" inside <td id="cell-G"> with an <a> tag.',
+    'Add the attribute href="http://google.com" to the <a> tag.',
+    'Add the attribute target="_blank" to ensure the link opens in a new tab.',
+    'Set the clickable text inside the <a> tag exactly to "Link to Google".'
+]
+
+// Level 5
+tasks: [
+    'Replace the letter "H" inside <td id="cell-H"> with an <a> tag.',
+    'Set the href attribute starting with "mailto:myschool@gmail.com".',
+    'Automatically add a subject by appending "?subject=Hello%20School" inside the href value.',
+    'Set the clickable text inside the <a> tag exactly to "Email Me".'
+]
+
+// Level 6
+tasks: [
+    'Replace the letter "A" inside <td id="cell-A"> with an <h1> tag containing the text "Top of page".',
+    'Add the attribute id="top" to the <h1> tag to create a bookmark target.',
+    'Replace the letter "B" inside <td id="cell-B"> with an <a> tag containing the text "Go to Top".',
+    'Set the href attribute of the <a> tag in cell B to "#top" so it jumps to the ID.'
+]
+
+// Level 7
+tasks: [
+    'Replace letter "C" in <td id="cell-C"> with a <video> tag having these 6 attributes: width="500", height="400", controls, autoplay, loop, and muted.',
+    'Inside the <video>, add a <source> tag with src="file.mp4" and type="video/mp4".',
+    'Inside the <video>, below <source>, add the fallback text exactly: "Sorry! Your browser does not support this video."',
+    'Replace letter "D" in <td id="cell-D"> with an <audio> tag that has the controls attribute.',
+    'Inside the <audio>, add a <source> tag with src="file.mp3" and type="audio/mpeg".'
+]
+
+// Level 8
+tasks: [
+    'Replace the letter "E" inside <td id="cell-E"> with a <div> tag.',
+    'Inside that <div>, create an unordered list using the <ul> tag.',
+    'Add two list items (<li>) inside the <ul> containing exactly the texts "Item 1" and "Item 2".',
+    'Replace the letter "F" inside <td id="cell-F"> with an ordered list using the <ol> tag.',
+    'Add two list items (<li>) inside the <ol> containing exactly the texts "Step 1" and "Step 2".'
+]
+
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Elements & Table Mastery - 8 Levels (Green Theme)</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            /* Green Theme Palette */
+            --primary: #10B981;       /* Emerald 500 */
+            --primary-hover: #059669; /* Emerald 600 */
+            --success: #047857;       /* Emerald 700 for text contrast */
+            --bg-gradient: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); /* Green 50 to Green 100 */
+            --text-main: #14532D;     /* Green 900 */
+            --text-muted: #166534;    /* Green 800 */
+            --panel-bg: #FFFFFF;
+            --editor-bg: #052E16;     /* Green 950 for Editor */
+            --editor-text: #F0FDF4;   /* Green 50 for Editor Text */
+            
+            /* Dynamic Font Variables */
+            --base-font-size: 14.5px;
+            --editor-font-size: 15px;
+            --icon-size: 18px;
+            --btn-size: 36px;
+        }
+        
+        body {
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 24px;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; 
+            box-sizing: border-box;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .level-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .level-tab {
+            padding: 10px 20px;
+            background: #FFFFFF;
+            color: var(--text-muted);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .level-tab:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px -2px rgba(16, 185, 129, 0.15);
+        }
+
+        .level-tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .font-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #FFFFFF;
+            padding: 8px 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .font-label {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+
+        .font-btn {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .font-btn:hover {
+            background: #DCFCE7;
+        }
+
+        .font-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: minmax(320px, 40vh) minmax(400px, 1fr); 
+            gap: 24px;
+            flex: 1;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(20, 83, 45, 0.08), 0 8px 10px -6px rgba(20, 83, 45, 0.04);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .panel-header {
+            background: #F0FDF4;
+            color: var(--text-main);
+            padding: 16px 20px;
+            font-weight: 800;
+            font-size: 1.15em;
+            margin: 0;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #BBF7D0;
+        }
+
+        #task-list {
+            list-style: none;
+            padding: 16px;
+            margin: 0;
+            background: #FFFFFF;
+            flex: 1;
+            overflow-y: auto; 
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #task-list li {
+            padding: 12px 16px;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: var(--base-font-size);
+            display: flex;
+            align-items: center; 
+            justify-content: space-between;
+            gap: 16px;
+            transition: all 0.2s ease;
+        }
+
+        #task-list li:hover {
+            background: #FFFFFF;
+            border-color: #6EE7B7;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
+        }
+
+        .task-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            flex: 1;
+            min-width: 0; 
+        }
+
+        .status-icon {
+            font-size: var(--icon-size);
+            flex-shrink: 0; 
+            margin-top: 1px; 
+        }
+
+        .task-text {
+            line-height: 1.5;
+            color: var(--text-main);
+            word-wrap: break-word; 
+            flex: 1;
+            font-family: inherit;
+        }
+
+        .task-text code {
+            background: #ECFDF5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #059669;
+            font-family: 'Consolas', monospace;
+            font-size: 0.95em;
+            border: 1px solid #A7F3D0;
+        }
+
+        .completed-task {
+            background: #ECFDF5 !important;
+            border-color: #A7F3D0 !important;
+        }
+
+        .completed-task .task-text {
+            color: var(--success);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .hint-btn {
+            background: #FEF08A;
+            border: 1px solid #FDE047;
+            cursor: pointer;
+            font-size: var(--icon-size);
+            width: var(--btn-size);
+            height: var(--btn-size);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0; 
+            align-self: center; 
+            box-shadow: 0 2px 4px rgba(253, 224, 71, 0.3);
+        }
+
+        .hint-btn:hover {
+            background: #FDE047;
+            transform: translateY(-2px) rotate(5deg);
+            box-shadow: 0 4px 8px rgba(253, 224, 71, 0.5);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 44, 34, 0.7); /* Dark green overlay */
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            max-width: 650px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #D1FAE5;
+            padding-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.25em;
+        }
+
+        .modal-close {
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #10B981;
+            background: #ECFDF5;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #FFFFFF;
+            background: #EF4444; /* Keep red for close action */
+        }
+
+        .modal-code {
+            background: #052E16;
+            color: #D1FAE5;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-size: var(--editor-font-size);
+            line-height: 1.6;
+            margin: 0;
+            border: 1px solid #065F46;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+            max-height: 400px;
+        }
+
+        .dashboard {
+            padding: 30px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #FFFFFF;
+        }
+
+        .dashboard h1 {
+            margin: 0 0 12px 0;
+            font-size: 2em;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .dashboard p {
+            margin: 0 0 24px 0;
+            color: var(--text-muted);
+            max-width: 85%;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 450px;
+            background: #ECFDF5;
+            border-radius: 20px;
+            height: 28px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #D1FAE5;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #22C55E, #4ADE80);
+            border-radius: 20px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s;
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 800;
+            font-size: 14px;
+            color: #064E3B; /* Dark green for better contrast inside progress bar */
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+            letter-spacing: 0.5px;
+        }
+
+        #success-message {
+            display: none;
+            color: var(--success);
+            font-size: 1.4em;
+            font-weight: 800;
+            margin-top: 20px;
+            background: #ECFDF5;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: 1px solid #A7F3D0;
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        textarea {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 24px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: var(--editor-font-size);
+            line-height: 1.6;
+            resize: none;
+            background-color: var(--editor-bg);
+            color: var(--editor-text);
+            box-sizing: border-box;
+            transition: font-size 0.2s;
+        }
+        
+        textarea:focus {
+            outline: none;
+        }
+
+        .browser-mockup-bar {
+            background: #F0FDF4;
+            padding: 10px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #BBF7D0;
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.red { background: #EF4444; }
+        .dot.yellow { background: #F59E0B; }
+        .dot.green { background: #10B981; }
+
+        #preview {
+            padding: 24px;
+            flex: 1;
+            overflow: auto;
+            background: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="level-tabs" id="level-tabs">
+            <button class="level-tab active" data-level="0">Lvl 1</button>
+            <button class="level-tab" data-level="1">Lvl 2</button>
+            <button class="level-tab" data-level="2">Lvl 3</button>
+            <button class="level-tab" data-level="3">Lvl 4</button>
+            <button class="level-tab" data-level="4">Lvl 5</button>
+            <button class="level-tab" data-level="5">Lvl 6</button>
+            <button class="level-tab" data-level="6">Lvl 7</button>
+            <button class="level-tab" data-level="7">Lvl 8</button>
+        </div>
+
+        <div class="font-controls">
+            <span class="font-label">Text Size:</span>
+            <button class="font-btn active" id="font-btn-A" onclick="setFontSize('A')">A</button>
+            <button class="font-btn" id="font-btn-Ap" onclick="setFontSize('A+')">A+</button>
+            <button class="font-btn" id="font-btn-App" onclick="setFontSize('A++')">A++</button>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="panel">
+            <h2 class="panel-header">🎯 Assignment Tasks</h2>
+            <ul id="task-list"></ul>
+        </div>
+
+        <div class="panel dashboard">
+            <h1 id="level-title">HTML Mastery</h1>
+            <p id="level-desc">Insert elements into the table to score points!</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+                <div class="score-text" id="score-text">Score: 0%</div>
+            </div>
+            
+            <div id="success-message">🎉 Level Cleared! Awesome! 🎉</div>
+        </div>
+
+        <div class="panel" style="background: var(--editor-bg);">
+            <h2 class="panel-header" style="background: #022C22; color: #D1FAE5; border-bottom: 1px solid #065F46;">
+                💻 HTML Editor
+            </h2>
+            <textarea id="editor" spellcheck="false"></textarea>
+        </div>
+
+        <div class="panel">
+            <div class="browser-mockup-bar">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+                <span style="margin-left: 10px; font-size: 13px; color: #047857; font-weight: bold;">Live Web Preview</span>
+            </div>
+            <div id="preview"></div>
+        </div>
+    </div>
+
+    <div id="hint-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💡 Task Hint & Solution Guide</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <p style="margin-top: 0; margin-bottom: 16px; color: #166534; font-size: 15px;">
+                Review the structural code solution below and type it into your editor to learn:
+            </p>
+            <pre class="modal-code" id="hint-code"></pre>
+        </div>
+    </div>
+
+    <script>
+        function setFontSize(level) {
+            const root = document.documentElement;
+            if (level === 'A') {
+                root.style.setProperty('--base-font-size', '14.5px');
+                root.style.setProperty('--editor-font-size', '15px');
+                root.style.setProperty('--icon-size', '18px');
+                root.style.setProperty('--btn-size', '36px');
+            } else if (level === 'A+') {
+                root.style.setProperty('--base-font-size', '18px');
+                root.style.setProperty('--editor-font-size', '18px');
+                root.style.setProperty('--icon-size', '22px');
+                root.style.setProperty('--btn-size', '40px');
+            } else if (level === 'A++') {
+                root.style.setProperty('--base-font-size', '22px');
+                root.style.setProperty('--editor-font-size', '22px');
+                root.style.setProperty('--icon-size', '26px');
+                root.style.setProperty('--btn-size', '44px');
+            }
+            document.querySelectorAll('.font-btn').forEach(btn => btn.classList.remove('active'));
+            const btnId = 'font-btn-' + level.replace('++', 'pp').replace('+', 'p');
+            document.getElementById(btnId).classList.add('active');
+        }
+
+        function escapeHTML(str) {
+            return str
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/(&lt;[a-zA-Z0-9=\s"'-]+&gt;|&lt;\/[a-zA-Z0-9]+&gt;)/g, "<code>$1</code>");
+        }
+
+        const initialTableStr = `<table border="1" width="100%">
+  <tbody>
+    <tr>
+      <td id="cell-A">A</td>
+      <td id="cell-B">B</td>
+    </tr>
+    <tr>
+      <td id="cell-C">C</td>
+      <td id="cell-D">D</td>
+    </tr>
+    <tr>
+      <td id="cell-E">E</td>
+      <td id="cell-F">F</td>
+    </tr>
+    <tr>
+      <td id="cell-G">G</td>
+      <td id="cell-H">H</td>
+    </tr>
+  </tbody>
+</table>`;
+
+        const levels = [
+            {
+                title: "Level 1: Headings & Paragraphs",
+                desc: "Learn to insert basic text elements like h1, h2, and p inside table cells.",
+                initialCode: initialTableStr,
+                tasks: [
+                    'Replace the letter "A" inside <td id="cell-A"> with an <h1> tag containing exactly the text "Heading 1".',
+                    'Replace the letter "B" inside <td id="cell-B"> with an <h2> tag containing exactly the text "Heading 2".',
+                    'Replace the letter "C" inside <td id="cell-C"> with a <p> tag containing exactly the text "Paragraph text".'
+                ],
+                hints: [
+                    `<td id="cell-A">\n  <!-- HINT: Replace A with an h1 tag -->\n  <h1>Heading 1</h1>\n</td>`,
+                    `<td id="cell-B">\n  <!-- HINT: Replace B with an h2 tag -->\n  <h2>Heading 2</h2>\n</td>`,
+                    `<td id="cell-C">\n  <!-- HINT: Replace C with a p tag -->\n  <p>Paragraph text</p>\n</td>`
+                ],
+                validate: (doc) => {
+                    let res = [false, false, false];
+                    const a = doc.querySelector('#cell-A h1');
+                    if (a && a.textContent.trim() === 'Heading 1') res[0] = true;
+                    const b = doc.querySelector('#cell-B h2');
+                    if (b && b.textContent.trim() === 'Heading 2') res[1] = true;
+                    const c = doc.querySelector('#cell-C p');
+                    if (c && c.textContent.trim() === 'Paragraph text') res[2] = true;
+                    return res;
+                }
+            },
+            {
+                title: "Level 2: Subscript & Superscript",
+                desc: "Format text formulas using sub and sup tags.",
+                initialCode: initialTableStr,
+                tasks: [
+                    'Replace the letter "D" inside <td id="cell-D"> with the chemical formula for water (H2O). Use the <sub> tag for the number 2.',
+                    'Replace the letter "E" inside <td id="cell-E"> with the math equation X squared (X2). Use the <sup> tag for the number 2.'
+                ],
+                hints: [
+                    `<td id="cell-D">\n  <!-- HINT: Use sub for subscript text -->\n  H<sub>2</sub>O\n</td>`,
+                    `<td id="cell-E">\n  <!-- HINT: Use sup for superscript text -->\n  X<sup>2</sup>\n</td>`
+                ],
+                validate: (doc) => {
+                    let res = [false, false];
+                    const tdD = doc.querySelector('#cell-D');
+                    if (tdD && tdD.querySelector('sub') && tdD.textContent.trim().replace(/\s/g, '') === 'H2O') res[0] = true;
+                    const tdE = doc.querySelector('#cell-E');
+                    if (tdE && tdE.querySelector('sup') && tdE.textContent.trim().replace(/\s/g, '') === 'X2') res[1] = true;
+                    return res;
+                }
+            },
+            {
+                title: "Level 3: Images",
+                desc: "Insert images with attributes (HTML5 strict: no 'px' in width/height).",
+                initialCode: initialTableStr,
+                tasks: [
+                    'Replace the letter "F" inside <td id="cell-F"> with an <img> tag.',
+                    'Add the attribute src="image.jpg" to the <img> tag.',
+                    'Add the attribute alt="Missing picture" to the <img> tag.',
+                    'Set the width attribute to "50" and the height attribute to "90" (Use ONLY numbers, do NOT add "px").'
+                ],
+                hints: [
+                    `<td id="cell-F">\n  <!-- HINT: Insert an img tag -->\n  <img>\n</td>`,
+                    `<td id="cell-F">\n  <!-- HINT: Add src attribute -->\n  <img src="image.jpg">\n</td>`,
+                    `<td id="cell-F">\n  <!-- HINT: Add alt attribute -->\n  <img src="image.jpg" alt="Missing picture">\n</td>`,
+                    `<td id="cell-F">\n  <!-- HINT: Add width and height strictly as integers -->\n  <img src="image.jpg" alt="Missing picture" width="50" height="90">\n</td>`
+                ],
+                validate: (doc) => {
+                    let res = [false, false, false, false];
+                    const img = doc.querySelector('#cell-F img');
+                    if (img) {
+                        res[0] = true;
+                        if (img.getAttribute('src') === 'image.jpg') res[1] = true;
+                        if (img.getAttribute('alt') === 'Missing picture') res[2] = true;
+                        if (img.getAttribute('width') === '50' && img.getAttribute('height') === '90') res[3] = true;
+                    }
+                    return res;
+                }
+            },
+            {
+                title: "Level 4: External Hyperlinks",
+                desc: "Create clickable links that open in a new tab.",
+                initialCode: initialTableStr,
+                tasks: [
+                    'Replace the letter "G" inside <td id="cell-G"> with an <a> tag.',
+                    'Add the attribute href="http://google.com" to the <a> tag.',
+                    'Add the attribute target="_blank" to ensure the link opens in a new tab.',
+                    'Set the clickable text inside the <a> tag exactly to "Link to Google".'
+                ],
+                hints: [
+                    `<td id="cell-G">\n  <!-- HINT: Add anchor tag -->\n  <a></a>\n</td>`,
+                    `<td id="cell-G">\n  <!-- HINT: Add href -->\n  <a href="http://google.com"></a>\n</td>`,
+                    `<td id="cell-G">\n  <!-- HINT: Add target -->\n  <a href="http://google.com" target="_blank"></a>\n</td>`,
+                    `<td id="cell-G">\n  <!-- HINT: Add link text -->\n  <a href="http://google.com" target="_blank">Link to Google</a>\n</td>`
+                ],
+                validate: (doc) => {
+                    let res = [false, false, false, false];
+                    const a = doc.querySelector('#cell-G a');
+                    if (a) {
+                        res[0] = true;
+                        if (a.getAttribute('href') === 'http://google.com') res[1] = true;
+                        if (a.getAttribute('target') === '_blank') res[2] = true;
+                        if (a.textContent.trim() === 'Link to Google') res[3] = true;
+                    }
+                    return res;
+                }
+            },
+            {
+                title: "Level 5: Email Hyperlinks",
+                desc: "Create mailto links with auto-filled subjects.",
+                initialCode: initialTableStr,
+                tasks: [
+                    'Replace the letter "H" inside <td id="cell-H"> with an <a> tag.',
+                    'Set the href attribute starting with "mailto:myschool@gmail.com".',
+                    'Automatically add a subject by appending "?subject=Hello%20School" inside the href value.',
+                    'Set the clickable text inside the <a> tag exactly to "Email Me".'
+                ],
+                hints: [
+                    `<td id="cell-H">\n  <a></a>\n</td>`,
+                    `<td id="cell-H">\n  <a href="mailto:myschool@gmail.com"></a>\n</td>`,
+                    `<td id="cell-H">\n  <!-- HINT: Add subject directly to the email link -->\n  <a href="mailto:myschool@gmail.com?subject=Hello%20School"></a>\n</td>`,
+                    `<td id="cell-H">\n  <!-- HINT: Finalize with text -->\n  <a href="mailto:myschool@gmail.com?subject=Hello%20School">Email Me</a>\n</td>`
+                ],
+                validate: (doc) => {
+                    let res = [false, false, false, false];
+                    const a = doc.querySelector('#cell-H a');
+                    if (a) {
+                        res[0] = true;
+                        const href = a.getAttribute('href');
+                        if (href && href.startsWith('mailto:myschool@gmail.com')) res[1] = true;
+                        if (href === 'mailto:myschool@gmail.com?subject=Hello%20School') res[2] = true;
+                        if (a.textContent.trim() === 'Email Me') res[3] = true;
+                    }
+                    return res;
+                }
+            },
+            {
+                title: "Level 6: Bookmarks (Anchors)",
+                desc: "Link to specific parts of the same web page using IDs.",
+                initialCode: initialTableStr,
+                tasks: [
+                    'Replace the letter "A" inside <td id="cell-A"> with an <h1> tag containing the text "Top of page".',
+                    'Add the attribute id="top" to the <h1> tag to create a bookmark target.',
+                    'Replace the letter "B" inside <td id="cell-B"> with an <a> tag containing the text "Go to Top".',
+                    'Set the href attribute of the <a> tag in cell B to "#top" so it jumps to the ID.'
+                ],
+                hints: [
+                    `<td id="cell-A">\n  <h1>Top of page</h1>\n</td>`,
+                    `<td id="cell-A">\n  <!-- HINT: Add id for anchor targeting -->\n  <h1 id="top">Top of page</h1>\n</td>`,
+                    `<td id="cell-B">\n  <a>Go to Top</a>\n</td>`,
+                    `<td id="cell-B">\n  <!-- HINT: Link directly to the #id -->\n  <a href="#top">Go to Top</a>\n</td>`
+                ],
+                validate: (doc) => {
+                    let res = [false, false, false, false];
+                    const h1 = doc.querySelector('#cell-A h1');
+                    if (h1 && h1.textContent.trim() === 'Top of page') res[0] = true;
+                    if (h1 && h1.getAttribute('id') === 'top') res[1] = true;
+                    const a = doc.querySelector('#cell-B a');
+                    if (a && a.textContent.trim() === 'Go to Top') res[2] = true;
+                    if (a && a.getAttribute('href') === '#top') res[3] = true;
+                    return res;
+                }
+            },
+            {
+                title: "Level 7: Video & Audio",
+                desc: "Embed multimedia using standard HTML5 tags and fallbacks.",
+                initialCode: initialTableStr,
+                tasks: [
+                    'Replace letter "C" in <td id="cell-C"> with a <video> tag having these 6 attributes: width="500", height="400", controls, autoplay, loop, and muted.',
+                    'Inside the <video>, add a <source> tag with src="file.mp4" and type="video/mp4".',
+                    'Inside the <video>, below <source>, add the fallback text exactly: "Sorry! Your browser does not support this video."',
+                    'Replace letter "D" in <td id="cell-D"> with an <audio> tag that has the controls attribute.',
+                    'Inside the <audio>, add a <source> tag with src="file.mp3" and type="audio/mpeg".'
+                ],
+                hints: [
+                    `<td id="cell-C">\n  <!-- HINT: Setup video with all requested boolean attributes -->\n  <video width="500" height="400" controls autoplay loop muted></video>\n</td>`,
+                    `<td id="cell-C">\n  <video width="500" height="400" controls autoplay loop muted>\n    <source src="file.mp4" type="video/mp4">\n  </video>\n</td>`,
+                    `<td id="cell-C">\n  <video width="500" height="400" controls autoplay loop muted>\n    <source src="file.mp4" type="video/mp4">\n    Sorry! Your browser does not support this video.\n  </video>\n</td>`,
+                    `<td id="cell-D">\n  <!-- HINT: Audio requires controls to be visible -->\n  <audio controls></audio>\n</td>`,
+                    `<td id="cell-D">\n  <audio controls>\n    <!-- HINT: mp3 standard MIME type is audio/mpeg -->\n    <source src="file.mp3" type="audio/mpeg">\n  </audio>\n</td>`
+                ],
+                validate: (doc) => {
+                    let res = [false, false, false, false, false];
+                    const vid = doc.querySelector('#cell-C video');
+                    if (vid && vid.getAttribute('width') === '500' && vid.getAttribute('height') === '400' && 
+                        vid.hasAttribute('controls') && vid.hasAttribute('autoplay') && 
+                        vid.hasAttribute('loop') && vid.hasAttribute('muted')) {
+                        res[0] = true;
+                    }
+                    const vSrc = vid?.querySelector('source');
+                    if (vSrc && vSrc.getAttribute('src') === 'file.mp4' && vSrc.getAttribute('type') === 'video/mp4') res[1] = true;
+                    if (vid && vid.textContent.includes('Sorry! Your browser does not support this video.')) res[2] = true;
+                    
+                    const aud = doc.querySelector('#cell-D audio');
+                    if (aud && aud.hasAttribute('controls')) res[3] = true;
+                    const aSrc = aud?.querySelector('source');
+                    if (aSrc && aSrc.getAttribute('src') === 'file.mp3' && aSrc.getAttribute('type') === 'audio/mpeg') res[4] = true;
+                    
+                    return res;
+                }
+            },
+            {
+                title: "Level 8: Lists & Div Structures",
+                desc: "Organize layout using divisions, ordered, and unordered lists.",
+                initialCode: initialTableStr,
+                tasks: [
+                    'Replace the letter "E" inside <td id="cell-E"> with a <div> tag.',
+                    'Inside that <div>, create an unordered list using the <ul> tag.',
+                    'Add two list items (<li>) inside the <ul> containing exactly the texts "Item 1" and "Item 2".',
+                    'Replace the letter "F" inside <td id="cell-F"> with an ordered list using the <ol> tag.',
+                    'Add two list items (<li>) inside the <ol> containing exactly the texts "Step 1" and "Step 2".'
+                ],
+                hints: [
+                    `<td id="cell-E">\n  <!-- HINT: Add division block -->\n  <div></div>\n</td>`,
+                    `<td id="cell-E">\n  <div>\n    <!-- HINT: Add unordered list -->\n    <ul></ul>\n  </div>\n</td>`,
+                    `<td id="cell-E">\n  <div>\n    <ul>\n      <li>Item 1</li>\n      <li>Item 2</li>\n    </ul>\n  </div>\n</td>`,
+                    `<td id="cell-F">\n  <!-- HINT: Add ordered list -->\n  <ol></ol>\n</td>`,
+                    `<td id="cell-F">\n  <ol>\n    <li>Step 1</li>\n    <li>Step 2</li>\n  </ol>\n</td>`
+                ],
+                validate: (doc) => {
+                    let res = [false, false, false, false, false];
+                    const div = doc.querySelector('#cell-E div');
+                    if (div) res[0] = true;
+                    const ul = div?.querySelector('ul');
+                    if (ul) res[1] = true;
+                    const ulLis = ul?.querySelectorAll('li');
+                    if (ulLis && ulLis.length >= 2 && ulLis[0].textContent.includes('Item 1') && ulLis[1].textContent.includes('Item 2')) res[2] = true;
+                    
+                    const ol = doc.querySelector('#cell-F ol');
+                    if (ol) res[3] = true;
+                    const olLis = ol?.querySelectorAll('li');
+                    if (olLis && olLis.length >= 2 && olLis[0].textContent.includes('Step 1') && olLis[1].textContent.includes('Step 2')) res[4] = true;
+                    
+                    return res;
+                }
+            }
+        ];
+
+        let currentLevel = 0;
+        let fireworksInterval = null;
+        let hasWon = false;
+
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreText = document.getElementById('score-text');
+        const successMessage = document.getElementById('success-message');
+        const taskList = document.getElementById('task-list');
+        const levelTitle = document.getElementById('level-title');
+        const levelDesc = document.getElementById('level-desc');
+        const tabs = document.querySelectorAll('.level-tab');
+
+        function triggerFireworks() {
+            var duration = 3.5 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1100 };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            fireworksInterval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(fireworksInterval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        function stopFireworks() { if (fireworksInterval) clearInterval(fireworksInterval); }
+
+        function showHint(taskIndex) {
+            const levelData = levels[currentLevel];
+            const modal = document.getElementById('hint-modal');
+            const modalCode = document.getElementById('hint-code');
+            modalCode.textContent = levelData.hints[taskIndex];
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('hint-modal').style.display = 'none'; }
+        window.onclick = function(event) {
+            const modal = document.getElementById('hint-modal');
+            if (event.target === modal) modal.style.display = "none";
+        };
+
+        function loadLevel(index) {
+            currentLevel = index;
+            const levelData = levels[index];
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs[index].classList.add('active');
+
+            levelTitle.textContent = levelData.title;
+            levelDesc.textContent = levelData.desc;
+
+            taskList.innerHTML = '';
+            levelData.tasks.forEach((task, i) => {
+                const li = document.createElement('li');
+                li.id = `task-${i}`;
+                const formattedTask = escapeHTML(task);
+                li.innerHTML = `
+                    <div class="task-info">
+                        <span class="status-icon">❌</span>
+                        <span class="task-text">${i + 1}. ${formattedTask}</span>
+                    </div>
+                    <button class="hint-btn" onclick="showHint(${i})" title="View Code Hint">💡</button>
+                `;
+                taskList.appendChild(li);
+            });
+
+            editor.value = levelData.initialCode;
+            stopFireworks();
+            hasWon = false;
+            successMessage.style.display = 'none';
+            updateUI();
+        }
+
+        function updateUI() {
+            const htmlCode = editor.value;
+            const levelData = levels[currentLevel];
+            
+            preview.innerHTML = htmlCode;
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlCode, 'text/html');
+
+            const tasksCompleted = levelData.validate(doc, htmlCode);
+            const totalTasks = levelData.tasks.length;
+            const pointPerTask = 100 / totalTasks;
+            
+            let score = 0;
+
+            tasksCompleted.forEach((completed, index) => {
+                const li = document.getElementById(`task-${index}`);
+                if (!li) return;
+                const icon = li.querySelector('.status-icon');
+                
+                if (completed) {
+                    score += pointPerTask;
+                    li.classList.add('completed-task');
+                    icon.textContent = '✅';
+                } else {
+                    li.classList.remove('completed-task');
+                    icon.textContent = '❌';
+                }
+            });
+
+            score = Math.round(score);
+
+            progressBar.style.width = `${score}%`;
+            scoreText.textContent = `Score: ${score}%`;
+
+            if (score === 100) {
+                progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)'; /* Bright success green */
+                if (!hasWon) {
+                    hasWon = true;
+                    successMessage.style.display = 'block';
+                    triggerFireworks();
+                }
+            } else {
+                progressBar.style.background = 'linear-gradient(90deg, #22C55E, #4ADE80)'; /* Default progress green */
+                hasWon = false;
+                successMessage.style.display = 'none';
+                stopFireworks();
+            }
+        }
+
+        editor.addEventListener('input', updateUI);
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-level'));
+                if (index !== currentLevel) loadLevel(index);
+            });
+        });
+
+        loadLevel(0);
+    </script>
+</body>
+</html>
