@@ -39,18 +39,22 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML Table Mastery - Interactive Coding Game</title>
+    <title>HTML/CSS Table Layout</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
     <style>
         :root {
-            --primary: #6366F1;
-            --primary-hover: #4F46E5;
+            --primary: #10B981;
+            --primary-hover: #059669;
             --success: #10B981;
-            --bg-gradient: linear-gradient(135deg, #EEF2F6 0%, #E2E8F0 100%);
+            --bg-gradient: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
             --text-main: #1E293B;
             --text-muted: #64748B;
             --panel-bg: #FFFFFF;
-            --editor-bg: #0F172A;
+            --editor-bg: #1E1E1E;
             --editor-text: #E2E8F0;
             
             /* Dynamic Font Variables */
@@ -72,7 +76,33 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             box-sizing: border-box;
         }
 
-        /* Top Bar Layout (Tabs + Font Controls) */
+        /* --- CUSTOM SCROLLBARS --- */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 8px;
+            border: 2px solid #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+        .modal-code::-webkit-scrollbar-track {
+            background: #1E293B;
+            border-color: #1E293B;
+        }
+        .modal-code::-webkit-scrollbar-thumb {
+            background: #475569;
+            border: 2px solid #1E293B;
+        }
+
+        /* Top Bar Layout */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -111,7 +141,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
         .level-tab.active {
             background: var(--primary);
             color: white;
-            box-shadow: 0 8px 15px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3);
             transform: translateY(-2px);
         }
 
@@ -155,7 +185,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             border-color: var(--primary);
         }
 
-        /* 2x2 Grid Layout Adjusted */
+        /* 2x2 Grid Layout */
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -173,6 +203,41 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             flex-direction: column;
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.5);
+            background-color: var(--panel-bg);
+        }
+
+        /* --- FULLSCREEN FEATURE CSS --- */
+        .panel.is-fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            max-height: none !important;
+            z-index: 9999 !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+
+        .fullscreen-btn {
+            background: transparent;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 1.2em;
+            opacity: 0.6;
+            transition: opacity 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        .fullscreen-btn:hover {
+            opacity: 1;
+            transform: scale(1.15);
         }
 
         .panel-header {
@@ -243,7 +308,6 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             font-family: inherit;
         }
 
-        /* Make HTML tags visually distinct */
         .task-text code {
             background: #F1F5F9;
             padding: 2px 6px;
@@ -264,7 +328,6 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             opacity: 0.8;
         }
 
-        /* Friendly Hint Button always pushed to the right */
         .hint-btn {
             background: #FEF08A;
             border: 1px solid #FDE047;
@@ -295,7 +358,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(4px);
-            z-index: 1000;
+            z-index: 10000;
             justify-content: center;
             align-items: center;
         }
@@ -407,7 +470,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
         .progress-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #6366F1, #8B5CF6);
+            background: linear-gradient(90deg, #10B981, #34D399);
             border-radius: 20px;
             transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s;
         }
@@ -443,24 +506,11 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Row 2, Col 1: Editor */
-        textarea {
+        /* Row 2, Col 1: Editor Container */
+        #editor {
             flex: 1;
             width: 100%;
-            border: none;
-            padding: 24px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: var(--editor-font-size);
-            line-height: 1.6;
-            resize: none;
-            background-color: var(--editor-bg);
-            color: var(--editor-text);
-            box-sizing: border-box;
-            transition: font-size 0.2s;
-        }
-        
-        textarea:focus {
-            outline: none;
+            overflow: hidden;
         }
 
         /* Row 2, Col 2: Live Preview */
@@ -468,7 +518,6 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             background: #E2E8F0;
             padding: 10px 16px;
             display: flex;
-            gap: 8px;
             align-items: center;
             border-bottom: 1px solid #CBD5E1;
         }
@@ -491,8 +540,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
     </style>
 </head>
 <body>
-
-    <!-- Top Bar with Level Navigation & Font Size Controls -->
+    <h2 style="color: #10B981">HTML/CSS Table Layout (Green)</h2>
     <div class="top-bar">
         <div class="level-tabs" id="level-tabs">
             <button class="level-tab active" data-level="0">Level 1</button>
@@ -503,7 +551,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
         </div>
 
         <div class="font-controls">
-            <span class="font-label">Text Size:</span>
+            <span class="font-label"></span>
             <button class="font-btn active" id="font-btn-A" onclick="setFontSize('A')">A</button>
             <button class="font-btn" id="font-btn-Ap" onclick="setFontSize('A+')">A+</button>
             <button class="font-btn" id="font-btn-App" onclick="setFontSize('A++')">A++</button>
@@ -511,13 +559,14 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
     </div>
 
     <div class="main-grid">
-        <!-- Row 1, Column 1: Task List -->
         <div class="panel">
-            <h2 class="panel-header">🎯 Assignment Tasks</h2>
+            <h2 class="panel-header">
+                <span>🎯 Assignment Tasks</span>
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this.closest('.panel'))" title="Phóng to toàn màn hình">⛶</button>
+            </h2>
             <ul id="task-list"></ul>
         </div>
 
-        <!-- Row 1, Column 2: Dashboard & Progress -->
         <div class="panel dashboard">
             <h1 id="level-title">HTML Table Mastery</h1>
             <p id="level-desc">Write your code below to complete the tasks and score points!</p>
@@ -530,27 +579,28 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             <div id="success-message">🎉 Level Cleared! Outstanding Job! 🎉</div>
         </div>
 
-        <!-- Row 2, Column 1: HTML Editor -->
         <div class="panel" style="background: var(--editor-bg);">
-            <h2 class="panel-header" style="background: #1E293B; color: #F8FAFC; border-bottom: 1px solid #334155;">
-                💻 HTML Editor
+            <h2 class="panel-header" style="background: #252526; color: #CCCCCC; border-bottom: 1px solid #333333;">
+                <span>💻 HTML Editor</span>
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this.closest('.panel'))" title="Phóng to toàn màn hình" style="color: #CCCCCC;">⛶</button>
             </h2>
-            <textarea id="editor" spellcheck="false"></textarea>
+            <div id="editor"></div>
         </div>
 
-        <!-- Row 2, Column 2: Live Preview -->
         <div class="panel">
             <div class="browser-mockup-bar">
-                <div class="dot red"></div>
-                <div class="dot yellow"></div>
-                <div class="dot green"></div>
-                <span style="margin-left: 10px; font-size: 13px; color: #64748B; font-weight: bold;">Live Web Preview</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div class="dot red"></div>
+                    <div class="dot yellow"></div>
+                    <div class="dot green"></div>
+                    <span style="margin-left: 10px; font-size: 13px; color: #64748B; font-weight: bold;">Live Web Preview</span>
+                </div>
+                <button class="fullscreen-btn" style="margin-left: auto;" onclick="toggleFullscreen(this.closest('.panel'))" title="Phóng to toàn màn hình">⛶</button>
             </div>
             <div id="preview"></div>
         </div>
     </div>
 
-    <!-- Friendly Hint Modal Popup -->
     <div id="hint-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -565,11 +615,114 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
     </div>
 
     <script>
+        // --- GLOBAL APP STATE ---
+        let currentLevel = 0;
+        let fireworksInterval = null;
+        let hasWon = false;
+        let monacoEditorInstance; 
+        let previousTasksState = []; 
+
+        // --- FULLSCREEN TOGGLE FUNCTION ---
+        function toggleFullscreen(panelElement) {
+            SoundFX.click(); 
+            const isFullscreen = panelElement.classList.contains('is-fullscreen');
+            
+            document.querySelectorAll('.panel.is-fullscreen').forEach(p => {
+                if (p !== panelElement) {
+                    p.classList.remove('is-fullscreen');
+                    const btn = p.querySelector('.fullscreen-btn');
+                    if (btn) btn.innerHTML = '⛶';
+                }
+            });
+
+            if (isFullscreen) {
+                panelElement.classList.remove('is-fullscreen');
+                panelElement.querySelector('.fullscreen-btn').innerHTML = '⛶'; 
+            } else {
+                panelElement.classList.add('is-fullscreen');
+                panelElement.querySelector('.fullscreen-btn').innerHTML = '✖'; 
+            }
+
+            if (monacoEditorInstance) {
+                setTimeout(() => {
+                    monacoEditorInstance.layout();
+                }, 50);
+            }
+        }
+
+        // --- HỆ THỐNG ÂM THANH (WEB AUDIO API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const SoundFX = {
+            init: function() {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            },
+            playTone: function(freq, type, duration, vol) {
+                this.init();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            },
+            type: () => {}, // ĐÃ TẮT ÂM THANH GÕ PHÍM THEO YÊU CẦU
+            click: () => SoundFX.playTone(600, 'sine', 0.08, 0.05), 
+            taskDone: () => { 
+                SoundFX.playTone(392.00, 'sine', 0.1, 0.1); 
+                setTimeout(() => SoundFX.playTone(523.25, 'sine', 0.15, 0.1), 100);
+            },
+            victory: () => { 
+                [392.00, 523.25, 659.25, 783.99].forEach((freq, i) => {
+                    setTimeout(() => SoundFX.playTone(freq, 'triangle', 0.4, 0.15), i * 150);
+                });
+            },
+            hint: () => SoundFX.playTone(880, 'sine', 0.2, 0.05) 
+        };
+
+        // DOM Element References
+        const preview = document.getElementById('preview');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreText = document.getElementById('score-text');
+        const successMessage = document.getElementById('success-message');
+        const taskList = document.getElementById('task-list');
+        const levelTitle = document.getElementById('level-title');
+        const levelDesc = document.getElementById('level-desc');
+        const tabs = document.querySelectorAll('.level-tab');
+
+        // --- INIT MONACO EDITOR ---
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            monacoEditorInstance = monaco.editor.create(document.getElementById('editor'), {
+                value: '',
+                language: 'html',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: 15,
+                tabSize: 4,
+                insertSpaces: true,
+                scrollBeyondLastLine: false,
+                padding: { top: 16, bottom: 16 }
+            });
+
+            monacoEditorInstance.onDidChangeModelContent(updateUI);
+
+            loadLevel(0);
+        });
+
         // --- TEXT FONT SIZE ACCESSIBILITY ---
         function setFontSize(level) {
+            SoundFX.click(); 
             const root = document.documentElement;
+            let monacoSize = 15;
             
-            // Define scaling for different text elements based on selected mode
             if (level === 'A') {
                 root.style.setProperty('--base-font-size', '14.5px');
                 root.style.setProperty('--editor-font-size', '15px');
@@ -580,23 +733,26 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                 root.style.setProperty('--editor-font-size', '18px');
                 root.style.setProperty('--icon-size', '22px');
                 root.style.setProperty('--btn-size', '40px');
+                monacoSize = 18;
             } else if (level === 'A++') {
                 root.style.setProperty('--base-font-size', '22px');
                 root.style.setProperty('--editor-font-size', '22px');
                 root.style.setProperty('--icon-size', '26px');
                 root.style.setProperty('--btn-size', '44px');
+                monacoSize = 22;
             }
 
-            // Update UI Active State
             document.querySelectorAll('.font-btn').forEach(btn => btn.classList.remove('active'));
-            
             const btnId = 'font-btn-' + level.replace('++', 'pp').replace('+', 'p');
             document.getElementById(btnId).classList.add('active');
+
+            if (monacoEditorInstance) {
+                monacoEditorInstance.updateOptions({ fontSize: monacoSize });
+            }
         }
 
         // --- PREVENT BROWSER FROM RENDERING TAGS AS HTML ---
         function escapeHTML(str) {
-            // Encode < and > to safely display them as plain text, while formatting them nicely in a code block
             return str
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
@@ -608,7 +764,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             {
                 title: "Level 1: Table Modification",
                 desc: "Modify table attributes, headers, and rows to match requirements.",
-                initialCode: `<table border="1">\n  <caption>Table Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n    </tr>\n  </tbody>\n</table>`,
+                initialCode: `<table border="1">\n  <caption>Table Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n    </tr>\n  </thead>\n</table>`,
                 tasks: [
                     'Change the text inside the <caption> tag exactly to "New Title".',
                     'Add a 3rd column by adding a <th> with text "Header 3" inside the <thead> row and a <td> with text "Data 3" inside the first <tbody> row.',
@@ -617,11 +773,11 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                     'Change the border attribute in the opening <table> tag to border="3".'
                 ],
                 hints: [
-                    `<table border="1">\n  <!-- HINT: Update the text inside <caption> to 'New Title' -->\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table border="1">\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <!-- HINT: Add the 3rd column header -->\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <!-- HINT: Add the 3rd column data cell -->\n      <td>Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table border="1">\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    <!-- HINT: Add a second <tr> with three data cells -->\n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table width="80%" border="1">\n  <!-- HINT: Add width="80%" to the <table> tag -->\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table width="80%" border="3">\n  <!-- HINT: Change border="1" to border="3" -->\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`
+                    `<table border="1">\n  \n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      \n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      \n      <td>Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    \n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table width="80%" border="1">\n  \n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table width="80%" border="3">\n  \n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`
                 ],
                 validate: (doc, rawCode) => {
                     let results = [false, false, false, false, false];
@@ -665,11 +821,11 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                     'Set the text content inside that <tfoot> cell <td> exactly to "Total Summary".'
                 ],
                 hints: [
-                    `<table border="2">\n  <!-- HINT: Set border="2" on <table> -->\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <!-- HINT: Add <tfoot> below <tbody> -->\n  <tfoot></tfoot>\n</table>`,
-                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <!-- HINT: Add a <tr> with a <td> inside <tfoot> -->\n    <tr>\n      <td></td>\n    </tr>\n  </tfoot>\n</table>`,
-                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      <!-- HINT: Add colspan="3" attribute -->\n      <td colspan="3"></td>\n    </tr>\n  </tfoot>\n</table>`,
-                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      <!-- HINT: Set text to 'Total Summary' -->\n      <td colspan="3">Total Summary</td>\n    </tr>\n  </tfoot>\n</table>`
+                    `<table border="2">\n  \n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  \n  <tfoot></tfoot>\n</table>`,
+                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    \n    <tr>\n      <td></td>\n    </tr>\n  </tfoot>\n</table>`,
+                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      \n      <td colspan="3"></td>\n    </tr>\n  </tfoot>\n</table>`,
+                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      \n      <td colspan="3">Total Summary</td>\n    </tr>\n  </tfoot>\n</table>`
                 ],
                 validate: (doc, rawCode) => {
                     let results = [false, false, false, false, false];
@@ -702,11 +858,11 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                     'Add the attribute width="500" directly to the opening <table> tag.'
                 ],
                 hints: [
-                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <!-- HINT: Add <tbody> section -->\n  <tbody>\n  </tbody>\n</table>`,
-                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <!-- HINT: Insert two <tr> rows inside <tbody> -->\n    <tr></tr>\n    <tr></tr>\n  </tbody>\n</table>`,
-                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      <!-- HINT: First cell with rowspan="2" -->\n      <td rowspan="2">Group</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      <td rowspan="2">Group</td>\n      <!-- HINT: Add cell containing 'Secret' -->\n      <td>Secret</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table width="500" border="1">\n  <!-- HINT: Set width="500" on table tag -->\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      <td rowspan="2">Group</td>\n      <td>Secret</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`
+                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  \n  <tbody>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    \n    <tr></tr>\n    <tr></tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      \n      <td rowspan="2">Group</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      <td rowspan="2">Group</td>\n      \n      <td>Secret</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table width="500" border="1">\n  \n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      <td rowspan="2">Group</td>\n      <td>Secret</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`
                 ],
                 validate: (doc, rawCode) => {
                     let results = [false, false, false, false, false];
@@ -715,17 +871,13 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
 
                     const code = rawCode.toLowerCase();
 
-                    // Logic fix: Check raw string for <tbody> so it doesn't auto-pass when browser fixes HTML
                     if (code.includes('<tbody') && code.includes('</tbody')) results[0] = true;
 
-                    // Ensure there are at least 2 data rows (rows containing td)
                     const dataRows = Array.from(table.querySelectorAll('tr')).filter(tr => tr.querySelector('td'));
                     if (dataRows.length >= 2) results[1] = true;
 
-                    // Check for rowspan="2"
                     if (table.querySelector('td[rowspan="2"]')) results[2] = true;
                     
-                    // Check for "Secret"
                     const tds = Array.from(table.querySelectorAll('td'));
                     if (tds.some(td => td.textContent.trim() === 'Secret')) results[3] = true;
                     
@@ -737,20 +889,20 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             {
                 title: "Level 4: Create From Scratch",
                 desc: "Build a multi-section schedule table combining headers, rowspan, and colspan.",
-                initialCode: `<!-- Write your HTML table completely from scratch! -->`,
+                initialCode: ``,
                 tasks: [
                     'Create an opening and closing <table> tag with the attribute border="1".',
-                    'Create a <thead> section containing one row <tr> with three header cells <th> having the text "Mon", "Tue", and "Wed".',
+                    'Create a <thead> section containing one row <tr> với ba thẻ header <th> có nội dung "Mon", "Tue", và "Wed".',
                     'Create a <tbody> section containing at least two rows <tr> with data cells <td>.',
                     'Merge a cell vertically across 2 rows by adding the attribute rowspan="2" to a <td> cell.',
                     'Merge a cell horizontally across 2 columns by adding the attribute colspan="2" to a <td> cell.'
                 ],
                 hints: [
-                    `<table border="1">\n  <!-- HINT: Basic table with border="1" -->\n</table>`,
-                    `<table border="1">\n  <thead>\n    <!-- HINT: <thead> with Mon, Tue, Wed -->\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n</table>`,
-                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  <!-- HINT: Add <tbody> with at least 2 rows -->\n  <tbody>\n    <tr>\n      <td>Math</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      <td>Art</td>\n      <td>PE</td>\n      <td>Music</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <!-- HINT: Add rowspan="2" to merge vertically -->\n      <td rowspan="2">Workshop</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      <td>PE</td>\n      <td>Music</td>\n    </tr>\n  </tbody>\n</table>`,
-                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td rowspan="2">Workshop</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      <!-- HINT: Add colspan="2" to merge horizontally -->\n      <td colspan="2">Free Period</td>\n    </tr>\n  </tbody>\n</table>`
+                    `<table border="1">\n  \n</table>`,
+                    `<table border="1">\n  <thead>\n    \n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n</table>`,
+                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  \n  <tbody>\n    <tr>\n      <td>Math</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      <td>Art</td>\n      <td>PE</td>\n      <td>Music</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      \n      <td rowspan="2">Workshop</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      <td>PE</td>\n      <td>Music</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td rowspan="2">Workshop</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      \n      <td colspan="2">Free Period</td>\n    </tr>\n  </tbody>\n</table>`
                 ],
                 validate: (doc, rawCode) => {
                     let results = [false, false, false, false, false];
@@ -775,7 +927,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             {
                 title: "Level 5: The Ultimate Data Table",
                 desc: "Build an enterprise-grade HTML table featuring all semantic tags and full-width footer spanning.",
-                initialCode: `<!-- Build a complete table with id='master-table' -->`,
+                initialCode: ``,
                 tasks: [
                     'Create a <table> tag and assign it the attribute id="master-table".',
                     'Add a <caption> tag directly inside the <table> containing the exact text "Employee Data".',
@@ -784,11 +936,11 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                     'Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attribute colspan="4" and the text "End of List".'
                 ],
                 hints: [
-                    `<table id="master-table" border="1">\n  <!-- HINT: Create table with id="master-table" -->\n</table>`,
-                    `<table id="master-table" border="1">\n  <!-- HINT: Add <caption>Employee Data</caption> -->\n  <caption>Employee Data</caption>\n</table>`,
-                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  <!-- HINT: Include the 3 semantic sections -->\n  <thead></thead>\n  <tbody></tbody>\n  <tfoot></tfoot>\n</table>`,
-                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  <thead>\n    <!-- HINT: Exactly 4 headers: ID, Name, Role, Salary -->\n    <tr>\n      <th>ID</th>\n      <th>Name</th>\n      <th>Role</th>\n      <th>Salary</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>101</td>\n      <td>Alice</td>\n      <td>Engineer</td>\n      <td>$4,500</td>\n    </tr>\n  </tbody>\n  <tfoot></tfoot>\n</table>`,
-                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  <thead>\n    <tr>\n      <th>ID</th>\n      <th>Name</th>\n      <th>Role</th>\n      <th>Salary</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>101</td>\n      <td>Alice</td>\n      <td>Engineer</td>\n      <td>$4,500</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      <!-- HINT: Single <td> spanning 4 columns with text 'End of List' -->\n      <td colspan="4">End of List</td>\n    </tr>\n  </tfoot>\n</table>`
+                    `<table id="master-table" border="1">\n  \n</table>`,
+                    `<table id="master-table" border="1">\n  \n  <caption>Employee Data</caption>\n</table>`,
+                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  \n  <thead></thead>\n  <tbody></tbody>\n  <tfoot></tfoot>\n</table>`,
+                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  <thead>\n    \n    <tr>\n      <th>ID</th>\n      <th>Name</th>\n      <th>Role</th>\n      <th>Salary</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>101</td>\n      <td>Alice</td>\n      <td>Engineer</td>\n      <td>$4,500</td>\n    </tr>\n  </tbody>\n  <tfoot></tfoot>\n</table>`,
+                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  <thead>\n    <tr>\n      <th>ID</th>\n      <th>Name</th>\n      <th>Role</th>\n      <th>Salary</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>101</td>\n      <td>Alice</td>\n      <td>Engineer</td>\n      <td>$4,500</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      \n      <td colspan="4">End of List</td>\n    </tr>\n  </tfoot>\n</table>`
                 ],
                 validate: (doc, rawCode) => {
                     let results = [false, false, false, false, false];
@@ -802,7 +954,6 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                     const caption = table.querySelector('caption');
                     if (caption && caption.textContent.trim() === 'Employee Data') results[1] = true;
                     
-                    // Logic fix: require manual typing of structure tags
                     if (code.includes('<thead') && code.includes('<tbody') && code.includes('<tfoot')) results[2] = true;
                     
                     const ths = table.querySelectorAll('thead th');
@@ -823,22 +974,6 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                 }
             }
         ];
-
-        // --- GLOBAL APP STATE ---
-        let currentLevel = 0;
-        let fireworksInterval = null;
-        let hasWon = false;
-
-        // DOM Element References
-        const editor = document.getElementById('editor');
-        const preview = document.getElementById('preview');
-        const progressBar = document.getElementById('progress-bar');
-        const scoreText = document.getElementById('score-text');
-        const successMessage = document.getElementById('success-message');
-        const taskList = document.getElementById('task-list');
-        const levelTitle = document.getElementById('level-title');
-        const levelDesc = document.getElementById('level-desc');
-        const tabs = document.querySelectorAll('.level-tab');
 
         // Fireworks Animation
         function triggerFireworks() {
@@ -867,6 +1002,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
 
         // Display Hint in Modal Dialog
         function showHint(taskIndex) {
+            SoundFX.hint(); 
             const levelData = levels[currentLevel];
             const modal = document.getElementById('hint-modal');
             const modalCode = document.getElementById('hint-code');
@@ -875,12 +1011,14 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
         }
 
         function closeModal() {
+            SoundFX.click(); 
             document.getElementById('hint-modal').style.display = 'none';
         }
 
         window.onclick = function(event) {
             const modal = document.getElementById('hint-modal');
             if (event.target === modal) {
+                SoundFX.click();
                 modal.style.display = "none";
             }
         };
@@ -890,21 +1028,17 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             currentLevel = index;
             const levelData = levels[index];
 
-            // Update Tab Active State
             tabs.forEach(tab => tab.classList.remove('active'));
             tabs[index].classList.add('active');
 
-            // Update Header Info
             levelTitle.textContent = levelData.title;
             levelDesc.textContent = levelData.desc;
 
-            // Render Task Items
             taskList.innerHTML = '';
             levelData.tasks.forEach((task, i) => {
                 const li = document.createElement('li');
                 li.id = `task-${i}`;
                 
-                // apply escapeHTML directly so <td> and <tr> output visibly
                 const formattedTask = escapeHTML(task);
                 
                 li.innerHTML = `
@@ -917,33 +1051,35 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                 taskList.appendChild(li);
             });
 
-            // Reset Code Editor and Victory Status
-            editor.value = levelData.initialCode;
+            if (monacoEditorInstance) {
+                monacoEditorInstance.setValue(levelData.initialCode);
+            }
+            
             stopFireworks();
             hasWon = false;
             successMessage.style.display = 'none';
+            previousTasksState = []; 
             
             updateUI();
         }
 
         // Real-time Parser & Validator
         function updateUI() {
-            const htmlCode = editor.value;
+            if (!monacoEditorInstance) return;
+            const htmlCode = monacoEditorInstance.getValue();
             const levelData = levels[currentLevel];
             
-            // Render to Preview Panel
             preview.innerHTML = htmlCode;
 
-            // Parse DOM safely
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlCode, 'text/html');
 
-            // Evaluate Task Completion by passing both parsed DOC and RAW CODE
             const tasksCompleted = levelData.validate(doc, htmlCode);
             const totalTasks = levelData.tasks.length;
             const pointPerTask = 100 / totalTasks;
             
             let score = 0;
+            let justCompletedATask = false;
 
             tasksCompleted.forEach((completed, index) => {
                 const li = document.getElementById(`task-${index}`);
@@ -954,48 +1090,52 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                     score += pointPerTask;
                     li.classList.add('completed-task');
                     icon.textContent = '✅';
+                    
+                    if (!previousTasksState[index]) {
+                        justCompletedATask = true;
+                    }
                 } else {
                     li.classList.remove('completed-task');
                     icon.textContent = '❌';
                 }
             });
-
+            
+            previousTasksState = [...tasksCompleted];
             score = Math.round(score);
 
-            // Update Progress Bar
             progressBar.style.width = `${score}%`;
             scoreText.textContent = `Score: ${score}%`;
 
-            // Victory Trigger
             if (score === 100) {
                 progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)';
                 if (!hasWon) {
                     hasWon = true;
                     successMessage.style.display = 'block';
+                    SoundFX.victory(); 
                     triggerFireworks();
                 }
             } else {
-                progressBar.style.background = 'linear-gradient(90deg, #6366F1, #8B5CF6)';
+                progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)';
                 hasWon = false;
                 successMessage.style.display = 'none';
                 stopFireworks();
+                
+                if (justCompletedATask) {
+                    SoundFX.taskDone(); 
+                }
             }
         }
-
-        // Event Listeners
-        editor.addEventListener('input', updateUI);
 
         tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
                 const index = parseInt(e.target.getAttribute('data-level'));
-                if (index !== currentLevel) {
+                if (index !== currentLevel && monacoEditorInstance) {
+                    SoundFX.click(); 
                     loadLevel(index);
                 }
             });
         });
 
-        // Initialize Game at Level 1
-        loadLevel(0);
     </script>
 </body>
 </html>
