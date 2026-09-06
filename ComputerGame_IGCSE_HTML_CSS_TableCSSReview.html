@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Master: Blue Ocean</title>
+    <style>
+        /* Color Palette - Blue Ocean Theme */
+        :root {
+            --primary: #003366;
+            --secondary: #00509e;
+            --accent: #4da6ff;
+            --bg-light: #e6f2ff;
+            --text-dark: #1a1a1a;
+            --white: #ffffff;
+            --success: #28a745;
+            --error: #dc3545;
+            --sidebar-bg: #001f3f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--primary);
+            color: var(--white);
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Vertical Progress Sidebar with Water Fill Effect --- */
+        .sidebar {
+            width: 80px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            position: relative;
+            border-right: 2px solid var(--accent);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .sidebar-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 70px;
+            bottom: 40px;
+            width: 4px;
+            background-color: #334455;
+            z-index: 1;
+        }
+
+        .step-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            z-index: 2;
+        }
+
+        /* Vòng tròn Progress (Cho phép Click) */
+        .step {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #334455;
+            color: #8899aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: 2px solid #112233;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer; /* Hiển thị con trỏ tay */
+        }
+        
+        .step:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        /* Lớp Nước (Water Fill) */
+        .step .water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%; /* Mặc định 0% */
+            background-color: var(--accent);
+            transition: height 0.6s ease-in-out, background-color 0.6s;
+            z-index: 1;
+        }
+
+        /* Level đang chơi -> Nước đầy 50% */
+        .step.active {
+            color: var(--white);
+            border-color: var(--white);
+            box-shadow: 0 0 12px var(--accent);
+            transform: scale(1.15);
+        }
+        .step.active .water {
+            height: 50%;
+        }
+
+        /* Level đã hoàn thành -> Nước đầy 100% màu xanh lá */
+        .step.completed {
+            color: var(--white);
+            border-color: #1e7e34;
+        }
+        .step.completed .water {
+            height: 100%;
+            background-color: var(--success);
+        }
+
+        /* Chữ số bên trên lớp nước */
+        .step .step-num {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* --- Main Content Wrapper --- */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--secondary);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--accent);
+        }
+
+        header h1 { margin: 0; font-size: 24px; }
+        .level-badge { background: var(--accent); padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- Left Panel (Editor) --- */
+        .editor-panel {
+            width: 50%;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid var(--secondary);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .instruction-box {
+            background: var(--white);
+            border-left: 5px solid var(--secondary);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .instruction-box h3 { color: var(--secondary); margin-bottom: 10px; padding-right: 80px; }
+        
+        .task-code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            border-left: 4px solid var(--accent);
+        }
+
+        .hint-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+        .hint-btn:hover { background-color: #e0a800; transform: scale(1.05); }
+
+        .file-naming {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .input-group { flex: 1; }
+        .input-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: var(--secondary); }
+        .input-group input { width: 100%; padding: 8px; border: 1px solid #aaa; border-radius: 4px; }
+
+        .code-area { margin-bottom: 15px; }
+        .code-area label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
+        textarea {
+            width: 100%;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            resize: vertical;
+            background: #fdfdfd;
+        }
+
+        .head-area textarea { height: 60px; }
+        .html-area textarea, .css-area textarea { height: 120px; }
+
+        .actions { margin-top: auto; padding-top: 20px; }
+        .btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: 0.3s;
+            width: 100%;
+        }
+        .btn:hover { background-color: var(--accent); }
+
+        #message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+        .msg-success { background: var(--success); color: white; }
+        .msg-error { background: var(--error); color: white; }
+
+        .hidden { display: none !important; }
+
+        /* --- Right Panel (Preview) --- */
+        .preview-panel {
+            width: 50%;
+            background-color: var(--white);
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-header {
+            background: #f0f0f0;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #preview-frame {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* --- Modal (Hint) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--white);
+            color: var(--text-dark);
+            width: 600px;
+            max-width: 90%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            background: var(--secondary);
+            color: var(--white);
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-close {
+            background: none; border: none; color: white; font-size: 24px; cursor: pointer;
+        }
+        .modal-body {
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .modal-code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Vertical Progress Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-title">Progress</div>
+        <div class="progress-line"></div>
+        <div class="step-container" id="progress-steps">
+            <!-- Steps Generated by JS -->
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <header>
+            <h1>CSS Master: Blue Ocean</h1>
+            <div class="level-badge" id="level-indicator">Level 1/10</div>
+        </header>
+
+        <div class="container">
+            <!-- Code Editor Area -->
+            <div class="editor-panel">
+                <div class="instruction-box">
+                    <button class="hint-btn" onclick="showHint()">💡 Hint</button>
+                    <h3 id="task-title">Task Title</h3>
+                    <p id="task-desc">Task description goes here...</p>
+                </div>
+
+                <div class="file-naming">
+                    <div class="input-group">
+                        <label>Required HTML File: <span id="req-html-name" style="color: red;"></span></label>
+                        <input type="text" id="html-filename" placeholder="e.g. index.html">
+                    </div>
+                    <div class="input-group" id="css-file-group">
+                        <label>Required CSS File: <span id="req-css-name" style="color: red;"></span></label>
+                        <input type="text" id="css-filename" placeholder="e.g. style.css">
+                    </div>
+                </div>
+
+                <div class="code-area head-area" id="head-section">
+                    <label>Inside &lt;head&gt; (CSS Connection):</label>
+                    <textarea id="head-code" placeholder="<!-- Write <style> or <link> tag here -->"></textarea>
+                </div>
+
+                <div class="code-area html-area">
+                    <label>Inside &lt;body&gt; (HTML):</label>
+                    <textarea id="html-code"></textarea>
+                </div>
+
+                <div class="code-area css-area" id="css-section">
+                    <label>Your CSS File:</label>
+                    <textarea id="css-code"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn" id="check-btn" onclick="checkSolution()">Check Solution</button>
+                    <div id="message"></div>
+                    <button class="btn hidden" id="next-btn" style="margin-top: 10px; background-color: var(--success);" onclick="nextLevel()">Play Next Level ➔</button>
+                </div>
+            </div>
+
+            <!-- Preview Area -->
+            <div class="preview-panel">
+                <div class="preview-header">Live Preview</div>
+                <div id="preview-frame">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hint Modal -->
+    <div class="modal-overlay" id="hint-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>💡 Level Hint</span>
+                <button class="modal-close" onclick="closeHint()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-code-block" id="hint-code"></div>
+                <div id="hint-explanation" style="line-height: 1.6;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // HÀM CHUẨN HÓA (Xử lý lỗi Copy/Paste)
+        // Loại bỏ mọi dấu cách, đổi in hoa thành in thường, xóa mọi loại dấu nháy đơn/kép/thông minh
+        function strip(str) {
+            if (!str) return "";
+            return str
+                .replace(/[\u2018\u2019\u201C\u201D'"]/g, "") // Xóa mọi loại dấu ngoặc kép / nháy đơn
+                .replace(/\s+/g, "") // Xóa mọi khoảng trắng, xuống dòng
+                .toLowerCase(); // Đưa về in thường
+        }
+
+        // DATA FOR 10 LEVELS
+        const levels = [
+            {
+                id: 1,
+                title: "Level 1: Inline CSS",
+                desc: `<b>Method:</b> Inline.<br><b>Properties:</b> color, font-size, font-weight, font-style, text-decoration.<br><br><b>Task:</b> Add a \`style\` attribute directly inside the &lt;h1&gt; tag matching this syntax exactly:
+<pre class="task-code">
+&lt;h1 style="color: blue; font-size: 24px; font-weight: bold; font-style: italic; text-decoration: underline;"&gt;</pre>`,
+                reqHtml: "level1.html",
+                reqCss: "none",
+                method: "inline",
+                initHtml: '<h1>Learning CSS is fun!</h1>',
+                initHead: '<!-- No head changes needed for this level -->',
+                initCss: '/* Not used */',
+                hintCode: '<h1 style="color: blue; font-size: 24px; font-weight: bold; font-style: italic; text-decoration: underline;">Learning CSS is fun!</h1>',
+                hintExplanation: "<b>Inline CSS</b> is written directly inside the HTML tag using the <code>style</code> attribute. Each property is separated by a semicolon (;). We apply color, font styling, and underlining directly to the h1 element.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    let h = strip(html);
+                    if(strip(htmlName) !== strip(this.reqHtml)) return "Incorrect HTML filename. Expected: " + this.reqHtml;
+                    
+                    if(h.includes('style=') && h.includes('color:blue') && h.includes('font-size:24px') && h.includes('font-weight:bold') && h.includes('font-style:italic') && h.includes('text-decoration:underline')) return true;
+                    return "Missing or incorrect CSS properties inside the h1 style attribute!";
+                }
+            },
+            {
+                id: 2,
+                title: "Level 2: Internal CSS",
+                desc: `<b>Method:</b> Internal (&lt;style&gt; tag).<br><b>Properties:</b> background-color, font-family, text-align, width, height.<br><br><b>Task:</b> Write a &lt;style&gt; tag inside the &lt;head&gt; section matching this CSS syntax:
+<pre class="task-code">
+div {
+  background-color: #00509e;
+  font-family: "Arial", sans-serif;
+  text-align: center;
+  width: 50%;
+  height: 100px;
+}</pre>`,
+                reqHtml: "layout2.html",
+                reqCss: "none",
+                method: "internal",
+                initHtml: '<div>I am learning Internal CSS</div>',
+                initHead: '<style>\n  /* Write css for div here */\n\n</style>',
+                initCss: '',
+                hintCode: `<style>\n  div {\n    background-color: #00509e;\n    font-family: "Arial", sans-serif;\n    text-align: center;\n    width: 50%;\n    height: 100px;\n  }\n</style>`,
+                hintExplanation: "<b>Internal CSS</b> is placed inside a <code>&lt;style&gt;</code> tag within the <code>&lt;head&gt;</code>. We target the HTML element (div) and apply background, sizing, font, and alignment rules.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml)) return "Incorrect HTML filename!";
+                    let h = strip(head);
+                    if(!h.includes('<style>') || !h.includes('</style>')) return "Missing <style> tag in head!";
+                    
+                    if(h.includes('background-color:#00509e') && h.includes('font-family:arial,sans-serif') && h.includes('text-align:center') && h.includes('width:50%') && h.includes('height:100px')) return true;
+                    return "Check CSS properties inside <style>! Did you add all 5 required properties?";
+                }
+            },
+            {
+                id: 3,
+                title: "Level 3: External CSS & Box Model",
+                desc: `<b>Method:</b> External (&lt;link&gt; tag).<br><b>Properties:</b> padding, border, margin-left: auto, margin-right: auto.<br><br><b>Task:</b> Use &lt;link&gt; in &lt;head&gt; to connect the CSS file. In your CSS file, style \`.box\` like this:
+<pre class="task-code">
+.box {
+  border: 2px solid black;
+  padding: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}</pre>`,
+                reqHtml: "index.html",
+                reqCss: "style.css",
+                method: "external",
+                initHtml: '<div class="box">Center this block</div>',
+                initHead: '<!-- Write <link> tag to connect style.css -->\n',
+                initCss: '.box {\n  width: 200px;\n  /* Add your CSS code here */\n}',
+                hintCode: `<!-- In Head Area -->\n<link rel="stylesheet" type="text/css" href="style.css">\n\n/* In CSS File */\n.box {\n  width: 200px;\n  border: 2px solid black;\n  padding: 20px;\n  margin-left: auto;\n  margin-right: auto;\n}`,
+                hintExplanation: "<b>External CSS</b> links a separate `.css` file using the <code>&lt;link&gt;</code> tag. To center a block element horizontally, we use <code>margin-left: auto; margin-right: auto;</code> alongside a defined width.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml)) return "Incorrect HTML filename!";
+                    if(strip(cssName) !== strip(this.reqCss)) return "Incorrect CSS filename!";
+                    
+                    let h = strip(head);
+                    if(!h.includes('rel=stylesheet') || !h.includes('href=style.css')) return "The <link> tag is missing, malformed, or has the wrong href!";
+
+                    let c = strip(css);
+                    if(c.includes('border:2pxsolidblack') && c.includes('padding:20px') && c.includes('margin-left:auto') && c.includes('margin-right:auto')) return true;
+                    return "CSS file is missing properties for border, padding, margin-left, or margin-right.";
+                }
+            },
+            {
+                id: 4,
+                title: "Level 4: Styling Tables - Part 1",
+                desc: `<b>Method:</b> External.<br><b>Properties:</b> border-collapse, vertical-align.<br><br><b>Task:</b> Connect the CSS file. Style the \`table\` and \`td\` as follows:
+<pre class="task-code">
+table {
+  border-collapse: collapse;
+}
+td {
+  vertical-align: bottom;
+}</pre>`,
+                reqHtml: "data.html",
+                reqCss: "table.css",
+                method: "external",
+                initHtml: '<table>\n  <tr>\n    <td style="height:80px; border: 1px solid black;">Data 1</td>\n  </tr>\n</table>',
+                initHead: '<!-- Connect table.css -->\n',
+                initCss: 'table {\n  /* Collapse borders here */\n}\ntd {\n  /* Align vertically */\n}',
+                hintCode: `<!-- In Head Area -->\n<link rel="stylesheet" type="text/css" href="table.css">\n\n/* In CSS File */\ntable {\n  border-collapse: collapse;\n}\ntd {\n  vertical-align: bottom;\n}`,
+                hintExplanation: "For tables, <code>border-collapse: collapse;</code> merges cell borders into a single border. <code>vertical-align: bottom;</code> pushes the text to the bottom edge of the cell.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml) || strip(cssName) !== strip(this.reqCss)) return "Incorrect filenames!";
+                    if(!strip(head).includes(strip(this.reqCss))) return "CSS file not linked correctly!";
+
+                    let c = strip(css);
+                    if(c.includes('border-collapse:collapse') && c.includes('vertical-align:bottom')) return true;
+                    return "Missing border-collapse for table or vertical-align for td.";
+                }
+            },
+            {
+                id: 5,
+                title: "Level 5: Styling Tables - Cell Spacing",
+                desc: `<b>Method:</b> External.<br><b>Properties:</b> border-spacing.<br><br><b>Task:</b> Connect the CSS file. Apply border spacing to the \`table\`:
+<pre class="task-code">
+table {
+  border-spacing: 10px 20px;
+}</pre>`,
+                reqHtml: "grid.html",
+                reqCss: "spacing.css",
+                method: "external",
+                initHtml: '<table>\n  <tr>\n    <td style="border: 1px solid blue;">Cell 1</td>\n    <td style="border: 1px solid blue;">Cell 2</td>\n  </tr>\n</table>',
+                initHead: '<!-- Link spacing.css -->\n',
+                initCss: 'table {\n  /* Write border-spacing here */\n}',
+                hintCode: `<!-- In Head Area -->\n<link rel="stylesheet" href="spacing.css">\n\n/* In CSS File */\ntable {\n  border-spacing: 10px 20px;\n}`,
+                hintExplanation: "<code>border-spacing</code> defines the space between cells in a table. It only works if <code>border-collapse</code> is NOT set to collapse. The first value is horizontal spacing, the second is vertical.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml) || strip(cssName) !== strip(this.reqCss)) return "Incorrect filenames!";
+                    if(!strip(head).includes(strip(this.reqCss))) return "CSS file not linked correctly!";
+                    if(strip(css).includes('border-spacing:10px20px')) return true;
+                    return "Make sure you set border-spacing to exactly 10px 20px.";
+                }
+            },
+            {
+                id: 6,
+                title: "Level 6: Background Handling",
+                desc: `<b>Method:</b> External.<br><b>Properties:</b> background-image, background-repeat, background-position.<br><br><b>Task:</b> Connect CSS. Add the following background properties to \`body\`:
+<pre class="task-code">
+body {
+  background-image: url('bg.jpg');
+  background-repeat: no-repeat;
+  background-position: right top;
+}</pre>`,
+                reqHtml: "home.html",
+                reqCss: "bg.css",
+                method: "external",
+                initHtml: '<body>\n  <h1>Website Content</h1>\n</body>',
+                initHead: '<!-- Link bg.css -->\n',
+                initCss: 'body {\n  height: 200px;\n  /* Background CSS code */\n}',
+                hintCode: `<!-- In Head Area -->\n<link rel="stylesheet" href="bg.css">\n\n/* In CSS File */\nbody {\n  height: 200px;\n  background-image: url('bg.jpg');\n  background-repeat: no-repeat;\n  background-position: right top;\n}`,
+                hintExplanation: "You can set images as backgrounds using <code>background-image: url('...');</code>. By default, images repeat to fill space. <code>background-repeat: no-repeat;</code> stops this, and <code>background-position</code> moves the image to specific coordinates.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml) || strip(cssName) !== strip(this.reqCss)) return "Incorrect filenames!";
+                    if(!strip(head).includes(strip(this.reqCss))) return "CSS file not linked correctly!";
+
+                    let c = strip(css);
+                    if(c.includes('background-image:url(bg.jpg)') && c.includes('background-repeat:no-repeat') && c.includes('background-position:righttop')) return true;
+                    return "Missing background-image, background-repeat, or background-position properties!";
+                }
+            },
+            {
+                id: 7,
+                title: "Level 7: Advanced - Beautiful Buttons",
+                desc: `<b>Mixed Review.</b><br>Create a styled button. HTML name: \`ui.html\`, CSS: \`button.css\`.<br><b>Task:</b> Connect CSS. Style \`.btn\` exactly like this:
+<pre class="task-code">
+.btn {
+  text-decoration: none;
+  border: 2px solid blue;
+  font-weight: bold;
+  text-align: center;
+}</pre>`,
+                reqHtml: "ui.html",
+                reqCss: "button.css",
+                method: "external",
+                initHtml: '<a href="#" class="btn">Click Me</a>',
+                initHead: '<!-- Link button.css -->\n',
+                initCss: '.btn {\n  display: inline-block;\n  padding: 10px 15px;\n  /* Add your CSS here */\n}',
+                hintCode: `/* In CSS File */\n.btn {\n  display: inline-block;\n  padding: 10px 15px;\n  text-decoration: none;\n  border: 2px solid blue;\n  font-weight: bold;\n  text-align: center;\n}`,
+                hintExplanation: "Links (<code>&lt;a&gt;</code> tags) often have underlines by default. We remove them with <code>text-decoration: none;</code> to make them look like buttons.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml) || strip(cssName) !== strip(this.reqCss)) return "Incorrect filenames!";
+                    if(!strip(head).includes(strip(this.reqCss))) return "CSS not connected!";
+                    let c = strip(css);
+                    if(c.includes('text-decoration:none') && c.includes('border:') && c.includes('font-weight:bold') && c.includes('text-align:center')) return true;
+                    return "Ensure you have text-decoration: none, border, font-weight: bold, and text-align: center.";
+                }
+            },
+            {
+                id: 8,
+                title: "Level 8: Internal CSS - Basic Layout",
+                desc: `<b>Use Internal CSS.</b> HTML name: \`layout.html\`.\n<br><b>Task:</b> Target \`.header\` inside the &lt;style&gt; tag with this syntax:
+<pre class="task-code">
+.header {
+  height: 50px;
+  background-color: blue;
+  color: white;
+}</pre>`,
+                reqHtml: "layout.html",
+                reqCss: "none",
+                method: "internal",
+                initHtml: '<div class="header">Website Title</div>',
+                initHead: '<style>\n\n</style>',
+                initCss: '',
+                hintCode: `<style>\n  .header {\n    height: 50px;\n    background-color: blue;\n    color: white;\n  }\n</style>`,
+                hintExplanation: "Classes are targeted with a dot (.) in CSS. Internal CSS is great for single-page styles.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml)) return "Incorrect HTML filename!";
+                    let h = strip(head);
+                    if(h.includes('.header{') && h.includes('height:50px') && h.includes('background-color:blue') && h.includes('color:white')) return true;
+                    return "Ensure height is 50px, background-color is blue, and color is white inside <style>.";
+                }
+            },
+            {
+                id: 9,
+                title: "Level 9: Urgent Inline Override",
+                desc: `Sometimes you need to override CSS immediately. HTML name: \`urgent.html\`.\n<br><b>Task:</b> Use <b>Inline CSS</b> on the div to apply these exact styles:
+<pre class="task-code">
+&lt;div class="alert" style="width: 100%; font-size: 2em;"&gt;</pre>`,
+                reqHtml: "urgent.html",
+                reqCss: "none",
+                method: "inline",
+                initHtml: '<div class="alert">Urgent Warning!</div>',
+                initHead: '<!-- Do not add anything here -->',
+                initCss: '',
+                hintCode: `<div class="alert" style="width: 100%; font-size: 2em;">Urgent Warning!</div>`,
+                hintExplanation: "Inline CSS has the highest specificity (priority). Using <code>2em</code> sets the font size to twice the current element's default size.",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml)) return "Incorrect HTML filename!";
+                    let h = strip(html);
+                    if(h.includes('style=') && h.includes('width:100%') && h.includes('font-size:2em')) return true;
+                    return "Must use inline style with width: 100% and font-size: 2em";
+                }
+            },
+            {
+                id: 10,
+                title: "Level 10: Master Challenge",
+                desc: `<b>Welcome to the final test.</b><br>HTML: \`master.html\`, CSS: \`master.css\`.\n<br><b>Task:</b> Link CSS. Complete your masterpiece by styling \`.card\`:
+<pre class="task-code">
+.card {
+  width: 300px;
+  border: 1px solid blue;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  padding: 20px;
+}</pre>`,
+                reqHtml: "master.html",
+                reqCss: "master.css",
+                method: "external",
+                initHtml: '<div class="card">\n  <h2>Achievement Card</h2>\n  <p>You have mastered CSS!</p>\n</div>',
+                initHead: '<!-- Link the file -->\n',
+                initCss: '.card {\n  /* Complete your masterpiece */\n}',
+                hintCode: `<!-- In Head -->\n<link rel="stylesheet" href="master.css">\n\n/* In CSS File */\n.card {\n  width: 300px;\n  border: 1px solid blue;\n  margin-left: auto;\n  margin-right: auto;\n  text-align: center;\n  padding: 20px;\n}`,
+                hintExplanation: "This final layout creates a classic centered card by combining fixed width, auto margins, inner padding, and borders. Congratulations on making it this far!",
+                validator: function(html, css, head, htmlName, cssName) {
+                    if(strip(htmlName) !== strip(this.reqHtml) || strip(cssName) !== strip(this.reqCss)) return "Incorrect filenames!";
+                    if(!strip(head).includes(strip(this.reqCss))) return "CSS not linked!";
+                    let c = strip(css);
+                    let reqs = ['width:300px', 'border:1pxsolidblue', 'margin-left:auto', 'margin-right:auto', 'text-align:center', 'padding:20px'];
+                    for(let r of reqs) {
+                        if(!c.includes(strip(r))) return `Missing or incorrect syntax for: ${r}`;
+                    }
+                    return true;
+                }
+            }
+        ];
+
+        let currentLevelIndex = 0;
+        const completedLevels = new Set(); // Theo dõi bài đã pass để nhảy Level
+
+        // UI Elements
+        const elHtmlName = document.getElementById('html-filename');
+        const elCssName = document.getElementById('css-filename');
+        const reqHtmlName = document.getElementById('req-html-name');
+        const reqCssName = document.getElementById('req-css-name');
+        const cssFileGroup = document.getElementById('css-file-group');
+        
+        const elHeadCode = document.getElementById('head-code');
+        const elHtmlCode = document.getElementById('html-code');
+        const elCssCode = document.getElementById('css-code');
+        const elCssSection = document.getElementById('css-section');
+        const elHeadSection = document.getElementById('head-section');
+
+        const elPreview = document.getElementById('preview-frame');
+        const elMsg = document.getElementById('message');
+        const elNextBtn = document.getElementById('next-btn');
+        const elCheckBtn = document.getElementById('check-btn');
+        const progressStepsContainer = document.getElementById('progress-steps');
+        const hintModal = document.getElementById('hint-modal');
+
+        // Hàm thay đổi Level bất kỳ
+        function jumpToLevel(index) {
+            currentLevelIndex = index;
+            loadLevel(currentLevelIndex);
+        }
+
+        // Initialize Progress Bar
+        function initProgressBar() {
+            progressStepsContainer.innerHTML = '';
+            for(let i = 1; i <= 10; i++) {
+                const step = document.createElement('div');
+                step.className = 'step';
+                step.id = 'step-' + i;
+                step.onclick = () => jumpToLevel(i - 1); // Cho phép Click
+
+                const water = document.createElement('div');
+                water.className = 'water';
+                step.appendChild(water);
+
+                const num = document.createElement('span');
+                num.className = 'step-num';
+                num.innerText = i;
+                step.appendChild(num);
+
+                progressStepsContainer.appendChild(step);
+            }
+        }
+
+        function updateProgressBar() {
+            for(let i = 1; i <= 10; i++) {
+                const step = document.getElementById('step-' + i);
+                const num = step.querySelector('.step-num');
+                
+                // Reset classes
+                step.classList.remove('active', 'completed');
+                
+                const isCompleted = completedLevels.has(i - 1);
+                const isActive = (i - 1 === currentLevelIndex);
+
+                if(isCompleted) {
+                    step.classList.add('completed');
+                    num.innerHTML = '✔';
+                }
+                
+                if(isActive) {
+                    step.classList.add('active');
+                    if (!isCompleted) {
+                        num.innerText = i;
+                    }
+                } else if (!isCompleted) {
+                    num.innerText = i;
+                }
+            }
+        }
+
+        function loadLevel(index) {
+            const level = levels[index];
+            document.getElementById('level-indicator').innerText = `Level ${level.id}/10`;
+            document.getElementById('task-title').innerHTML = level.title;
+            document.getElementById('task-desc').innerHTML = level.desc;
+
+            // Reset inputs
+            elHtmlName.value = '';
+            reqHtmlName.innerText = level.reqHtml;
+            
+            if (level.method === 'inline') {
+                cssFileGroup.style.display = 'none';
+                elCssSection.style.display = 'none';
+                elHeadSection.style.display = 'none';
+            } else if (level.method === 'internal') {
+                cssFileGroup.style.display = 'none';
+                elCssSection.style.display = 'none';
+                elHeadSection.style.display = 'block';
+            } else {
+                cssFileGroup.style.display = 'block';
+                elCssName.value = '';
+                reqCssName.innerText = level.reqCss;
+                elCssSection.style.display = 'block';
+                elHeadSection.style.display = 'block';
+            }
+
+            elHeadCode.value = level.initHead;
+            elHtmlCode.value = level.initHtml;
+            elCssCode.value = level.initCss;
+
+            resetMessage();
+            updatePreview();
+            updateProgressBar();
+        }
+
+        function updatePreview() {
+            const head = elHeadCode.value;
+            const html = elHtmlCode.value;
+            const css = elCssCode.value;
+            const method = levels[currentLevelIndex].method;
+
+            let previewHTML = '';
+            
+            if (method === 'inline') {
+                previewHTML = html;
+            } else if (method === 'internal') {
+                previewHTML = `${head}\n${html}`;
+            } else {
+                // External simulation
+                previewHTML = `<style>${css}</style>\n${html}`;
+            }
+
+            // Mock external background images so they render in preview
+            if (css.includes('bg.jpg')) {
+                previewHTML = previewHTML.replace('bg.jpg', 'https://www.w3schools.com/css/img_tree.png');
+            }
+
+            elPreview.innerHTML = previewHTML;
+        }
+
+        // Live preview listeners
+        elHeadCode.addEventListener('input', updatePreview);
+        elHtmlCode.addEventListener('input', updatePreview);
+        elCssCode.addEventListener('input', updatePreview);
+
+        function checkSolution() {
+            const level = levels[currentLevelIndex];
+            const htmlName = elHtmlName.value;
+            const cssName = elCssName.value;
+            const head = elHeadCode.value;
+            const html = elHtmlCode.value;
+            const css = elCssCode.value;
+
+            const result = level.validator(html, css, head, htmlName, cssName);
+
+            if (result === true) {
+                completedLevels.add(currentLevelIndex); // Đánh dấu hoàn thành
+                updateProgressBar();
+                showMessage("Correct! Great job completing this level.", true);
+                elNextBtn.classList.remove('hidden');
+                elCheckBtn.classList.add('hidden');
+                
+                if(completedLevels.size === 10) {
+                    elNextBtn.innerText = "Claim Master Certificate ➔";
+                } else {
+                    elNextBtn.innerText = "Play Next Level ➔";
+                }
+            } else {
+                showMessage("Error: " + result, false);
+            }
+        }
+
+        function showMessage(text, isSuccess) {
+            elMsg.style.display = 'block';
+            elMsg.innerText = text;
+            if (isSuccess) {
+                elMsg.className = 'msg-success';
+            } else {
+                elMsg.className = 'msg-error';
+            }
+        }
+
+        function resetMessage() {
+            elMsg.style.display = 'none';
+            elNextBtn.classList.add('hidden');
+            elCheckBtn.classList.remove('hidden');
+            elNextBtn.innerText = "Play Next Level ➔";
+        }
+
+        function showEndScreen() {
+            document.querySelector('.editor-panel').innerHTML = `
+                <div class="instruction-box" style="text-align:center; padding: 40px;">
+                    <h2 style="color: var(--success); font-size: 30px; margin-bottom: 20px;">🏆 EXCELLENT! 🏆</h2>
+                    <p style="font-size: 18px; margin-top:20px;">You have successfully completed all 10 Levels, mastering 19 Key CSS Properties and 3 methods to apply CSS.</p>
+                    <p style="margin-top:20px; font-size: 22px;">You are truly a <b>CSS Master</b>!</p>
+                </div>`;
+            elPreview.innerHTML = '<div style="text-align:center; margin-top: 50px;"><h1>🎉🎉🎉</h1></div>';
+        }
+
+        function nextLevel() {
+            if (completedLevels.size === 10) {
+                showEndScreen();
+                return;
+            }
+            // Tìm level tiếp theo chưa hoàn thành để nhảy tới
+            let nextIdx = (currentLevelIndex + 1) % 10;
+            while(completedLevels.has(nextIdx)) {
+                nextIdx = (nextIdx + 1) % 10;
+            }
+            jumpToLevel(nextIdx);
+        }
+
+        // --- Hint Logic ---
+        function showHint() {
+            const level = levels[currentLevelIndex];
+            document.getElementById('hint-code').innerText = level.hintCode;
+            document.getElementById('hint-explanation').innerHTML = level.hintExplanation;
+            hintModal.style.display = 'flex';
+        }
+
+        function closeHint() {
+            hintModal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == hintModal) {
+                closeHint();
+            }
+        }
+
+        // Boot
+        initProgressBar();
+        loadLevel(currentLevelIndex);
+    </script>
+</body>
+</html>
