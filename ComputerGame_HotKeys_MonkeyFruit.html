@@ -309,11 +309,11 @@
             <h2>🐒 Setup Harvest Bet</h2>
             <p>Set your target score and time to win!</p>
             <div class="input-group">
-                <label for="bet-score">🎯 Target Score (Bet):</label>
+                <label for="bet-score">Target Score (Bet):</label>
                 <input type="number" id="bet-score" value="100" min="10" step="10">
             </div>
             <div class="input-group">
-                <label for="bet-time">⏳ Time (Seconds):</label>
+                <label for="bet-time">Time (Seconds):</label>
                 <input type="number" id="bet-time" value="60" min="10" max="300">
             </div>
             <button id="btn-start" class="btn-primary">Start Game</button>
@@ -506,7 +506,6 @@
         let vModifiers = { control: false, alt: false, meta: false, shift: false };
         let isCapsOn = false;
         let isNumLockOn = true;
-        let letterButtons = [];
 
         keyboardMap.forEach(row => {
             const rowDiv = document.createElement('div'); rowDiv.className = 'vk-row';
@@ -519,9 +518,9 @@
                 if (['Ctrl', 'CtrlRight', 'Win', 'WinRight', 'Alt', 'AltRight'].includes(keyDisplay)) btn.classList.add('key-wider');
                 if (keyDisplay === 'Space') btn.classList.add('key-space');
                 
-                btn.textContent = keyDisplay.replace('Right', ''); 
+                // --- CHỈ SỬA Ở ĐÂY: Sử dụng toUpperCase() để hiển thị in hoa toàn bộ ---
+                btn.textContent = keyDisplay.replace('Right', '').toUpperCase(); 
                 btn.setAttribute('data-key', keyVal);
-                if(keyVal.length === 1 && keyVal >= 'a' && keyVal <= 'z') letterButtons.push(btn);
                 
                 btn.onclick = () => handleVirtualClick(btn, keyVal, false);
                 rowDiv.appendChild(btn);
@@ -531,7 +530,7 @@
 
         const numpadLayout = document.getElementById('numpad-layout');
         const numpadKeys = [
-            { label: 'Num', key: 'numlock', cls: '' }, { label: '/', key: '/', cls: '' }, { label: '*', key: '*', cls: '' }, { label: '-', key: '-', cls: '' },
+            { label: 'NumLock', key: 'numlock', cls: '' }, { label: '/', key: '/', cls: '' }, { label: '*', key: '*', cls: '' }, { label: '-', key: '-', cls: '' },
             { label: '7', key: '7', cls: 'np-num' }, { label: '8', key: '8', cls: 'np-num' }, { label: '9', key: '9', cls: 'np-num' }, { label: '+', key: '+', cls: 'np-plus' },
             { label: '4', key: '4', cls: 'np-num' }, { label: '5', key: '5', cls: 'np-num' }, { label: '6', key: '6', cls: 'np-num' },
             { label: '1', key: '1', cls: 'np-num' }, { label: '2', key: '2', cls: 'np-num' }, { label: '3', key: '3', cls: 'np-num' }, { label: 'Enter', key: 'enter', cls: 'np-enter' },
@@ -544,7 +543,8 @@
         numpadKeys.forEach(item => {
             const btn = document.createElement('button');
             btn.className = `np-key ${item.cls}`;
-            btn.textContent = item.label;
+            // Đảm bảo numpad cũng in hoa chữ NumLock/Enter
+            btn.textContent = item.label.toUpperCase();
             btn.setAttribute('data-key', item.key);
             btn.onclick = () => handleVirtualClick(btn, item.key, true);
             if (item.cls.includes('np-num') || item.key === '.') numpadNumberBtns.push(btn);
@@ -553,12 +553,7 @@
         });
 
         function updateKeyboardUI() {
-            const shiftActive = vModifiers.shift;
-            const uppercase = (shiftActive && !isCapsOn) || (!shiftActive && isCapsOn);
-            letterButtons.forEach(btn => {
-                btn.textContent = uppercase ? btn.getAttribute('data-key').toUpperCase() : btn.getAttribute('data-key').toLowerCase();
-            });
-            
+            // Loại bỏ logic thay đổi chữ hoa/thường dựa trên Shift/Caps vì giờ đây tất cả đều mặc định in hoa
             if (isNumLockOn) {
                 numLockBtn.classList.add('active-lock');
                 numpadNumberBtns.forEach(b => b.classList.remove('dimmed'));
