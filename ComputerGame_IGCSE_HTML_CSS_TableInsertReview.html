@@ -63,7 +63,6 @@ tasks: [
 ]
 
 -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -71,18 +70,21 @@ tasks: [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTML Elements & Table Mastery - 8 Levels (Green Theme)</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- Thư viện Prism.js để tạo Highlight Code giống Visual Studio Code -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-vsc-dark-plus.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
     <style>
         :root {
             /* Green Theme Palette */
             --primary: #10B981;       /* Emerald 500 */
             --primary-hover: #059669; /* Emerald 600 */
             --success: #047857;       /* Emerald 700 for text contrast */
-            --bg-gradient: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); /* Green 50 to Green 100 */
+            --bg-gradient: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); 
             --text-main: #14532D;     /* Green 900 */
             --text-muted: #166534;    /* Green 800 */
             --panel-bg: #FFFFFF;
-            --editor-bg: #052E16;     /* Green 950 for Editor */
-            --editor-text: #F0FDF4;   /* Green 50 for Editor Text */
             
             /* Dynamic Font Variables */
             --base-font-size: 14.5px;
@@ -103,410 +105,181 @@ tasks: [
             box-sizing: border-box;
         }
 
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 16px;
+        /* ===== THIẾT KẾ THANH CUỘN (SCROLLBAR) ĐẸP HƠN ===== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
         }
-
-        .level-tabs {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex: 1;
-        }
-
-        .level-tab {
-            padding: 10px 20px;
-            background: #FFFFFF;
-            color: var(--text-muted);
-            border: 2px solid transparent;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-
-        .level-tab:hover {
-            color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px -2px rgba(16, 185, 129, 0.15);
-        }
-
-        .level-tab.active {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .font-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            background: #FFFFFF;
-            padding: 8px 16px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-
-        .font-label {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--text-muted);
-            margin-right: 4px;
-        }
-
-        .font-btn {
-            background: #F0FDF4;
-            border: 1px solid #BBF7D0;
-            border-radius: 6px;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-weight: bold;
-            color: var(--text-muted);
-            transition: all 0.2s;
-            font-size: 14px;
-        }
-
-        .font-btn:hover {
-            background: #DCFCE7;
-        }
-
-        .font-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: minmax(320px, 40vh) minmax(400px, 1fr); 
-            gap: 24px;
-            flex: 1;
-        }
-
-        .panel {
-            background: var(--panel-bg);
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(20, 83, 45, 0.08), 0 8px 10px -6px rgba(20, 83, 45, 0.04);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-        }
-
-        .panel-header {
-            background: #F0FDF4;
-            color: var(--text-main);
-            padding: 16px 20px;
-            font-weight: 800;
-            font-size: 1.15em;
-            margin: 0;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #BBF7D0;
-        }
-
-        #task-list {
-            list-style: none;
-            padding: 16px;
-            margin: 0;
-            background: #FFFFFF;
-            flex: 1;
-            overflow-y: auto; 
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        #task-list li {
-            padding: 12px 16px;
-            background: #F8FAFC;
-            border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            font-size: var(--base-font-size);
-            display: flex;
-            align-items: center; 
-            justify-content: space-between;
-            gap: 16px;
-            transition: all 0.2s ease;
-        }
-
-        #task-list li:hover {
-            background: #FFFFFF;
-            border-color: #6EE7B7;
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
-        }
-
-        .task-info {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            flex: 1;
-            min-width: 0; 
-        }
-
-        .status-icon {
-            font-size: var(--icon-size);
-            flex-shrink: 0; 
-            margin-top: 1px; 
-        }
-
-        .task-text {
-            line-height: 1.5;
-            color: var(--text-main);
-            word-wrap: break-word; 
-            flex: 1;
-            font-family: inherit;
-        }
-
-        .task-text code {
-            background: #ECFDF5;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #059669;
-            font-family: 'Consolas', monospace;
-            font-size: 0.95em;
-            border: 1px solid #A7F3D0;
-        }
-
-        .completed-task {
-            background: #ECFDF5 !important;
-            border-color: #A7F3D0 !important;
-        }
-
-        .completed-task .task-text {
-            color: var(--success);
-            text-decoration: line-through;
-            opacity: 0.7;
-        }
-
-        .hint-btn {
-            background: #FEF08A;
-            border: 1px solid #FDE047;
-            cursor: pointer;
-            font-size: var(--icon-size);
-            width: var(--btn-size);
-            height: var(--btn-size);
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.03);
             border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            flex-shrink: 0; 
-            align-self: center; 
-            box-shadow: 0 2px 4px rgba(253, 224, 71, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 8px;
+            border: 2px solid #F0FDF4; /* Tạo viền mỏng đệm */
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
         }
 
-        .hint-btn:hover {
-            background: #FDE047;
-            transform: translateY(-2px) rotate(5deg);
-            box-shadow: 0 4px 8px rgba(253, 224, 71, 0.5);
+        /* Scrollbar riêng cho khu vực code (Tối màu) */
+        .editor-wrapper::-webkit-scrollbar,
+        #editor::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        .editor-wrapper::-webkit-scrollbar-track,
+        #editor::-webkit-scrollbar-track {
+            background: #1E1E1E;
+        }
+        .editor-wrapper::-webkit-scrollbar-thumb,
+        #editor::-webkit-scrollbar-thumb {
+            background: #424242;
+            border: 3px solid #1E1E1E;
+        }
+        .editor-wrapper::-webkit-scrollbar-thumb:hover,
+        #editor::-webkit-scrollbar-thumb:hover {
+            background: #4F4F4F;
         }
 
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(2, 44, 34, 0.7); /* Dark green overlay */
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .level-tabs { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; }
+        .level-tab { padding: 10px 20px; background: #FFFFFF; color: var(--text-muted); border: 2px solid transparent; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .level-tab:hover { color: var(--primary); transform: translateY(-2px); box-shadow: 0 6px 10px -2px rgba(16, 185, 129, 0.15); }
+        .level-tab.active { background: var(--primary); color: white; box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3); transform: translateY(-2px); }
+        .font-controls { display: flex; gap: 8px; align-items: center; background: #FFFFFF; padding: 8px 16px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .font-label { font-size: 14px; font-weight: 800; color: var(--text-muted); margin-right: 4px; }
+        .font-btn { background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: bold; color: var(--text-muted); transition: all 0.2s; font-size: 14px; }
+        .font-btn:hover { background: #DCFCE7; }
+        .font-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(320px, 40vh) minmax(400px, 1fr); gap: 24px; flex: 1; }
+        .panel { background: var(--panel-bg); border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(20, 83, 45, 0.08), 0 8px 10px -6px rgba(20, 83, 45, 0.04); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.8); }
+        .panel-header { background: #F0FDF4; color: var(--text-main); padding: 16px 20px; font-weight: 800; font-size: 1.15em; margin: 0; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #BBF7D0; }
+        
+        #task-list { list-style: none; padding: 16px; margin: 0; background: #FFFFFF; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        #task-list li { padding: 12px 16px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; font-size: var(--base-font-size); display: flex; align-items: center; justify-content: space-between; gap: 16px; transition: all 0.2s ease; }
+        #task-list li:hover { background: #FFFFFF; border-color: #6EE7B7; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1); }
+        .task-info { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
+        .status-icon { font-size: var(--icon-size); flex-shrink: 0; margin-top: 1px; }
+        .task-text { line-height: 1.5; color: var(--text-main); word-wrap: break-word; flex: 1; font-family: inherit; }
+        .task-text code { background: #ECFDF5; padding: 2px 6px; border-radius: 4px; color: #059669; font-family: 'Consolas', monospace; font-size: 0.95em; border: 1px solid #A7F3D0; }
+        .completed-task { background: #ECFDF5 !important; border-color: #A7F3D0 !important; }
+        .completed-task .task-text { color: var(--success); text-decoration: line-through; opacity: 0.7; }
+        
+        .hint-btn { background: #FEF08A; border: 1px solid #FDE047; cursor: pointer; font-size: var(--icon-size); width: var(--btn-size); height: var(--btn-size); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0; align-self: center; box-shadow: 0 2px 4px rgba(253, 224, 71, 0.3); }
+        .hint-btn:hover { background: #FDE047; transform: translateY(-2px) rotate(5deg); box-shadow: 0 4px 8px rgba(253, 224, 71, 0.5); }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 44, 34, 0.7); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 28px; border-radius: 16px; max-width: 650px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #D1FAE5; padding-bottom: 12px; }
+        .modal-header h3 { margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 8px; font-size: 1.25em; }
+        .modal-close { font-size: 24px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #10B981; background: #ECFDF5; border-radius: 50%; transition: all 0.2s; }
+        .modal-close:hover { color: #FFFFFF; background: #EF4444; }
+        .modal-code { background: #1E1E1E; color: #D4D4D4; padding: 20px; border-radius: 10px; font-family: 'Consolas', 'Courier New', Courier, monospace; white-space: pre-wrap; overflow-x: auto; font-size: var(--editor-font-size); line-height: 1.6; margin: 0; border: 1px solid #333; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); max-height: 400px; }
 
-        .modal-content {
-            background: white;
-            padding: 28px;
-            border-radius: 16px;
-            max-width: 650px;
-            width: 90%;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        .dashboard { padding: 30px 20px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #FFFFFF; }
+        .dashboard h1 { margin: 0 0 12px 0; font-size: 2em; color: var(--text-main); letter-spacing: -0.5px; }
+        .dashboard p { margin: 0 0 24px 0; color: var(--text-muted); max-width: 85%; font-size: 1.05em; line-height: 1.5; }
+        .progress-container { width: 100%; max-width: 450px; background: #ECFDF5; border-radius: 20px; height: 28px; position: relative; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #D1FAE5; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #22C55E, #4ADE80); border-radius: 20px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s; }
+        .score-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: 14px; color: #064E3B; text-shadow: 0 1px 2px rgba(255,255,255,0.5); letter-spacing: 0.5px; }
+        #success-message { display: none; color: var(--success); font-size: 1.4em; font-weight: 800; margin-top: 20px; background: #ECFDF5; padding: 12px 24px; border-radius: 12px; border: 1px solid #A7F3D0; animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes bounceIn { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            border-bottom: 2px solid #D1FAE5;
-            padding-bottom: 12px;
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.25em;
-        }
-
-        .modal-close {
-            font-size: 24px;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #10B981;
-            background: #ECFDF5;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-
-        .modal-close:hover {
-            color: #FFFFFF;
-            background: #EF4444; /* Keep red for close action */
-        }
-
-        .modal-code {
-            background: #052E16;
-            color: #D1FAE5;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Consolas', 'Courier New', Courier, monospace;
-            white-space: pre-wrap;
-            overflow-x: auto;
-            font-size: var(--editor-font-size);
-            line-height: 1.6;
-            margin: 0;
-            border: 1px solid #065F46;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
-            max-height: 400px;
-        }
-
-        .dashboard {
-            padding: 30px 20px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: #FFFFFF;
-        }
-
-        .dashboard h1 {
-            margin: 0 0 12px 0;
-            font-size: 2em;
-            color: var(--text-main);
-            letter-spacing: -0.5px;
-        }
-
-        .dashboard p {
-            margin: 0 0 24px 0;
-            color: var(--text-muted);
-            max-width: 85%;
-            font-size: 1.05em;
-            line-height: 1.5;
-        }
-
-        .progress-container {
-            width: 100%;
-            max-width: 450px;
-            background: #ECFDF5;
-            border-radius: 20px;
-            height: 28px;
+        /* ===== THIẾT KẾ KHU VỰC EDITOR THEO CHUẨN VS CODE ===== */
+        .editor-wrapper {
             position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-            border: 1px solid #D1FAE5;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #22C55E, #4ADE80);
-            border-radius: 20px;
-            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s;
-        }
-
-        .score-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: 800;
-            font-size: 14px;
-            color: #064E3B; /* Dark green for better contrast inside progress bar */
-            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
-            letter-spacing: 0.5px;
-        }
-
-        #success-message {
-            display: none;
-            color: var(--success);
-            font-size: 1.4em;
-            font-weight: 800;
-            margin-top: 20px;
-            background: #ECFDF5;
-            padding: 12px 24px;
-            border-radius: 12px;
-            border: 1px solid #A7F3D0;
-            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        @keyframes bounceIn {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        textarea {
             flex: 1;
-            width: 100%;
+            background-color: #1E1E1E; /* Màu nền VS Code Dark */
+            overflow: hidden; /* Không bẻ dòng, để textarea tự cuộn ngang dọc */
+        }
+        
+        #editor {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            margin: 0; padding: 24px;
             border: none;
-            padding: 24px;
+            color: transparent; 
+            background: transparent;
+            caret-color: #D4D4D4; 
+            resize: none;
+            z-index: 2;
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             font-size: var(--editor-font-size);
             line-height: 1.6;
-            resize: none;
-            background-color: var(--editor-bg);
-            color: var(--editor-text);
-            box-sizing: border-box;
-            transition: font-size 0.2s;
-        }
-        
-        textarea:focus {
+            white-space: pre; 
+            overflow: auto;
             outline: none;
+            box-sizing: border-box;
         }
 
-        .browser-mockup-bar {
-            background: #F0FDF4;
-            padding: 10px 16px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            border-bottom: 1px solid #BBF7D0;
+        /* Lớp highlight nằm ngay bên dưới lớp textarea */
+        pre#highlighting {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            margin: 0 !important; 
+            padding: 24px !important;
+            border: none !important;
+            background: transparent !important;
+            z-index: 1;
+            pointer-events: none; 
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            font-size: var(--editor-font-size) !important;
+            line-height: 1.6 !important;
+            white-space: pre !important;
+            overflow: hidden !important; 
+            box-sizing: border-box;
         }
 
+        #highlighting-content {
+            font-family: inherit !important;
+            font-size: inherit !important;
+            line-height: inherit !important;
+        }
+
+        /* ===== THIẾT KẾ CHỨC NĂNG FULLSCREEN CHO TẤT CẢ Ô ===== */
+        .browser-mockup-bar { background: #F0FDF4; padding: 10px 16px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #BBF7D0; }
         .dot { width: 12px; height: 12px; border-radius: 50%; }
         .dot.red { background: #EF4444; }
         .dot.yellow { background: #F59E0B; }
         .dot.green { background: #10B981; }
-
-        #preview {
-            padding: 24px;
-            flex: 1;
-            overflow: auto;
-            background: #FFFFFF;
+        
+        .fullscreen-btn {
+            margin-left: auto; /* Tự động đẩy nút qua góc phải trong khung Flex */
+            background: #D1FAE5;
+            border: 1px solid #34D399;
+            color: #047857;
+            border-radius: 6px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 10;
         }
+        .fullscreen-btn:hover { background: #10B981; color: white; }
+
+        /* Lớp học định vị Fullscreen 100% viewport */
+        .panel.fullscreen-mode {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            border-radius: 0;
+            margin: 0;
+            border: none;
+        }
+
+        #preview { padding: 24px; flex: 1; overflow: auto; background: #FFFFFF; }
     </style>
 </head>
 <body>
@@ -532,12 +305,19 @@ tasks: [
     </div>
 
     <div class="main-grid">
+        
+        <!-- Ô 1: TASKS -->
         <div class="panel">
-            <h2 class="panel-header">🎯 Assignment Tasks</h2>
+            <h2 class="panel-header">
+                <span>🎯 Assignment Tasks</span>
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Toàn màn hình">⛶</button>
+            </h2>
             <ul id="task-list"></ul>
         </div>
 
-        <div class="panel dashboard">
+        <!-- Ô 2: DASHBOARD -->
+        <div class="panel dashboard" style="position: relative;">
+            <button class="fullscreen-btn" onclick="toggleFullscreen(this)" style="position: absolute; top: 16px; right: 20px;" title="Toàn màn hình">⛶</button>
             <h1 id="level-title">HTML Mastery</h1>
             <p id="level-desc">Insert elements into the table to score points!</p>
             
@@ -549,19 +329,26 @@ tasks: [
             <div id="success-message">🎉 Level Cleared! Awesome! 🎉</div>
         </div>
 
-        <div class="panel" style="background: var(--editor-bg);">
-            <h2 class="panel-header" style="background: #022C22; color: #D1FAE5; border-bottom: 1px solid #065F46;">
-                💻 HTML Editor
+        <!-- Ô 3: KHUNG EDITOR VS CODE -->
+        <div class="panel" style="background: #1E1E1E;">
+            <h2 class="panel-header" style="background: #252526; color: #CCCCCC; border-bottom: 1px solid #333333; font-family: 'Consolas', monospace; font-size: 14px; font-weight: normal; padding: 10px 20px;">
+                <span style="display: flex; align-items: center;"><span style="color: #4EC9B0; margin-right: 8px;">&lt;/&gt;</span> index.html</span>
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Toàn màn hình">⛶</button>
             </h2>
-            <textarea id="editor" spellcheck="false"></textarea>
+            <div class="editor-wrapper">
+                <textarea id="editor" spellcheck="false"></textarea>
+                <pre id="highlighting" aria-hidden="true"><code class="language-html" id="highlighting-content"></code></pre>
+            </div>
         </div>
 
-        <div class="panel">
+        <!-- Ô 4: KHUNG LIVE PREVIEW -->
+        <div class="panel" id="preview-panel">
             <div class="browser-mockup-bar">
                 <div class="dot red"></div>
                 <div class="dot yellow"></div>
                 <div class="dot green"></div>
                 <span style="margin-left: 10px; font-size: 13px; color: #047857; font-weight: bold;">Live Web Preview</span>
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Toàn màn hình">⛶</button>
             </div>
             <div id="preview"></div>
         </div>
@@ -576,12 +363,89 @@ tasks: [
             <p style="margin-top: 0; margin-bottom: 16px; color: #166534; font-size: 15px;">
                 Review the structural code solution below and type it into your editor to learn:
             </p>
-            <pre class="modal-code" id="hint-code"></pre>
+            <pre class="modal-code"><code class="language-html" id="hint-code"></code></pre>
         </div>
     </div>
 
     <script>
+        // ===== BỘ ENGINE ÂM THANH (WEB AUDIO API) =====
+        const AudioContextAPI = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContextAPI();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playTone(freq, type, duration, vol = 0.1) {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            // Envelope mượt mà để âm thanh không bị rè
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playClick() { 
+            playTone(400, 'sine', 0.1, 0.05); 
+        }
+        
+        function playTaskComplete() { 
+            // 2 nốt nhạc vui tai (tinh tinh)
+            initAudio();
+            playTone(587.33, 'sine', 0.15, 0.1); // D5
+            setTimeout(() => playTone(880.00, 'sine', 0.3, 0.1), 100); // A5
+        }
+        
+        function playLevelWin() {
+            // Hợp âm chiến thắng (Tada!)
+            initAudio();
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, i) => {
+                setTimeout(() => playTone(freq, 'triangle', 0.3, 0.1), i * 120);
+            });
+            setTimeout(() => {
+                notes.forEach(freq => playTone(freq, 'sine', 0.8, 0.1)); // Hợp âm kéo dài
+            }, notes.length * 120);
+        }
+        
+        function playHintSound() {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            
+            // Hiệu ứng vuốt âm thanh mềm mại (Sweep up)
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.2);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+        
+        // Mảng lưu trữ trạng thái hoàn thành task trước đó để so sánh (kích hoạt âm thanh 1 lần/task)
+        let prevTaskStates = [];
+        // ============================================
+
+
         function setFontSize(level) {
+            playClick(); // Âm thanh Click
             const root = document.documentElement;
             if (level === 'A') {
                 root.style.setProperty('--base-font-size', '14.5px');
@@ -603,6 +467,29 @@ tasks: [
             const btnId = 'font-btn-' + level.replace('++', 'pp').replace('+', 'p');
             document.getElementById(btnId).classList.add('active');
         }
+
+        // ===== CHỨC NĂNG BẬT/TẮT TOÀN MÀN HÌNH ĐỘNG CHO BẤT KỲ Ô NÀO =====
+        function toggleFullscreen(btn) {
+            playClick(); // Âm thanh nút nhấn
+            
+            // Tìm thẻ cha gần nhất mang class 'panel'
+            const panel = btn.closest('.panel');
+            panel.classList.toggle('fullscreen-mode');
+            
+            // Cập nhật diện mạo của chính cái nút vừa click
+            if (panel.classList.contains('fullscreen-mode')) {
+                btn.innerHTML = '✖';
+                btn.style.background = '#FEE2E2'; 
+                btn.style.color = '#B91C1C';
+                btn.style.borderColor = '#F87171';
+            } else {
+                btn.innerHTML = '⛶ Mở Rộng';
+                btn.style.background = '#D1FAE5'; 
+                btn.style.color = '#047857';
+                btn.style.borderColor = '#34D399';
+            }
+        }
+        // ================================================================
 
         function escapeHTML(str) {
             return str
@@ -673,9 +560,9 @@ tasks: [
                 validate: (doc) => {
                     let res = [false, false];
                     const tdD = doc.querySelector('#cell-D');
-                    if (tdD && tdD.querySelector('sub') && tdD.textContent.trim().replace(/\s/g, '') === 'H2O') res[0] = true;
+                    if (tdD && tdD.querySelector('sub') && tdD.textContent.trim().replace(/\\s/g, '') === 'H2O') res[0] = true;
                     const tdE = doc.querySelector('#cell-E');
-                    if (tdE && tdE.querySelector('sup') && tdE.textContent.trim().replace(/\s/g, '') === 'X2') res[1] = true;
+                    if (tdE && tdE.querySelector('sup') && tdE.textContent.trim().replace(/\\s/g, '') === 'X2') res[1] = true;
                     return res;
                 }
             },
@@ -871,6 +758,9 @@ tasks: [
         let hasWon = false;
 
         const editor = document.getElementById('editor');
+        const highlightingContent = document.getElementById('highlighting-content');
+        const highlighting = document.getElementById('highlighting');
+        
         const preview = document.getElementById('preview');
         const progressBar = document.getElementById('progress-bar');
         const scoreText = document.getElementById('score-text');
@@ -879,6 +769,26 @@ tasks: [
         const levelTitle = document.getElementById('level-title');
         const levelDesc = document.getElementById('level-desc');
         const tabs = document.querySelectorAll('.level-tab');
+
+        // TÍNH NĂNG 1: BẤM NÚT TAB ĐỂ THỤT LỀ
+        editor.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                // Chèn 2 dấu cách thay vì chuyển ô
+                const space = "  "; 
+                this.value = this.value.substring(0, start) + space + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + space.length;
+                updateUI(); // Cập nhật lại màu và giao diện ngay
+            }
+        });
+
+        // TÍNH NĂNG 2: ĐỒNG BỘ THANH CUỘN GIỮA LỚP MÀU (PRE) VÀ LỚP GÕ (TEXTAREA)
+        editor.addEventListener('scroll', () => {
+            highlighting.scrollTop = editor.scrollTop;
+            highlighting.scrollLeft = editor.scrollLeft;
+        });
 
         function triggerFireworks() {
             var duration = 3.5 * 1000;
@@ -897,17 +807,28 @@ tasks: [
         function stopFireworks() { if (fireworksInterval) clearInterval(fireworksInterval); }
 
         function showHint(taskIndex) {
+            playHintSound(); // Bổ sung âm thanh mở Gợi ý
             const levelData = levels[currentLevel];
             const modal = document.getElementById('hint-modal');
             const modalCode = document.getElementById('hint-code');
             modalCode.textContent = levelData.hints[taskIndex];
+            
+            // Cập nhật highlight cả cho Hint (như VS Code)
+            if (window.Prism) Prism.highlightElement(modalCode);
+            
             modal.style.display = 'flex';
         }
 
-        function closeModal() { document.getElementById('hint-modal').style.display = 'none'; }
+        function closeModal() { 
+            playClick(); // Bổ sung âm thanh đóng Gợi ý
+            document.getElementById('hint-modal').style.display = 'none'; 
+        }
         window.onclick = function(event) {
             const modal = document.getElementById('hint-modal');
-            if (event.target === modal) modal.style.display = "none";
+            if (event.target === modal) {
+                playClick();
+                modal.style.display = "none";
+            }
         };
 
         function loadLevel(index) {
@@ -939,6 +860,7 @@ tasks: [
             stopFireworks();
             hasWon = false;
             successMessage.style.display = 'none';
+            prevTaskStates = []; // Đặt lại mảng ghi nhớ âm thanh mỗi khi chuyển cấp độ
             updateUI();
         }
 
@@ -947,6 +869,12 @@ tasks: [
             const levelData = levels[currentLevel];
             
             preview.innerHTML = htmlCode;
+
+            // ==== CẬP NHẬT MÀU SẮC CODE (PRISM.JS) ====
+            highlightingContent.textContent = htmlCode;
+            if (window.Prism) {
+                Prism.highlightElement(highlightingContent);
+            }
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlCode, 'text/html');
@@ -961,6 +889,12 @@ tasks: [
                 const li = document.getElementById(`task-${index}`);
                 if (!li) return;
                 const icon = li.querySelector('.status-icon');
+                
+                // KIỂM TRA ĐỂ PHÁT ÂM THANH KHI HOÀN THÀNH 1 TASK
+                if (completed && !prevTaskStates[index]) {
+                    playTaskComplete();
+                }
+                prevTaskStates[index] = completed;
                 
                 if (completed) {
                     score += pointPerTask;
@@ -978,14 +912,15 @@ tasks: [
             scoreText.textContent = `Score: ${score}%`;
 
             if (score === 100) {
-                progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)'; /* Bright success green */
+                progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)';
                 if (!hasWon) {
                     hasWon = true;
+                    playLevelWin(); // Phát âm thanh vô địch
                     successMessage.style.display = 'block';
                     triggerFireworks();
                 }
             } else {
-                progressBar.style.background = 'linear-gradient(90deg, #22C55E, #4ADE80)'; /* Default progress green */
+                progressBar.style.background = 'linear-gradient(90deg, #22C55E, #4ADE80)';
                 hasWon = false;
                 successMessage.style.display = 'none';
                 stopFireworks();
@@ -995,6 +930,7 @@ tasks: [
         editor.addEventListener('input', updateUI);
         tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
+                playClick(); // Âm thanh Click nút
                 const index = parseInt(e.target.getAttribute('data-level'));
                 if (index !== currentLevel) loadLevel(index);
             });
