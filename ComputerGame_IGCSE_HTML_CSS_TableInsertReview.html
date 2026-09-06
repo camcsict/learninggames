@@ -1,68 +1,3 @@
-<!--
-// Level 1
-tasks: [
-    'Replace the letter "A" inside <td id="cell-A"> with an <h1> tag containing exactly the text "Heading 1".',
-    'Replace the letter "B" inside <td id="cell-B"> with an <h2> tag containing exactly the text "Heading 2".',
-    'Replace the letter "C" inside <td id="cell-C"> with a <p> tag containing exactly the text "Paragraph text".'
-]
-
-// Level 2
-tasks: [
-    'Replace the letter "D" inside <td id="cell-D"> with the chemical formula for water (H2O). Use the <sub> tag for the number 2.',
-    'Replace the letter "E" inside <td id="cell-E"> with the math equation X squared (X2). Use the <sup> tag for the number 2.'
-]
-
-// Level 3
-tasks: [
-    'Replace the letter "F" inside <td id="cell-F"> with an <img> tag.',
-    'Add the attribute src="image.jpg" to the <img> tag.',
-    'Add the attribute alt="Missing picture" to the <img> tag.',
-    'Set the width attribute to "50" and the height attribute to "90" (Use ONLY numbers, do NOT add "px").'
-]
-
-// Level 4
-tasks: [
-    'Replace the letter "G" inside <td id="cell-G"> with an <a> tag.',
-    'Add the attribute href="http://google.com" to the <a> tag.',
-    'Add the attribute target="_blank" to ensure the link opens in a new tab.',
-    'Set the clickable text inside the <a> tag exactly to "Link to Google".'
-]
-
-// Level 5
-tasks: [
-    'Replace the letter "H" inside <td id="cell-H"> with an <a> tag.',
-    'Set the href attribute starting with "mailto:myschool@gmail.com".',
-    'Automatically add a subject by appending "?subject=Hello%20School" inside the href value.',
-    'Set the clickable text inside the <a> tag exactly to "Email Me".'
-]
-
-// Level 6
-tasks: [
-    'Replace the letter "A" inside <td id="cell-A"> with an <h1> tag containing the text "Top of page".',
-    'Add the attribute id="top" to the <h1> tag to create a bookmark target.',
-    'Replace the letter "B" inside <td id="cell-B"> with an <a> tag containing the text "Go to Top".',
-    'Set the href attribute of the <a> tag in cell B to "#top" so it jumps to the ID.'
-]
-
-// Level 7
-tasks: [
-    'Replace letter "C" in <td id="cell-C"> with a <video> tag having these 6 attributes: width="500", height="400", controls, autoplay, loop, and muted.',
-    'Inside the <video>, add a <source> tag with src="file.mp4" and type="video/mp4".',
-    'Inside the <video>, below <source>, add the fallback text exactly: "Sorry! Your browser does not support this video."',
-    'Replace letter "D" in <td id="cell-D"> with an <audio> tag that has the controls attribute.',
-    'Inside the <audio>, add a <source> tag with src="file.mp3" and type="audio/mpeg".'
-]
-
-// Level 8
-tasks: [
-    'Replace the letter "E" inside <td id="cell-E"> with a <div> tag.',
-    'Inside that <div>, create an unordered list using the <ul> tag.',
-    'Add two list items (<li>) inside the <ul> containing exactly the texts "Item 1" and "Item 2".',
-    'Replace the letter "F" inside <td id="cell-F"> with an ordered list using the <ol> tag.',
-    'Add two list items (<li>) inside the <ol> containing exactly the texts "Step 1" and "Step 2".'
-]
-
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -125,21 +60,25 @@ tasks: [
 
         /* Scrollbar riêng cho khu vực code (Tối màu) */
         .editor-wrapper::-webkit-scrollbar,
-        #editor::-webkit-scrollbar {
+        #editor::-webkit-scrollbar,
+        .modal-code-wrapper::-webkit-scrollbar {
             width: 12px;
             height: 12px;
         }
         .editor-wrapper::-webkit-scrollbar-track,
-        #editor::-webkit-scrollbar-track {
+        #editor::-webkit-scrollbar-track,
+        .modal-code-wrapper::-webkit-scrollbar-track {
             background: #1E1E1E;
         }
         .editor-wrapper::-webkit-scrollbar-thumb,
-        #editor::-webkit-scrollbar-thumb {
+        #editor::-webkit-scrollbar-thumb,
+        .modal-code-wrapper::-webkit-scrollbar-thumb {
             background: #424242;
             border: 3px solid #1E1E1E;
         }
         .editor-wrapper::-webkit-scrollbar-thumb:hover,
-        #editor::-webkit-scrollbar-thumb:hover {
+        #editor::-webkit-scrollbar-thumb:hover,
+        .modal-code-wrapper::-webkit-scrollbar-thumb:hover {
             background: #4F4F4F;
         }
 
@@ -178,7 +117,44 @@ tasks: [
         .modal-header h3 { margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 8px; font-size: 1.25em; }
         .modal-close { font-size: 24px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #10B981; background: #ECFDF5; border-radius: 50%; transition: all 0.2s; }
         .modal-close:hover { color: #FFFFFF; background: #EF4444; }
-        .modal-code { background: #1E1E1E; color: #D4D4D4; padding: 20px; border-radius: 10px; font-family: 'Consolas', 'Courier New', Courier, monospace; white-space: pre-wrap; overflow-x: auto; font-size: var(--editor-font-size); line-height: 1.6; margin: 0; border: 1px solid #333; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); max-height: 400px; }
+        
+        /* ===== GIAO DIỆN HIỂN THỊ CODE CÓ SỐ THỨ TỰ (VS CODE STYLE) ===== */
+        .modal-code-wrapper {
+            background: #1E1E1E;
+            border-radius: 10px;
+            border: 1px solid #333;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+            max-height: 400px;
+            overflow: auto;
+            display: flex;
+            margin: 0;
+        }
+        .line-numbers {
+            background: #1E1E1E;
+            color: #858585;
+            padding: 20px 10px 20px 15px;
+            text-align: right;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: var(--editor-font-size);
+            line-height: 1.6;
+            user-select: none;
+            border-right: 1px solid #333;
+            min-width: 30px;
+        }
+        .modal-code {
+            background: transparent !important;
+            color: #D4D4D4 !important;
+            padding: 20px !important;
+            border: none !important;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            white-space: pre !important;
+            overflow: visible !important;
+            font-size: var(--editor-font-size);
+            line-height: 1.6;
+            margin: 0 !important;
+            box-shadow: none !important;
+            flex: 1;
+        }
 
         .dashboard { padding: 30px 20px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #FFFFFF; }
         .dashboard h1 { margin: 0 0 12px 0; font-size: 2em; color: var(--text-main); letter-spacing: -0.5px; }
@@ -193,10 +169,34 @@ tasks: [
         .editor-wrapper {
             position: relative;
             flex: 1;
-            background-color: #1E1E1E; /* Màu nền VS Code Dark */
-            overflow: hidden; /* Không bẻ dòng, để textarea tự cuộn ngang dọc */
+            background-color: #1E1E1E; 
+            overflow: hidden; 
+            display: flex;
         }
         
+        .editor-line-numbers {
+            background-color: #1E1E1E;
+            color: #858585;
+            padding: 24px 10px 24px 15px;
+            text-align: right;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: var(--editor-font-size);
+            line-height: 1.6;
+            user-select: none;
+            border-right: 1px solid #333333;
+            min-width: 30px;
+            overflow: hidden;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .editor-inner-container {
+            position: relative;
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+        }
+
         #editor {
             position: absolute;
             top: 0; left: 0;
@@ -250,7 +250,7 @@ tasks: [
         .dot.green { background: #10B981; }
         
         .fullscreen-btn {
-            margin-left: auto; /* Tự động đẩy nút qua góc phải trong khung Flex */
+            margin-left: auto; 
             background: #D1FAE5;
             border: 1px solid #34D399;
             color: #047857;
@@ -267,7 +267,6 @@ tasks: [
         }
         .fullscreen-btn:hover { background: #10B981; color: white; }
 
-        /* Lớp học định vị Fullscreen 100% viewport */
         .panel.fullscreen-mode {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -297,7 +296,7 @@ tasks: [
         </div>
 
         <div class="font-controls">
-            <span class="font-label">Text Size:</span>
+            <span class="font-label"></span>
             <button class="font-btn active" id="font-btn-A" onclick="setFontSize('A')">A</button>
             <button class="font-btn" id="font-btn-Ap" onclick="setFontSize('A+')">A+</button>
             <button class="font-btn" id="font-btn-App" onclick="setFontSize('A++')">A++</button>
@@ -336,8 +335,11 @@ tasks: [
                 <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Toàn màn hình">⛶</button>
             </h2>
             <div class="editor-wrapper">
-                <textarea id="editor" spellcheck="false"></textarea>
-                <pre id="highlighting" aria-hidden="true"><code class="language-html" id="highlighting-content"></code></pre>
+                <div class="editor-line-numbers" id="editor-line-numbers">1</div>
+                <div class="editor-inner-container">
+                    <textarea id="editor" spellcheck="false"></textarea>
+                    <pre id="highlighting" aria-hidden="true"><code class="language-html" id="highlighting-content"></code></pre>
+                </div>
             </div>
         </div>
 
@@ -363,7 +365,10 @@ tasks: [
             <p style="margin-top: 0; margin-bottom: 16px; color: #166534; font-size: 15px;">
                 Review the structural code solution below and type it into your editor to learn:
             </p>
-            <pre class="modal-code"><code class="language-html" id="hint-code"></code></pre>
+            <div class="modal-code-wrapper">
+                <div class="line-numbers" id="modal-line-numbers">1</div>
+                <pre class="modal-code"><code class="language-html" id="hint-code"></code></pre>
+            </div>
         </div>
     </div>
 
@@ -384,7 +389,6 @@ tasks: [
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             
-            // Envelope mượt mà để âm thanh không bị rè
             gain.gain.setValueAtTime(0, audioCtx.currentTime);
             gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.02);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
@@ -401,21 +405,19 @@ tasks: [
         }
         
         function playTaskComplete() { 
-            // 2 nốt nhạc vui tai (tinh tinh)
             initAudio();
-            playTone(587.33, 'sine', 0.15, 0.1); // D5
-            setTimeout(() => playTone(880.00, 'sine', 0.3, 0.1), 100); // A5
+            playTone(587.33, 'sine', 0.15, 0.1); 
+            setTimeout(() => playTone(880.00, 'sine', 0.3, 0.1), 100); 
         }
         
         function playLevelWin() {
-            // Hợp âm chiến thắng (Tada!)
             initAudio();
-            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            const notes = [523.25, 659.25, 783.99, 1046.50]; 
             notes.forEach((freq, i) => {
                 setTimeout(() => playTone(freq, 'triangle', 0.3, 0.1), i * 120);
             });
             setTimeout(() => {
-                notes.forEach(freq => playTone(freq, 'sine', 0.8, 0.1)); // Hợp âm kéo dài
+                notes.forEach(freq => playTone(freq, 'sine', 0.8, 0.1)); 
             }, notes.length * 120);
         }
         
@@ -425,7 +427,6 @@ tasks: [
             const gain = audioCtx.createGain();
             osc.type = 'sine';
             
-            // Hiệu ứng vuốt âm thanh mềm mại (Sweep up)
             osc.frequency.setValueAtTime(300, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.2);
             
@@ -439,13 +440,10 @@ tasks: [
             osc.stop(audioCtx.currentTime + 0.2);
         }
         
-        // Mảng lưu trữ trạng thái hoàn thành task trước đó để so sánh (kích hoạt âm thanh 1 lần/task)
         let prevTaskStates = [];
-        // ============================================
-
 
         function setFontSize(level) {
-            playClick(); // Âm thanh Click
+            playClick(); 
             const root = document.documentElement;
             if (level === 'A') {
                 root.style.setProperty('--base-font-size', '14.5px');
@@ -468,28 +466,23 @@ tasks: [
             document.getElementById(btnId).classList.add('active');
         }
 
-        // ===== CHỨC NĂNG BẬT/TẮT TOÀN MÀN HÌNH ĐỘNG CHO BẤT KỲ Ô NÀO =====
         function toggleFullscreen(btn) {
-            playClick(); // Âm thanh nút nhấn
-            
-            // Tìm thẻ cha gần nhất mang class 'panel'
+            playClick(); 
             const panel = btn.closest('.panel');
             panel.classList.toggle('fullscreen-mode');
             
-            // Cập nhật diện mạo của chính cái nút vừa click
             if (panel.classList.contains('fullscreen-mode')) {
                 btn.innerHTML = '✖';
                 btn.style.background = '#FEE2E2'; 
                 btn.style.color = '#B91C1C';
                 btn.style.borderColor = '#F87171';
             } else {
-                btn.innerHTML = '⛶ Mở Rộng';
+                btn.innerHTML = '⛶';
                 btn.style.background = '#D1FAE5'; 
                 btn.style.color = '#047857';
                 btn.style.borderColor = '#34D399';
             }
         }
-        // ================================================================
 
         function escapeHTML(str) {
             return str
@@ -758,6 +751,7 @@ tasks: [
         let hasWon = false;
 
         const editor = document.getElementById('editor');
+        const editorLineNumbers = document.getElementById('editor-line-numbers');
         const highlightingContent = document.getElementById('highlighting-content');
         const highlighting = document.getElementById('highlighting');
         
@@ -770,24 +764,32 @@ tasks: [
         const levelDesc = document.getElementById('level-desc');
         const tabs = document.querySelectorAll('.level-tab');
 
-        // TÍNH NĂNG 1: BẤM NÚT TAB ĐỂ THỤT LỀ
+        // Hàm cập nhật số thứ tự dòng tự động
+        function updateLineNumbers(text, lineNumbersElement) {
+            const linesCount = text.split('\n').length;
+            let numbersStr = '';
+            for (let i = 1; i <= linesCount; i++) {
+                numbersStr += i + '<br>';
+            }
+            lineNumbersElement.innerHTML = numbersStr;
+        }
+
         editor.addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
                 e.preventDefault();
                 const start = this.selectionStart;
                 const end = this.selectionEnd;
-                // Chèn 2 dấu cách thay vì chuyển ô
                 const space = "  "; 
                 this.value = this.value.substring(0, start) + space + this.value.substring(end);
                 this.selectionStart = this.selectionEnd = start + space.length;
-                updateUI(); // Cập nhật lại màu và giao diện ngay
+                updateUI(); 
             }
         });
 
-        // TÍNH NĂNG 2: ĐỒNG BỘ THANH CUỘN GIỮA LỚP MÀU (PRE) VÀ LỚP GÕ (TEXTAREA)
         editor.addEventListener('scroll', () => {
             highlighting.scrollTop = editor.scrollTop;
             highlighting.scrollLeft = editor.scrollLeft;
+            editorLineNumbers.scrollTop = editor.scrollTop; // Đồng bộ cuộn thanh số thứ tự
         });
 
         function triggerFireworks() {
@@ -807,20 +809,23 @@ tasks: [
         function stopFireworks() { if (fireworksInterval) clearInterval(fireworksInterval); }
 
         function showHint(taskIndex) {
-            playHintSound(); // Bổ sung âm thanh mở Gợi ý
+            playHintSound(); 
             const levelData = levels[currentLevel];
             const modal = document.getElementById('hint-modal');
             const modalCode = document.getElementById('hint-code');
-            modalCode.textContent = levelData.hints[taskIndex];
+            const modalLineNumbers = document.getElementById('modal-line-numbers');
             
-            // Cập nhật highlight cả cho Hint (như VS Code)
+            const hintText = levelData.hints[taskIndex];
+            modalCode.textContent = hintText;
+            updateLineNumbers(hintText, modalLineNumbers);
+            
             if (window.Prism) Prism.highlightElement(modalCode);
             
             modal.style.display = 'flex';
         }
 
         function closeModal() { 
-            playClick(); // Bổ sung âm thanh đóng Gợi ý
+            playClick(); 
             document.getElementById('hint-modal').style.display = 'none'; 
         }
         window.onclick = function(event) {
@@ -857,10 +862,12 @@ tasks: [
             });
 
             editor.value = levelData.initialCode;
+            updateLineNumbers(levelData.initialCode, editorLineNumbers);
+
             stopFireworks();
             hasWon = false;
             successMessage.style.display = 'none';
-            prevTaskStates = []; // Đặt lại mảng ghi nhớ âm thanh mỗi khi chuyển cấp độ
+            prevTaskStates = []; 
             updateUI();
         }
 
@@ -870,11 +877,12 @@ tasks: [
             
             preview.innerHTML = htmlCode;
 
-            // ==== CẬP NHẬT MÀU SẮC CODE (PRISM.JS) ====
             highlightingContent.textContent = htmlCode;
             if (window.Prism) {
                 Prism.highlightElement(highlightingContent);
             }
+
+            updateLineNumbers(htmlCode, editorLineNumbers);
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlCode, 'text/html');
@@ -890,7 +898,6 @@ tasks: [
                 if (!li) return;
                 const icon = li.querySelector('.status-icon');
                 
-                // KIỂM TRA ĐỂ PHÁT ÂM THANH KHI HOÀN THÀNH 1 TASK
                 if (completed && !prevTaskStates[index]) {
                     playTaskComplete();
                 }
@@ -915,7 +922,7 @@ tasks: [
                 progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)';
                 if (!hasWon) {
                     hasWon = true;
-                    playLevelWin(); // Phát âm thanh vô địch
+                    playLevelWin(); 
                     successMessage.style.display = 'block';
                     triggerFireworks();
                 }
@@ -930,7 +937,7 @@ tasks: [
         editor.addEventListener('input', updateUI);
         tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
-                playClick(); // Âm thanh Click nút
+                playClick(); 
                 const index = parseInt(e.target.getAttribute('data-level'));
                 if (index !== currentLevel) loadLevel(index);
             });
