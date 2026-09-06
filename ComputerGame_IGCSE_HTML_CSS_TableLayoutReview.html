@@ -1,0 +1,1001 @@
+<!--
+Level 1: Table Modification
+Change the text inside the <caption> tag exactly to "New Title".
+Add a 3rd column by adding a <th> with text "Header 3" inside the <thead> row and a <td> with text "Data 3" inside the first <tbody> row.
+Add a new row <tr> at the end of the <tbody> containing three <td> elements with the exact text "New Data 1", "New Data 2", and "New Data 3".
+Add the attribute width="80%" directly to the opening <table> tag.
+Change the border attribute in the opening <table> tag to border="3".
+
+Level 2: Colspan & Footers
+Change the border attribute in the opening <table> tag to border="2".
+Add a <tfoot> section immediately below the <tbody> closing tag.
+Insert a row <tr> containing a single cell <td> inside the <tfoot> section.
+Add the attribute colspan="3" to the <td> cell inside the <tfoot> to merge it across 3 columns.
+Set the text content inside that <tfoot> cell <td> exactly to "Total Summary".
+
+Level 3: Rowspan Structure
+Add a <tbody> section immediately after the header row <tr>.
+Create exactly two rows <tr> inside the <tbody> section.
+Add the attribute rowspan="2" to the first <td> cell in the first <tbody> row to merge it vertically across 2 rows.
+Add a <td> cell with the exact text "Secret" in the row next to the merged cell.
+Add the attribute width="500" directly to the opening <table> tag.
+
+Level 4: Create From Scratch
+Create an opening and closing <table> tag with the attribute border="1".
+Create a <thead> section containing one row <tr> with three header cells <th> having the text "Mon", "Tue", and "Wed".
+Create a <tbody> section containing at least two rows <tr> with data cells <td>.
+Merge a cell vertically across 2 rows by adding the attribute rowspan="2" to a <td> cell.
+Merge a cell horizontally across 2 columns by adding the attribute colspan="2" to a <td> cell.
+
+Level 5: The Ultimate Data Table
+Create a <table> tag and assign it the attribute id="master-table".
+Add a <caption> tag directly inside the <table> containing the exact text "Employee Data".
+Include all three semantic structural sections: <thead>, <tbody>, and <tfoot>.
+Insert a row <tr> inside the <thead> containing exactly 4 header cells <th> with titles: "ID", "Name", "Role", and "Salary".
+Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attribute colspan="4" and the text "End of List".
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Table Mastery - Interactive Coding Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-hover: #4F46E5;
+            --success: #10B981;
+            --bg-gradient: linear-gradient(135deg, #EEF2F6 0%, #E2E8F0 100%);
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --panel-bg: #FFFFFF;
+            --editor-bg: #0F172A;
+            --editor-text: #E2E8F0;
+            
+            /* Dynamic Font Variables */
+            --base-font-size: 14.5px;
+            --editor-font-size: 15px;
+            --icon-size: 18px;
+            --btn-size: 36px;
+        }
+        
+        body {
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 24px;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; 
+            box-sizing: border-box;
+        }
+
+        /* Top Bar Layout (Tabs + Font Controls) */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        /* Level Navigation Tabs */
+        .level-tabs {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .level-tab {
+            padding: 12px 28px;
+            background: #FFFFFF;
+            color: var(--text-muted);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .level-tab:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px -2px rgba(0,0,0,0.1);
+        }
+
+        .level-tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 8px 15px rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Font Controls */
+        .font-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #FFFFFF;
+            padding: 8px 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .font-label {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+
+        .font-btn {
+            background: #F1F5F9;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .font-btn:hover {
+            background: #E2E8F0;
+        }
+
+        .font-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* 2x2 Grid Layout Adjusted */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: minmax(320px, 40vh) minmax(400px, 1fr); 
+            gap: 24px;
+            flex: 1;
+        }
+
+        /* Shared Panel Styles */
+        .panel {
+            background: var(--panel-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .panel-header {
+            background: #F8FAFC;
+            color: var(--text-main);
+            padding: 16px 20px;
+            font-weight: 800;
+            font-size: 1.15em;
+            margin: 0;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        /* Row 1, Col 1: Tasks */
+        #task-list {
+            list-style: none;
+            padding: 16px;
+            margin: 0;
+            background: #FFFFFF;
+            flex: 1;
+            overflow-y: auto; 
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #task-list li {
+            padding: 12px 16px;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: var(--base-font-size);
+            display: flex;
+            align-items: center; 
+            justify-content: space-between;
+            gap: 16px;
+            transition: all 0.2s ease;
+        }
+
+        #task-list li:hover {
+            background: #FFFFFF;
+            border-color: #CBD5E1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            flex: 1;
+            min-width: 0; 
+        }
+
+        .status-icon {
+            font-size: var(--icon-size);
+            flex-shrink: 0; 
+            margin-top: 1px; 
+        }
+
+        .task-text {
+            line-height: 1.5;
+            color: var(--text-main);
+            word-wrap: break-word; 
+            flex: 1;
+            font-family: inherit;
+        }
+
+        /* Make HTML tags visually distinct */
+        .task-text code {
+            background: #F1F5F9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #EF4444;
+            font-family: 'Consolas', monospace;
+            font-size: 0.95em;
+        }
+
+        .completed-task {
+            background: #ECFDF5 !important;
+            border-color: #A7F3D0 !important;
+        }
+
+        .completed-task .task-text {
+            color: var(--success);
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        /* Friendly Hint Button always pushed to the right */
+        .hint-btn {
+            background: #FEF08A;
+            border: 1px solid #FDE047;
+            cursor: pointer;
+            font-size: var(--icon-size);
+            width: var(--btn-size);
+            height: var(--btn-size);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0; 
+            align-self: center; 
+            box-shadow: 0 2px 4px rgba(253, 224, 71, 0.3);
+        }
+
+        .hint-btn:hover {
+            background: #FDE047;
+            transform: translateY(-2px) rotate(5deg);
+            box-shadow: 0 4px 8px rgba(253, 224, 71, 0.5);
+        }
+
+        /* Hint Modal Popup */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            max-width: 650px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #F1F5F9;
+            padding-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.25em;
+        }
+
+        .modal-close {
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #94A3B8;
+            background: #F1F5F9;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #EF4444;
+            background: #FEE2E2;
+        }
+
+        .modal-code {
+            background: #1E293B;
+            color: #E2E8F0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-size: var(--editor-font-size);
+            line-height: 1.6;
+            margin: 0;
+            border: 1px solid #334155;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Row 1, Col 2: Dashboard & Progress */
+        .dashboard {
+            padding: 30px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #FFFFFF;
+        }
+
+        .dashboard h1 {
+            margin: 0 0 12px 0;
+            font-size: 2em;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .dashboard p {
+            margin: 0 0 24px 0;
+            color: var(--text-muted);
+            max-width: 85%;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 450px;
+            background: #F1F5F9;
+            border-radius: 20px;
+            height: 28px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6366F1, #8B5CF6);
+            border-radius: 20px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s;
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 800;
+            font-size: 14px;
+            color: #FFFFFF;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            letter-spacing: 0.5px;
+        }
+
+        #success-message {
+            display: none;
+            color: var(--success);
+            font-size: 1.4em;
+            font-weight: 800;
+            margin-top: 20px;
+            background: #ECFDF5;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: 1px solid #A7F3D0;
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Row 2, Col 1: Editor */
+        textarea {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 24px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: var(--editor-font-size);
+            line-height: 1.6;
+            resize: none;
+            background-color: var(--editor-bg);
+            color: var(--editor-text);
+            box-sizing: border-box;
+            transition: font-size 0.2s;
+        }
+        
+        textarea:focus {
+            outline: none;
+        }
+
+        /* Row 2, Col 2: Live Preview */
+        .browser-mockup-bar {
+            background: #E2E8F0;
+            padding: 10px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #CBD5E1;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot.red { background: #EF4444; }
+        .dot.yellow { background: #F59E0B; }
+        .dot.green { background: #10B981; }
+
+        #preview {
+            padding: 24px;
+            flex: 1;
+            overflow: auto;
+            background: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar with Level Navigation & Font Size Controls -->
+    <div class="top-bar">
+        <div class="level-tabs" id="level-tabs">
+            <button class="level-tab active" data-level="0">Level 1</button>
+            <button class="level-tab" data-level="1">Level 2</button>
+            <button class="level-tab" data-level="2">Level 3</button>
+            <button class="level-tab" data-level="3">Level 4</button>
+            <button class="level-tab" data-level="4">Level 5</button>
+        </div>
+
+        <div class="font-controls">
+            <span class="font-label">Text Size:</span>
+            <button class="font-btn active" id="font-btn-A" onclick="setFontSize('A')">A</button>
+            <button class="font-btn" id="font-btn-Ap" onclick="setFontSize('A+')">A+</button>
+            <button class="font-btn" id="font-btn-App" onclick="setFontSize('A++')">A++</button>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Row 1, Column 1: Task List -->
+        <div class="panel">
+            <h2 class="panel-header">🎯 Assignment Tasks</h2>
+            <ul id="task-list"></ul>
+        </div>
+
+        <!-- Row 1, Column 2: Dashboard & Progress -->
+        <div class="panel dashboard">
+            <h1 id="level-title">HTML Table Mastery</h1>
+            <p id="level-desc">Write your code below to complete the tasks and score points!</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+                <div class="score-text" id="score-text">Score: 0%</div>
+            </div>
+            
+            <div id="success-message">🎉 Level Cleared! Outstanding Job! 🎉</div>
+        </div>
+
+        <!-- Row 2, Column 1: HTML Editor -->
+        <div class="panel" style="background: var(--editor-bg);">
+            <h2 class="panel-header" style="background: #1E293B; color: #F8FAFC; border-bottom: 1px solid #334155;">
+                💻 HTML Editor
+            </h2>
+            <textarea id="editor" spellcheck="false"></textarea>
+        </div>
+
+        <!-- Row 2, Column 2: Live Preview -->
+        <div class="panel">
+            <div class="browser-mockup-bar">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+                <span style="margin-left: 10px; font-size: 13px; color: #64748B; font-weight: bold;">Live Web Preview</span>
+            </div>
+            <div id="preview"></div>
+        </div>
+    </div>
+
+    <!-- Friendly Hint Modal Popup -->
+    <div id="hint-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💡 Task Hint & Solution Guide</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <p style="margin-top: 0; margin-bottom: 16px; color: #64748B; font-size: 15px;">
+                Review the structural code solution below and type it into your editor to learn:
+            </p>
+            <pre class="modal-code" id="hint-code"></pre>
+        </div>
+    </div>
+
+    <script>
+        // --- TEXT FONT SIZE ACCESSIBILITY ---
+        function setFontSize(level) {
+            const root = document.documentElement;
+            
+            // Define scaling for different text elements based on selected mode
+            if (level === 'A') {
+                root.style.setProperty('--base-font-size', '14.5px');
+                root.style.setProperty('--editor-font-size', '15px');
+                root.style.setProperty('--icon-size', '18px');
+                root.style.setProperty('--btn-size', '36px');
+            } else if (level === 'A+') {
+                root.style.setProperty('--base-font-size', '18px');
+                root.style.setProperty('--editor-font-size', '18px');
+                root.style.setProperty('--icon-size', '22px');
+                root.style.setProperty('--btn-size', '40px');
+            } else if (level === 'A++') {
+                root.style.setProperty('--base-font-size', '22px');
+                root.style.setProperty('--editor-font-size', '22px');
+                root.style.setProperty('--icon-size', '26px');
+                root.style.setProperty('--btn-size', '44px');
+            }
+
+            // Update UI Active State
+            document.querySelectorAll('.font-btn').forEach(btn => btn.classList.remove('active'));
+            
+            const btnId = 'font-btn-' + level.replace('++', 'pp').replace('+', 'p');
+            document.getElementById(btnId).classList.add('active');
+        }
+
+        // --- PREVENT BROWSER FROM RENDERING TAGS AS HTML ---
+        function escapeHTML(str) {
+            // Encode < and > to safely display them as plain text, while formatting them nicely in a code block
+            return str
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/(&lt;[a-zA-Z0-9=\s"-]+&gt;|&lt;\/[a-zA-Z0-9]+&gt;)/g, "<code>$1</code>");
+        }
+
+        // --- LEVEL DEFINITIONS WITH QUESTIONS & CODE HINTS ---
+        const levels = [
+            {
+                title: "Level 1: Table Modification",
+                desc: "Modify table attributes, headers, and rows to match requirements.",
+                initialCode: `<table border="1">\n  <caption>Table Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n    </tr>\n  </tbody>\n</table>`,
+                tasks: [
+                    'Change the text inside the <caption> tag exactly to "New Title".',
+                    'Add a 3rd column by adding a <th> with text "Header 3" inside the <thead> row and a <td> with text "Data 3" inside the first <tbody> row.',
+                    'Add a new row <tr> at the end of the <tbody> containing three <td> elements with the exact text "New Data 1", "New Data 2", and "New Data 3".',
+                    'Add the attribute width="80%" directly to the opening <table> tag.',
+                    'Change the border attribute in the opening <table> tag to border="3".'
+                ],
+                hints: [
+                    `<table border="1">\n  <!-- HINT: Update the text inside <caption> to 'New Title' -->\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <!-- HINT: Add the 3rd column header -->\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <!-- HINT: Add the 3rd column data cell -->\n      <td>Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    <!-- HINT: Add a second <tr> with three data cells -->\n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table width="80%" border="1">\n  <!-- HINT: Add width="80%" to the <table> tag -->\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table width="80%" border="3">\n  <!-- HINT: Change border="1" to border="3" -->\n  <caption>New Title</caption>\n  <thead>\n    <tr>\n      <th>Header 1</th>\n      <th>Header 2</th>\n      <th>Header 3</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data 1</td>\n      <td>Data 2</td>\n      <td>Data 3</td>\n    </tr>\n    <tr>\n      <td>New Data 1</td>\n      <td>New Data 2</td>\n      <td>New Data 3</td>\n    </tr>\n  </tbody>\n</table>`
+                ],
+                validate: (doc, rawCode) => {
+                    let results = [false, false, false, false, false];
+                    const table = doc.querySelector('table');
+                    if (!table) return results;
+
+                    const caption = table.querySelector('caption');
+                    if (caption && caption.textContent.trim() === 'New Title') results[0] = true;
+
+                    const ths = table.querySelectorAll('thead th');
+                    const firstRowTds = table.querySelectorAll('tbody tr:first-of-type td');
+                    if (ths.length >= 3 && ths[2].textContent.trim() === 'Header 3' &&
+                        firstRowTds.length >= 3 && firstRowTds[2].textContent.trim() === 'Data 3') results[1] = true;
+
+                    const tbodyTrs = table.querySelectorAll('tbody tr');
+                    if (tbodyTrs.length >= 2) {
+                        const secondRowTds = tbodyTrs[1].querySelectorAll('td');
+                        if (secondRowTds.length >= 3 && 
+                            secondRowTds[0].textContent.trim() === 'New Data 1' && 
+                            secondRowTds[1].textContent.trim() === 'New Data 2' && 
+                            secondRowTds[2].textContent.trim() === 'New Data 3') {
+                            results[2] = true;
+                        }
+                    }
+
+                    if (table.getAttribute('width') === '80%' || table.style.width === '80%') results[3] = true;
+                    if (table.getAttribute('border') === '3') results[4] = true;
+
+                    return results;
+                }
+            },
+            {
+                title: "Level 2: Colspan & Footers",
+                desc: "Add a footer section and merge columns horizontally using colspan.",
+                initialCode: `<table border="1">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n</table>`,
+                tasks: [
+                    'Change the border attribute in the opening <table> tag to border="2".',
+                    'Add a <tfoot> section immediately below the <tbody> closing tag.',
+                    'Insert a row <tr> containing a single cell <td> inside the <tfoot> section.',
+                    'Add the attribute colspan="3" to the <td> cell inside the <tfoot> to merge it across 3 columns.',
+                    'Set the text content inside that <tfoot> cell <td> exactly to "Total Summary".'
+                ],
+                hints: [
+                    `<table border="2">\n  <!-- HINT: Set border="2" on <table> -->\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <!-- HINT: Add <tfoot> below <tbody> -->\n  <tfoot></tfoot>\n</table>`,
+                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <!-- HINT: Add a <tr> with a <td> inside <tfoot> -->\n    <tr>\n      <td></td>\n    </tr>\n  </tfoot>\n</table>`,
+                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      <!-- HINT: Add colspan="3" attribute -->\n      <td colspan="3"></td>\n    </tr>\n  </tfoot>\n</table>`,
+                    `<table border="2">\n  <thead>\n    <tr>\n      <th>Product</th>\n      <th>Qty</th>\n      <th>Price</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Apple</td>\n      <td>2</td>\n      <td>$1.50</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      <!-- HINT: Set text to 'Total Summary' -->\n      <td colspan="3">Total Summary</td>\n    </tr>\n  </tfoot>\n</table>`
+                ],
+                validate: (doc, rawCode) => {
+                    let results = [false, false, false, false, false];
+                    const table = doc.querySelector('table');
+                    if (!table) return results;
+
+                    if (table.getAttribute('border') === '2') results[0] = true;
+                    
+                    const tfoot = table.querySelector('tfoot');
+                    if (tfoot) results[1] = true;
+
+                    const tfootTd = tfoot ? tfoot.querySelector('td') : null;
+                    if (tfoot && tfoot.querySelector('tr') && tfootTd) results[2] = true;
+
+                    if (tfootTd && tfootTd.getAttribute('colspan') === '3') results[3] = true;
+                    if (tfootTd && tfootTd.textContent.trim() === 'Total Summary') results[4] = true;
+
+                    return results;
+                }
+            },
+            {
+                title: "Level 3: Rowspan Structure",
+                desc: "Complete the table body and merge vertical cells across rows using rowspan.",
+                initialCode: `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n</table>`,
+                tasks: [
+                    'Add a <tbody> section immediately after the header row <tr>.',
+                    'Create exactly two rows <tr> inside the <tbody> section.',
+                    'Add the attribute rowspan="2" to the first <td> cell in the first <tbody> row to merge it vertically across 2 rows.',
+                    'Add a <td> cell with the exact text "Secret" in the row next to the merged cell.',
+                    'Add the attribute width="500" directly to the opening <table> tag.'
+                ],
+                hints: [
+                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <!-- HINT: Add <tbody> section -->\n  <tbody>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <!-- HINT: Insert two <tr> rows inside <tbody> -->\n    <tr></tr>\n    <tr></tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      <!-- HINT: First cell with rowspan="2" -->\n      <td rowspan="2">Group</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      <td rowspan="2">Group</td>\n      <!-- HINT: Add cell containing 'Secret' -->\n      <td>Secret</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table width="500" border="1">\n  <!-- HINT: Set width="500" on table tag -->\n  <tr>\n    <th>Category</th>\n    <th>Item</th>\n  </tr>\n  <tbody>\n    <tr>\n      <td rowspan="2">Group</td>\n      <td>Secret</td>\n    </tr>\n    <tr>\n      <td>Other</td>\n    </tr>\n  </tbody>\n</table>`
+                ],
+                validate: (doc, rawCode) => {
+                    let results = [false, false, false, false, false];
+                    const table = doc.querySelector('table');
+                    if (!table) return results;
+
+                    const code = rawCode.toLowerCase();
+
+                    // Logic fix: Check raw string for <tbody> so it doesn't auto-pass when browser fixes HTML
+                    if (code.includes('<tbody') && code.includes('</tbody')) results[0] = true;
+
+                    // Ensure there are at least 2 data rows (rows containing td)
+                    const dataRows = Array.from(table.querySelectorAll('tr')).filter(tr => tr.querySelector('td'));
+                    if (dataRows.length >= 2) results[1] = true;
+
+                    // Check for rowspan="2"
+                    if (table.querySelector('td[rowspan="2"]')) results[2] = true;
+                    
+                    // Check for "Secret"
+                    const tds = Array.from(table.querySelectorAll('td'));
+                    if (tds.some(td => td.textContent.trim() === 'Secret')) results[3] = true;
+                    
+                    if (table.getAttribute('width') === '500' || table.style.width === '500px') results[4] = true;
+
+                    return results;
+                }
+            },
+            {
+                title: "Level 4: Create From Scratch",
+                desc: "Build a multi-section schedule table combining headers, rowspan, and colspan.",
+                initialCode: `<!-- Write your HTML table completely from scratch! -->`,
+                tasks: [
+                    'Create an opening and closing <table> tag with the attribute border="1".',
+                    'Create a <thead> section containing one row <tr> with three header cells <th> having the text "Mon", "Tue", and "Wed".',
+                    'Create a <tbody> section containing at least two rows <tr> with data cells <td>.',
+                    'Merge a cell vertically across 2 rows by adding the attribute rowspan="2" to a <td> cell.',
+                    'Merge a cell horizontally across 2 columns by adding the attribute colspan="2" to a <td> cell.'
+                ],
+                hints: [
+                    `<table border="1">\n  <!-- HINT: Basic table with border="1" -->\n</table>`,
+                    `<table border="1">\n  <thead>\n    <!-- HINT: <thead> with Mon, Tue, Wed -->\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n</table>`,
+                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  <!-- HINT: Add <tbody> with at least 2 rows -->\n  <tbody>\n    <tr>\n      <td>Math</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      <td>Art</td>\n      <td>PE</td>\n      <td>Music</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <!-- HINT: Add rowspan="2" to merge vertically -->\n      <td rowspan="2">Workshop</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      <td>PE</td>\n      <td>Music</td>\n    </tr>\n  </tbody>\n</table>`,
+                    `<table border="1">\n  <thead>\n    <tr>\n      <th>Mon</th>\n      <th>Tue</th>\n      <th>Wed</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td rowspan="2">Workshop</td>\n      <td>Science</td>\n      <td>History</td>\n    </tr>\n    <tr>\n      <!-- HINT: Add colspan="2" to merge horizontally -->\n      <td colspan="2">Free Period</td>\n    </tr>\n  </tbody>\n</table>`
+                ],
+                validate: (doc, rawCode) => {
+                    let results = [false, false, false, false, false];
+                    const table = doc.querySelector('table');
+                    if (!table) return results;
+
+                    if (table.getAttribute('border') === '1') results[0] = true;
+                    
+                    const ths = table.querySelectorAll('thead th');
+                    if (ths.length >= 3 && 
+                        ths[0].textContent.trim().toLowerCase() === 'mon' && 
+                        ths[1].textContent.trim().toLowerCase() === 'tue' && 
+                        ths[2].textContent.trim().toLowerCase() === 'wed') results[1] = true;
+                    
+                    if (table.querySelectorAll('tbody tr').length >= 2) results[2] = true;
+                    if (table.querySelector('td[rowspan="2"]') || table.querySelector('th[rowspan="2"]')) results[3] = true;
+                    if (table.querySelector('td[colspan="2"]') || table.querySelector('th[colspan="2"]')) results[4] = true;
+
+                    return results;
+                }
+            },
+            {
+                title: "Level 5: The Ultimate Data Table",
+                desc: "Build an enterprise-grade HTML table featuring all semantic tags and full-width footer spanning.",
+                initialCode: `<!-- Build a complete table with id='master-table' -->`,
+                tasks: [
+                    'Create a <table> tag and assign it the attribute id="master-table".',
+                    'Add a <caption> tag directly inside the <table> containing the exact text "Employee Data".',
+                    'Include all three semantic structural sections: <thead>, <tbody>, and <tfoot>.',
+                    'Insert a row <tr> inside the <thead> containing exactly 4 header cells <th> with titles: "ID", "Name", "Role", and "Salary".',
+                    'Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attribute colspan="4" and the text "End of List".'
+                ],
+                hints: [
+                    `<table id="master-table" border="1">\n  <!-- HINT: Create table with id="master-table" -->\n</table>`,
+                    `<table id="master-table" border="1">\n  <!-- HINT: Add <caption>Employee Data</caption> -->\n  <caption>Employee Data</caption>\n</table>`,
+                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  <!-- HINT: Include the 3 semantic sections -->\n  <thead></thead>\n  <tbody></tbody>\n  <tfoot></tfoot>\n</table>`,
+                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  <thead>\n    <!-- HINT: Exactly 4 headers: ID, Name, Role, Salary -->\n    <tr>\n      <th>ID</th>\n      <th>Name</th>\n      <th>Role</th>\n      <th>Salary</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>101</td>\n      <td>Alice</td>\n      <td>Engineer</td>\n      <td>$4,500</td>\n    </tr>\n  </tbody>\n  <tfoot></tfoot>\n</table>`,
+                    `<table id="master-table" border="1">\n  <caption>Employee Data</caption>\n  <thead>\n    <tr>\n      <th>ID</th>\n      <th>Name</th>\n      <th>Role</th>\n      <th>Salary</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>101</td>\n      <td>Alice</td>\n      <td>Engineer</td>\n      <td>$4,500</td>\n    </tr>\n  </tbody>\n  <tfoot>\n    <tr>\n      <!-- HINT: Single <td> spanning 4 columns with text 'End of List' -->\n      <td colspan="4">End of List</td>\n    </tr>\n  </tfoot>\n</table>`
+                ],
+                validate: (doc, rawCode) => {
+                    let results = [false, false, false, false, false];
+                    const table = doc.querySelector('table#master-table');
+                    if (!table) return results;
+                    
+                    const code = rawCode.toLowerCase();
+
+                    results[0] = true;
+                    
+                    const caption = table.querySelector('caption');
+                    if (caption && caption.textContent.trim() === 'Employee Data') results[1] = true;
+                    
+                    // Logic fix: require manual typing of structure tags
+                    if (code.includes('<thead') && code.includes('<tbody') && code.includes('<tfoot')) results[2] = true;
+                    
+                    const ths = table.querySelectorAll('thead th');
+                    if (ths.length === 4 &&
+                        ths[0].textContent.trim().toLowerCase() === 'id' &&
+                        ths[1].textContent.trim().toLowerCase() === 'name' &&
+                        ths[2].textContent.trim().toLowerCase() === 'role' &&
+                        ths[3].textContent.trim().toLowerCase() === 'salary') {
+                        results[3] = true;
+                    }
+                    
+                    const tfootTd = table.querySelector('tfoot td');
+                    if (tfootTd && tfootTd.getAttribute('colspan') === '4' && tfootTd.textContent.trim() === 'End of List') {
+                        results[4] = true;
+                    }
+
+                    return results;
+                }
+            }
+        ];
+
+        // --- GLOBAL APP STATE ---
+        let currentLevel = 0;
+        let fireworksInterval = null;
+        let hasWon = false;
+
+        // DOM Element References
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreText = document.getElementById('score-text');
+        const successMessage = document.getElementById('success-message');
+        const taskList = document.getElementById('task-list');
+        const levelTitle = document.getElementById('level-title');
+        const levelDesc = document.getElementById('level-desc');
+        const tabs = document.querySelectorAll('.level-tab');
+
+        // Fireworks Animation
+        function triggerFireworks() {
+            var duration = 3.5 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            fireworksInterval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) {
+                    return clearInterval(fireworksInterval);
+                }
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        function stopFireworks() {
+            if (fireworksInterval) clearInterval(fireworksInterval);
+        }
+
+        // Display Hint in Modal Dialog
+        function showHint(taskIndex) {
+            const levelData = levels[currentLevel];
+            const modal = document.getElementById('hint-modal');
+            const modalCode = document.getElementById('hint-code');
+            modalCode.textContent = levelData.hints[taskIndex];
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('hint-modal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('hint-modal');
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        // Load and Switch Levels
+        function loadLevel(index) {
+            currentLevel = index;
+            const levelData = levels[index];
+
+            // Update Tab Active State
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs[index].classList.add('active');
+
+            // Update Header Info
+            levelTitle.textContent = levelData.title;
+            levelDesc.textContent = levelData.desc;
+
+            // Render Task Items
+            taskList.innerHTML = '';
+            levelData.tasks.forEach((task, i) => {
+                const li = document.createElement('li');
+                li.id = `task-${i}`;
+                
+                // apply escapeHTML directly so <td> and <tr> output visibly
+                const formattedTask = escapeHTML(task);
+                
+                li.innerHTML = `
+                    <div class="task-info">
+                        <span class="status-icon">❌</span>
+                        <span class="task-text">${i + 1}. ${formattedTask}</span>
+                    </div>
+                    <button class="hint-btn" onclick="showHint(${i})" title="View Code Hint">💡</button>
+                `;
+                taskList.appendChild(li);
+            });
+
+            // Reset Code Editor and Victory Status
+            editor.value = levelData.initialCode;
+            stopFireworks();
+            hasWon = false;
+            successMessage.style.display = 'none';
+            
+            updateUI();
+        }
+
+        // Real-time Parser & Validator
+        function updateUI() {
+            const htmlCode = editor.value;
+            const levelData = levels[currentLevel];
+            
+            // Render to Preview Panel
+            preview.innerHTML = htmlCode;
+
+            // Parse DOM safely
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlCode, 'text/html');
+
+            // Evaluate Task Completion by passing both parsed DOC and RAW CODE
+            const tasksCompleted = levelData.validate(doc, htmlCode);
+            const totalTasks = levelData.tasks.length;
+            const pointPerTask = 100 / totalTasks;
+            
+            let score = 0;
+
+            tasksCompleted.forEach((completed, index) => {
+                const li = document.getElementById(`task-${index}`);
+                if (!li) return;
+                const icon = li.querySelector('.status-icon');
+                
+                if (completed) {
+                    score += pointPerTask;
+                    li.classList.add('completed-task');
+                    icon.textContent = '✅';
+                } else {
+                    li.classList.remove('completed-task');
+                    icon.textContent = '❌';
+                }
+            });
+
+            score = Math.round(score);
+
+            // Update Progress Bar
+            progressBar.style.width = `${score}%`;
+            scoreText.textContent = `Score: ${score}%`;
+
+            // Victory Trigger
+            if (score === 100) {
+                progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)';
+                if (!hasWon) {
+                    hasWon = true;
+                    successMessage.style.display = 'block';
+                    triggerFireworks();
+                }
+            } else {
+                progressBar.style.background = 'linear-gradient(90deg, #6366F1, #8B5CF6)';
+                hasWon = false;
+                successMessage.style.display = 'none';
+                stopFireworks();
+            }
+        }
+
+        // Event Listeners
+        editor.addEventListener('input', updateUI);
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-level'));
+                if (index !== currentLevel) {
+                    loadLevel(index);
+                }
+            });
+        });
+
+        // Initialize Game at Level 1
+        loadLevel(0);
+    </script>
+</body>
+</html>
