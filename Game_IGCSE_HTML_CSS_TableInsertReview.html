@@ -87,6 +87,10 @@
         .level-tab { padding: 10px 20px; background: #FFFFFF; color: var(--text-muted); border: 2px solid transparent; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .level-tab:hover { color: var(--primary); transform: translateY(-2px); box-shadow: 0 6px 10px -2px rgba(160, 82, 45, 0.15); }
         .level-tab.active { background: var(--primary); color: white; box-shadow: 0 8px 15px rgba(160, 82, 45, 0.3); transform: translateY(-2px); }
+        
+        /* CLASS ĐƯỢC THÊM: Đổi nút sang màu cà phê khi hoàn thành level */
+        .level-tab.completed { background: #6F4E37 !important; color: white !important; border-color: #4A3018 !important; box-shadow: 0 4px 10px rgba(111, 78, 55, 0.4) !important; }
+
         .font-controls { display: flex; gap: 8px; align-items: center; background: #FFFFFF; padding: 8px 16px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .font-label { font-size: 14px; font-weight: 800; color: var(--text-muted); margin-right: 4px; }
         .font-btn { background: #FDF5E6; border: 1px solid #DEB887; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: bold; color: var(--text-muted); transition: all 0.2s; font-size: 14px; }
@@ -553,9 +557,9 @@
                 validate: (doc) => {
                     let res = [false, false];
                     const tdD = doc.querySelector('#cell-D');
-                    if (tdD && tdD.querySelector('sub') && tdD.textContent.trim().replace(/\\s/g, '') === 'H2O') res[0] = true;
+                    if (tdD && tdD.querySelector('sub') && tdD.textContent.trim().replace(/\s/g, '') === 'H2O') res[0] = true;
                     const tdE = doc.querySelector('#cell-E');
-                    if (tdE && tdE.querySelector('sup') && tdE.textContent.trim().replace(/\\s/g, '') === 'X2') res[1] = true;
+                    if (tdE && tdE.querySelector('sup') && tdE.textContent.trim().replace(/\s/g, '') === 'X2') res[1] = true;
                     return res;
                 }
             },
@@ -925,6 +929,9 @@
                     playLevelWin(); 
                     successMessage.style.display = 'block';
                     triggerFireworks();
+                    
+                    // CODE THÊM MỚI: Gắn class để đổi nút Lvl sang màu cà phê vĩnh viễn khi qua bài
+                    tabs[currentLevel].classList.add('completed');
                 }
             } else {
                 progressBar.style.background = 'linear-gradient(90deg, #A0522D, #CD853F)';
