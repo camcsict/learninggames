@@ -145,6 +145,14 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             transform: translateY(-2px);
         }
 
+        /* Trạng thái tab khi đã hoàn thành */
+        .level-tab.completed {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+
         /* Font Controls */
         .font-controls {
             display: flex;
@@ -621,6 +629,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
         let hasWon = false;
         let monacoEditorInstance; 
         let previousTasksState = []; 
+        let completedLevels = new Set(); // Mảng theo dõi các Level đã hoàn thành
 
         // --- FULLSCREEN TOGGLE FUNCTION ---
         function toggleFullscreen(panelElement) {
@@ -672,7 +681,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                 osc.start();
                 osc.stop(audioCtx.currentTime + duration);
             },
-            type: () => {}, // ĐÃ TẮT ÂM THANH GÕ PHÍM THEO YÊU CẦU
+            type: () => {}, 
             click: () => SoundFX.playTone(600, 'sine', 0.08, 0.05), 
             taskDone: () => { 
                 SoundFX.playTone(392.00, 'sine', 0.1, 0.1); 
@@ -892,7 +901,7 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                 initialCode: ``,
                 tasks: [
                     'Create an opening and closing <table> tag with the attribute border="1".',
-                    'Create a <thead> section containing one row <tr> với ba thẻ header <th> có nội dung "Mon", "Tue", và "Wed".',
+                    'Create a <thead> section containing one row <tr> with three header tags <th> containing the text "Mon", "Tue", và "Wed".',
                     'Create a <tbody> section containing at least two rows <tr> with data cells <td>.',
                     'Merge a cell vertically across 2 rows by adding the attribute rowspan="2" to a <td> cell.',
                     'Merge a cell horizontally across 2 columns by adding the attribute colspan="2" to a <td> cell.'
@@ -1107,6 +1116,9 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
             scoreText.textContent = `Score: ${score}%`;
 
             if (score === 100) {
+                completedLevels.add(currentLevel); // Ghi nhận Level đã hoàn thành
+                tabs[currentLevel].classList.add('completed'); // Thêm trạng thái completed cho tab
+                
                 progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)';
                 if (!hasWon) {
                     hasWon = true;
@@ -1115,6 +1127,10 @@ Insert a row <tr> inside the <tfoot> with a single cell <td> containing the attr
                     triggerFireworks();
                 }
             } else {
+                if (!completedLevels.has(currentLevel)) {
+                    tabs[currentLevel].classList.remove('completed'); // Chỉ xoá màu nếu Level chưa từng hoàn thành trước đó
+                }
+                
                 progressBar.style.background = 'linear-gradient(90deg, #10B981, #34D399)';
                 hasWon = false;
                 successMessage.style.display = 'none';
