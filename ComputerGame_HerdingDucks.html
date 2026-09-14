@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ultimate Farm Herding Game - iPad Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            background-color: #87CEEB;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none; /* Ngăn scroll trên iPad khi vuốt */
+        }
+
+        /* --- WRAPPER DÙNG ĐỂ TỰ ĐỘNG SCALE TRÊN IPAD --- */
+        #app-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: center center;
+        }
+
+        /* --- PROGRESS TRACKER --- */
+        #progress-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 30px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .tracker-emoji {
+            font-size: 30px;
+            filter: grayscale(100%) opacity(0.3);
+            transition: all 0.5s ease;
+        }
+
+        .tracker-emoji.unlocked {
+            filter: grayscale(0%) opacity(1);
+            transform: scale(1.2);
+            text-shadow: 0 0 10px gold;
+        }
+
+        /* --- GAME CONTAINER --- */
+        #game-container {
+            width: 800px;
+            height: 550px;
+            position: relative;
+            border: 8px solid #333;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            cursor: crosshair;
+            transition: background 1s ease;
+        }
+
+        .env-paddy { background: radial-gradient(#6B8E23 15%, transparent 16%), #556B2F; background-size: 60px 60px; } 
+        .env-dirt { background: radial-gradient(#8B4513 15%, transparent 16%), #A0522D; background-size: 50px 50px; } 
+        .env-grass { background: radial-gradient(#90EE90 15%, transparent 16%), #7CFC00; background-size: 60px 60px; } 
+        .env-rocky { background: radial-gradient(#A9A9A9 15%, transparent 16%), #708090; background-size: 70px 70px; } 
+        .env-mud { background: radial-gradient(#3E2723 15%, transparent 16%), #5D4037; background-size: 40px 40px; } 
+        .env-water { background: radial-gradient(#00BFFF 15%, transparent 16%), #1E90FF; background-size: 80px 80px; } 
+        .env-sand { background: radial-gradient(#F4A460 15%, transparent 16%), #D2B48C; background-size: 30px 30px; } 
+        .env-straw { background: radial-gradient(#DAA520 15%, transparent 16%), #B8860B; background-size: 50px 50px; } 
+
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 20px;
+            color: #333;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+
+        /* --- VIRTUAL CROSSHAIR (Tâm ngắm) --- */
+        #crosshair {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px dashed #FF4500;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9;
+            transition: border-color 0.2s;
+        }
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 6px; height: 6px;
+            background: #FF4500;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* --- GATE --- */
+        #gate-container {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 240px;
+            height: 100px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .pillar {
+            width: 30px;
+            height: 100px;
+            background: #555;
+            border: 2px solid #222;
+            border-top: none;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.5);
+            z-index: 6;
+        }
+
+        #gate-doors {
+            width: 180px;
+            height: 80px;
+            background: linear-gradient(to bottom, #8B4513, #5C2E0B);
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            border: 3px solid #3E1F07;
+            border-top: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        #gate-doors.open {
+            background: rgba(255, 215, 0, 0.4);
+            border-color: #FFD700;
+            box-shadow: 0 0 30px #FFD700;
+            cursor: default;
+        }
+
+        .lock-display { font-size: 24px; letter-spacing: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .gate-text { font-family: 'Fredoka One', cursive; color: white; font-size: 14px; margin-top: 5px; text-shadow: 1px 1px 2px black; }
+
+        .animal {
+            position: absolute; font-size: 45px; transform: translate(-50%, -50%);
+            transition: left 0.1s linear, top 0.1s linear; z-index: 4; pointer-events: none;
+        }
+        .bounce { animation: bounceAnim 0.4s infinite alternate; }
+        @keyframes bounceAnim {
+            0% { transform: translate(-50%, -50%) scaleY(0.9) translateY(3px); }
+            100% { transform: translate(-50%, -50%) scaleY(1.1) translateY(-3px); }
+        }
+
+        /* --- GAMEPAD CHO IPAD/TOUCH --- */
+        #gamepad {
+            display: flex;
+            width: 800px;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-sizing: border-box;
+        }
+
+        .d-pad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .d-pad-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .dir-btn {
+            width: 60px; height: 60px;
+            border-radius: 15px;
+            background: #333; color: white;
+            font-size: 24px; font-weight: bold;
+            border: 4px solid #555;
+            box-shadow: 0 6px 0 #111;
+            cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .dir-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #111; }
+
+        .action-btn {
+            height: 80px; width: 250px;
+            border-radius: 20px;
+            background: #FF4500; color: white;
+            font-family: 'Fredoka One', cursive; font-size: 22px;
+            border: 4px solid #CC3700;
+            box-shadow: 0 8px 0 #992900;
+            cursor: pointer;
+        }
+        .action-btn:active { transform: translateY(8px); box-shadow: 0 0 0 #992900; }
+
+        /* Overlays & Quiz */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 20; color: white; text-align: center;
+        }
+        .overlay h1 { font-family: 'Fredoka One', cursive; font-size: 50px; margin-bottom: 10px; color: #FFD700; text-shadow: 2px 2px 4px #000; }
+        .overlay p { font-size: 22px; margin-bottom: 30px; max-width: 80%; }
+        
+        .btn {
+            padding: 15px 40px; font-size: 24px; font-family: 'Fredoka One', cursive; background: #FF4500; color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 0 #CC3700;
+        }
+        .btn:active { transform: translateY(5px); box-shadow: 0 0 0 #CC3700; }
+
+        #quiz-modal {
+            background: white; color: #333; padding: 30px; border-radius: 20px; width: 80%; max-width: 500px;
+            display: flex; flex-direction: column; align-items: center; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        }
+        #quiz-progress { font-family: 'Fredoka One', cursive; color: #FF4500; margin-bottom: 10px; font-size: 18px; }
+        #quiz-question { font-size: 22px; font-weight: bold; margin-bottom: 20px; text-align: center; min-height: 60px; }
+        
+        .answer-btn {
+            width: 100%; padding: 15px; margin: 8px 0; font-size: 20px; font-family: 'Nunito', sans-serif; font-weight: bold;
+            background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer; transition: background 0.2s;
+        }
+        .answer-btn:hover { background: #45a049; }
+        .hidden { display: none !important; }
+
+        .click-effect {
+            position: absolute; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%; transform: translate(-50%, -50%) scale(0); animation: ripple 0.4s ease-out; pointer-events: none; z-index: 3;
+        }
+        @keyframes ripple { to { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="app-wrapper">
+    <div id="progress-bar">
+        <span class="tracker-emoji" id="track-0">🐃</span>
+        <span class="tracker-emoji" id="track-1">🐂</span>
+        <span class="tracker-emoji" id="track-2">🐄</span>
+        <span class="tracker-emoji" id="track-3">🐐</span>
+        <span class="tracker-emoji" id="track-4">🐑</span>
+        <span class="tracker-emoji" id="track-5">🐖</span>
+        <span class="tracker-emoji" id="track-6">🦆</span>
+        <span class="tracker-emoji" id="track-7">🐓</span>
+        <span class="tracker-emoji" id="track-8">🐤</span>
+    </div>
+
+    <div id="game-container" class="env-paddy">
+        <div id="crosshair"></div>
+        <div id="hud">Level: <span id="level-text">1/9</span> | Saved: <span id="score-text">0/5</span></div>
+        
+        <div id="gate-container">
+            <div class="pillar"></div>
+            <div id="gate-doors">
+                <div class="lock-display" id="gate-locks">🔒🔒🔒</div>
+                <div class="gate-text" id="gate-text">CLICK TO UNLOCK</div>
+            </div>
+            <div class="pillar"></div>
+        </div>
+
+        <div id="start-screen" class="overlay">
+            <h1>ULTIMATE FARM</h1>
+            <p>Tap the grass or use the Gamepad to herd animals!<br>Answer <b>3 questions</b> to break the gate locks.</p>
+            <button class="btn" onclick="startGame()">START GAME</button>
+        </div>
+        <div id="level-up-screen" class="overlay hidden">
+            <h1>LEVEL CLEARED!</h1>
+            <p>The animals are safely inside.</p>
+            <button class="btn" onclick="startNextLevel()">NEXT LEVEL</button>
+        </div>
+        <div id="win-screen" class="overlay hidden">
+            <h1>🎉 MASTER FARMER 🎉</h1>
+            <p>You have successfully saved every animal!</p>
+            <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
+        </div>
+        <div id="quiz-overlay" class="overlay hidden">
+            <div id="quiz-modal">
+                <div id="quiz-progress">Question <span id="q-current">1</span> of 3</div>
+                <div id="quiz-question">Question text</div>
+                <div id="quiz-answers" style="width: 100%;"></div>
+                <p id="quiz-msg" style="color: red; margin-top: 10px; font-weight: bold;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIRTUAL GAMEPAD -->
+    <div id="gamepad">
+        <div class="d-pad">
+            <button class="dir-btn" id="btn-up">▲</button>
+            <div class="d-pad-row">
+                <button class="dir-btn" id="btn-left">◀</button>
+                <button class="dir-btn" id="btn-down">▼</button>
+                <button class="dir-btn" id="btn-right">▶</button>
+            </div>
+        </div>
+        <button id="btn-herd" class="action-btn">🐾 ACTION / HERD</button>
+    </div>
+</div>
+
+<script>
+    // --- TỰ ĐỘNG THU PHÓNG ĐỂ VỪA IPAD ---
+    function resizeApp() {
+        const wrapper = document.getElementById('app-wrapper');
+        const scale = Math.min(window.innerWidth / 850, window.innerHeight / 850);
+        wrapper.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', resizeApp);
+    resizeApp();
+
+    // --- AUDIO SYSTEM ---
+    let audioCtx = null;
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+
+        if (type === 'click') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        } else if (type === 'score') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(900, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        } else if (type === 'correct') { 
+            osc.type = 'sine'; osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        } else if (type === 'open') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(554, audioCtx.currentTime + 0.1); osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'win') {
+            osc.type = 'sine';
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                setTimeout(() => {
+                    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+                    o.type = 'square'; o.frequency.value = freq; o.connect(g); g.connect(audioCtx.destination);
+                    g.gain.setValueAtTime(0.2, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    o.start(); o.stop(audioCtx.currentTime + 0.3);
+                }, i * 150);
+            });
+        }
+    }
+
+    // --- LEVEL DATA (9 Levels) ---
+    const levelsData = [
+        { emoji: '🐃', env: 'env-paddy', name: 'Water Buffalo', questions: [{ q: "Where do water buffaloes love to cool down?", answers: ["In mud", "In sand", "In trees"], correct: 0 }, { q: "Water buffaloes are famous for helping farmers do what?", answers: ["Hunt", "Plough fields", "Fly"], correct: 1 }, { q: "What do water buffaloes eat?", answers: ["Meat", "Fish", "Grass"], correct: 2 }] },
+        { emoji: '🐂', env: 'env-dirt', name: 'Ox', questions: [{ q: "What is an ox typically used for?", answers: ["Racing", "Pulling carts", "Swimming"], correct: 1 }, { q: "An ox is an adult male...", answers: ["Pig", "Horse", "Cattle"], correct: 2 }, { q: "How many stomachs does cattle have?", answers: ["Four", "One", "Two"], correct: 0 }] },
+        { emoji: '🐄', env: 'env-grass', name: 'Cow', questions: [{ q: "What do dairy cows produce for us?", answers: ["Honey", "Silk", "Milk"], correct: 2 }, { q: "What color pattern is famous on Holstein cows?", answers: ["Pink & Blue", "Black & White", "All Brown"], correct: 1 }, { q: "What do you call a baby cow?", answers: ["Calf", "Kitten", "Puppy"], correct: 0 }] },
+        { emoji: '🐐', env: 'env-rocky', name: 'Goat', questions: [{ q: "Goats are excellent at...", answers: ["Flying", "Climbing", "Swimming"], correct: 1 }, { q: "What do you call a baby goat?", answers: ["Foal", "Cub", "Kid"], correct: 2 }, { q: "What are goat horns made of?", answers: ["Keratin", "Wood", "Gold"], correct: 0 }] },
+        { emoji: '🐑', env: 'env-grass', name: 'Sheep', questions: [{ q: "What material do we get from sheep?", answers: ["Wool", "Cotton", "Plastic"], correct: 0 }, { q: "What sound does a sheep make?", answers: ["Moo", "Baa", "Oink"], correct: 1 }, { q: "A group of sheep is called a...", answers: ["Pack", "Herd", "Flock"], correct: 2 }] },
+        { emoji: '🐖', env: 'env-mud', name: 'Pig', questions: [{ q: "Why do pigs roll in mud?", answers: ["To cool down", "To hide", "To sleep"], correct: 0 }, { q: "What is a pig's nose called?", answers: ["Beak", "Snout", "Trunk"], correct: 1 }, { q: "Are pigs intelligent animals?", answers: ["No", "Yes, very smart", "They are robots"], correct: 1 }] },
+        { emoji: '🦆', env: 'env-water', name: 'Duck', questions: [{ q: "What sound does a duck make?", answers: ["Quack", "Cluck", "Bark"], correct: 0 }, { q: "Ducks have webbed feet to help them...", answers: ["Run fast", "Dig holes", "Swim"], correct: 2 }, { q: "Duck feathers are naturally...", answers: ["Waterproof", "Heavy", "Invisible"], correct: 0 }] },
+        { emoji: '🐓', env: 'env-sand', name: 'Rooster', questions: [{ q: "When do roosters famously crow?", answers: ["At midnight", "In the morning", "Never"], correct: 1 }, { q: "A rooster is a male...", answers: ["Duck", "Turkey", "Chicken"], correct: 2 }, { q: "What is the red part on top of a rooster's head called?", answers: ["Comb", "Hat", "Crown"], correct: 0 }] },
+        { emoji: '🐤', env: 'env-straw', name: 'Chick', questions: [{ q: "What do chicks hatch from?", answers: ["Plants", "Eggs", "Stones"], correct: 1 }, { q: "What color are baby chicks usually?", answers: ["Yellow", "Blue", "Green"], correct: 0 }, { q: "What do chicks mostly eat?", answers: ["Big fish", "Grass", "Seeds/bugs"], correct: 2 }] }
+    ];
+
+    // --- VARIABLES ---
+    const container = document.getElementById('game-container');
+    const crosshairEl = document.getElementById('crosshair');
+    let cx = 400, cy = 300, vx = 0, vy = 0; // Crosshair position & velocity
+    const speed = 7; // Tốc độ di chuyển tâm ngắm
+
+    let currentLevel = 0, score = 0, targetScore = 5, gateOpen = false, questionsPassed = 0;
+    let animals = [], gameLoop, isPaused = false;
+
+    function startGame() {
+        initAudio();
+        document.getElementById('start-screen').classList.add('hidden');
+        loadLevel(0);
+    }
+
+    function startNextLevel() {
+        document.getElementById('level-up-screen').classList.add('hidden');
+        currentLevel++;
+        if (currentLevel < levelsData.length) loadLevel(currentLevel);
+    }
+
+    function loadLevel(idx) {
+        currentLevel = idx;
+        const data = levelsData[currentLevel];
+        score = 0; gateOpen = false; questionsPassed = 0; animals = []; isPaused = false;
+        
+        document.getElementById('level-text').innerText = `${currentLevel + 1}/9`;
+        document.getElementById('score-text').innerText = `0/5`;
+        updateGateUI();
+        container.className = data.env;
+
+        document.querySelectorAll('.animal').forEach(el => el.remove());
+        for (let i = 0; i < targetScore; i++) createAnimal(data.emoji);
+
+        // Đưa crosshair ra giữa
+        cx = 400; cy = 300; vx = 0; vy = 0;
+
+        if (gameLoop) cancelAnimationFrame(gameLoop);
+        loop();
+    }
+
+    function createAnimal(emoji) {
+        let el = document.createElement('div');
+        el.className = 'animal bounce';
+        let innerSpan = document.createElement('span');
+        innerSpan.innerText = emoji; innerSpan.style.display = 'inline-block';
+        el.appendChild(innerSpan);
+        container.appendChild(el);
+
+        let animal = { el: el, inner: innerSpan, x: Math.random() * 600 + 100, y: Math.random() * 200 + 350, targetX: 0, targetY: 0 };
+        animal.targetX = animal.x; animal.targetY = animal.y;
+        el.style.left = animal.x + 'px'; el.style.top = animal.y + 'px';
+        animals.push(animal);
+    }
+
+    function loop() {
+        if (!isPaused) {
+            // Update crosshair từ Gamepad
+            cx += vx; cy += vy;
+            cx = Math.max(20, Math.min(780, cx));
+            cy = Math.max(20, Math.min(530, cy));
+            crosshairEl.style.left = cx + 'px';
+            crosshairEl.style.top = cy + 'px';
+
+            // Highlight crosshair nếu đang chỉ vào cổng
+            if (!gateOpen && cx > 310 && cx < 490 && cy < 100) {
+                crosshairEl.style.borderColor = "#FFD700";
+            } else {
+                crosshairEl.style.borderColor = "#FF4500";
+            }
+
+            for (let i = animals.length - 1; i >= 0; i--) {
+                let a = animals[i];
+                a.x += (a.targetX - a.x) * 0.04; a.y += (a.targetY - a.y) * 0.04;
+                a.el.style.left = a.x + 'px'; a.el.style.top = a.y + 'px';
+
+                if (a.targetX > a.x + 2) a.inner.style.transform = 'scaleX(-1)';
+                else if (a.targetX < a.x - 2) a.inner.style.transform = 'scaleX(1)';
+
+                if (Math.abs(a.targetX - a.x) < 10 && Math.abs(a.targetY - a.y) < 10) {
+                    if (Math.random() < 0.03) {
+                        a.targetX = Math.max(40, Math.min(760, a.x + (Math.random() * 120 - 60)));
+                        a.targetY = Math.max(110, Math.min(510, a.y + (Math.random() * 120 - 60)));
+                    }
+                }
+
+                if (gateOpen && a.x > 310 && a.x < 490 && a.y < 100) {
+                    a.el.remove(); animals.splice(i, 1);
+                    score++; document.getElementById('score-text').innerText = `${score}/5`;
+                    playSound('score'); checkLevelComplete();
+                }
+            }
+        }
+        gameLoop = requestAnimationFrame(loop);
+    }
+
+    // --- LOGIC LÙA (Dùng chung cho cả click màn hình và nút Action) ---
+    function triggerHerd(x, y) {
+        initAudio();
+        
+        // Nếu ngắm vào cổng thì mở Quiz
+        if (!gateOpen && x > 310 && x < 490 && y < 100) {
+            isPaused = true;
+            renderQuiz();
+            return;
+        }
+
+        // Lùa bình thường
+        let effect = document.createElement('div');
+        effect.className = 'click-effect';
+        effect.style.left = x + 'px'; effect.style.top = y + 'px';
+        container.appendChild(effect);
+        setTimeout(() => effect.remove(), 400);
+
+        playSound('click');
+
+        animals.forEach(a => {
+            let dx = a.x - x, dy = a.y - y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < 200) { 
+                let force = 180; if (distance === 0) distance = 1;
+                a.targetX = Math.max(40, Math.min(760, a.x + (dx / distance) * force));
+                a.targetY = Math.max(40, Math.min(510, a.y + (dy / distance) * force));
+            }
+        });
+    }
+
+    // --- EVENTS CẢM ỨNG / CLICK LÊN MÀN HÌNH ---
+    container.addEventListener('pointerdown', (e) => {
+        if (isPaused) return;
+        // Bỏ qua nếu click thẳng vào div cổng
+        if (e.target.closest('#gate-container')) {
+            if (!gateOpen) { initAudio(); isPaused = true; renderQuiz(); }
+            return;
+        }
+
+        let rect = container.getBoundingClientRect();
+        // Tính X, Y với tỷ lệ Scale của màn hình
+        const scale = parseFloat(document.getElementById('app-wrapper').style.transform.replace('scale(', '').replace(')', '')) || 1;
+        
+        let clickX = (e.clientX - rect.left) / scale;
+        let clickY = (e.clientY - rect.top) / scale;
+
+        // Dời tâm ngắm tới điểm chạm
+        cx = clickX; cy = clickY;
+        triggerHerd(cx, cy);
+    });
+
+    // --- EVENTS CHO BẢNG ĐIỀU KHIỂN (GAMEPAD) ---
+    const bindDir = (id, nx, ny) => {
+        const el = document.getElementById(id);
+        const start = (e) => { e.preventDefault(); vx = nx * speed; vy = ny * speed; };
+        const stop = (e) => { e.preventDefault(); vx = 0; vy = 0; };
+        el.addEventListener('pointerdown', start);
+        el.addEventListener('pointerup', stop);
+        el.addEventListener('pointerleave', stop);
+    };
+
+    bindDir('btn-up', 0, -1);
+    bindDir('btn-down', 0, 1);
+    bindDir('btn-left', -1, 0);
+    bindDir('btn-right', 1, 0);
+
+    const btnHerd = document.getElementById('btn-herd');
+    btnHerd.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (isPaused) return;
+        triggerHerd(cx, cy);
+    });
+
+    // --- GATE & QUIZ UI ---
+    function updateGateUI() {
+        const gateDoors = document.getElementById('gate-doors'), gateLocks = document.getElementById('gate-locks'), gateText = document.getElementById('gate-text');
+        if (gateOpen) {
+            gateDoors.classList.add('open'); gateLocks.innerText = '🔓🔓🔓'; gateText.innerText = 'GATE OPEN'; gateText.style.color = '#333';
+        } else {
+            gateDoors.classList.remove('open'); gateText.style.color = 'white'; gateText.innerText = 'CLICK TO UNLOCK';
+            if (questionsPassed === 0) gateLocks.innerText = '🔒🔒🔒';
+            if (questionsPassed === 1) gateLocks.innerText = '🔓🔒🔒';
+            if (questionsPassed === 2) gateLocks.innerText = '🔓🔓🔒';
+        }
+    }
+
+    function renderQuiz() {
+        const qData = levelsData[currentLevel].questions[questionsPassed];
+        document.getElementById('q-current').innerText = questionsPassed + 1;
+        document.getElementById('quiz-question').innerText = qData.q;
+        document.getElementById('quiz-msg').innerText = '';
+        
+        let answersDiv = document.getElementById('quiz-answers');
+        answersDiv.innerHTML = ''; 
+        qData.answers.forEach((ansText, index) => {
+            let btn = document.createElement('button');
+            btn.className = 'answer-btn'; btn.innerText = ansText;
+            btn.onclick = () => handleAnswer(index === qData.correct);
+            answersDiv.appendChild(btn);
+        });
+        document.getElementById('quiz-overlay').classList.remove('hidden');
+    }
+
+    function handleAnswer(isCorrect) {
+        if (isCorrect) {
+            questionsPassed++; updateGateUI();
+            if (questionsPassed < 3) {
+                playSound('correct'); renderQuiz();
+            } else {
+                playSound('open'); document.getElementById('quiz-overlay').classList.add('hidden');
+                gateOpen = true; updateGateUI(); isPaused = false;
+            }
+        } else {
+            playSound('wrong'); document.getElementById('quiz-msg').innerText = "Wrong answer! Try again.";
+        }
+    }
+
+    function checkLevelComplete() {
+        if (score === targetScore) {
+            playSound('win');
+            document.getElementById(`track-${currentLevel}`).classList.add('unlocked');
+            setTimeout(() => {
+                document.getElementById(currentLevel === levelsData.length - 1 ? 'win-screen' : 'level-up-screen').classList.remove('hidden');
+            }, 800);
+        }
+    }
+</script>
+
+</body>
+</html>
