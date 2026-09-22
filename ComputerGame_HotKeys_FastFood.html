@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortcut Master Chef</title>
+    <style>
+        /* --- GLOBAL RESETS & NO-SCROLL LAYOUT --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #3e2723;
+            text-align: center;
+            margin: 0;
+            
+            /* THIẾT LẬP KÍCH THƯỚC TRÀN VIỀN TỐI ĐA VÀ NGĂN SCROLL */
+            height: 100vh;
+            width: 100vw;
+            box-sizing: border-box;
+            overflow: hidden; 
+            
+            /* THÊM PADDING CHÍNH LÀ ĐỂ TẠO KHOẢNG CÁCH CÁCH 4 CẠNH MÀN HÌNH */
+            padding: 3vh 3vw;
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            
+            /* BACKGROUND: BỨC TƯỜNG SỌC QUÁN ĂN NHANH */
+            background: repeating-linear-gradient(to right, #ffe0b2 0, #ffe0b2 50px, #ffcc80 50px, #ffcc80 100px);
+            z-index: 0;
+            position: relative;
+        }
+
+        /* BACKGROUND: SÀN NHÀ CARO 3D VÀ QUẦY THU NGÂN MÀU ĐỎ */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 55%; left: 0; right: 0; bottom: 0;
+            background: 
+                linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 15%), /* Ánh sáng hắt xuống */
+                conic-gradient(at 50% 50%, #212121 90deg, #f5f5f5 90deg 180deg, #212121 180deg 270deg, #f5f5f5 270deg); /* Sàn Caro */
+            background-size: 100% 100%, 80px 80px;
+            border-top: 15px solid #d32f2f;
+            box-shadow: inset 0 20px 40px rgba(0,0,0,0.7);
+            z-index: -1;
+        }
+
+        h1 { margin: 0 0 5px 0; }
+        
+        /* --- MENU CHỌN MÓN --- */
+        .menu-bar {
+            display: flex;
+            justify-content: center;
+            gap: 1vw;
+            margin-bottom: 2vh; /* Tăng nhẹ khoảng cách menu với khay */
+            flex-wrap: wrap;
+            z-index: 1;
+        }
+        .menu-btn {
+            background-color: white;
+            border: 3px solid #ff9800;
+            color: #ff9800;
+            padding: clamp(6px, 1.2vh, 12px) clamp(12px, 2vw, 24px);
+            font-size: clamp(14px, 2vh, 18px);
+            font-weight: 900;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+        }
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            background-color: #fff3e0;
+        }
+        .menu-btn.active {
+            background-color: #d84315;
+            border-color: #bf360c;
+            color: white;
+            box-shadow: 0 0 15px rgba(216, 67, 21, 0.6);
+        }
+
+        /* --- LAYOUT CHÍNH (KHAY ĐỰNG ĐỒ ĂN) --- */
+        .container {
+            display: flex;
+            flex-direction: column;
+            
+            /* GIẢI THUẬT RÀNG BUỘC KÍCH THƯỚC ĐỂ KHÔNG CHẠM MÉP 4 BÊN */
+            width: 100%;       /* Dùng 100% chiều rộng của body (đã bị trừ padding) */
+            height: 100%;      /* Dùng 100% chiều cao khả dụng sau khi chừa menu */
+            max-width: 1200px;
+            max-height: 800px;
+            
+            flex: 1;
+            min-height: 0; 
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            
+            /* Viền khay đỏ và bóng đổ */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4), inset 0 0 0 8px rgba(211, 47, 47, 0.8);
+            
+            /* Padding bên trong khay */
+            padding: 3vh 3vw;
+            box-sizing: border-box;
+            z-index: 1;
+        }
+
+        #game-title {
+            color: #d84315;
+            font-size: clamp(22px, 4vh, 36px);
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0px #ffe0b2;
+        }
+        
+        .container > p {
+            margin: 0 0 2vh 0;
+            font-size: clamp(13px, 2vh, 18px);
+            color: #5d4037;
+            font-weight: 600;
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            width: 100%;
+            gap: 2vw;
+            min-height: 0;
+            align-items: stretch;
+        }
+
+        /* --- PHẦN TRẮC NGHIỆM --- */
+        .quiz-section {
+            flex: 5;
+            display: flex;
+            flex-direction: column;
+            border-right: 3px dashed #bdbdbd;
+            padding-right: 2vw;
+            min-height: 0;
+            overflow-y: auto; 
+        }
+        
+        /* Tùy chỉnh thanh cuộn */
+        .quiz-section::-webkit-scrollbar { width: 6px; }
+        .quiz-section::-webkit-scrollbar-track { background: transparent; }
+        .quiz-section::-webkit-scrollbar-thumb { background: #ffcc80; border-radius: 10px; }
+
+        .question {
+            font-size: clamp(16px, 2.5vh, 24px);
+            font-weight: 600;
+            color: #1b5e20;
+            margin-bottom: 2vh;
+            flex-shrink: 0;
+            line-height: 1.3;
+        }
+        .question span {
+            color: #d84315;
+            font-size: clamp(22px, 3.5vh, 32px);
+            font-weight: 900;
+            display: block;
+            margin-top: 1vh;
+            background: #fff3e0;
+            padding: 5px;
+            border-radius: 10px;
+            border: 2px dashed #ff9800;
+        }
+        
+        .options {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5vh;
+            justify-content: center;
+        }
+        
+        button.option-btn {
+            background: linear-gradient(145deg, #ffcc80, #ffb74d);
+            border: 2px solid #f57c00;
+            padding: clamp(8px, 2vh, 20px);
+            font-size: clamp(14px, 2.2vh, 20px);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #4e342e;
+            box-shadow: 0 4px 0 #ef6c00;
+            line-height: 1.3;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        button.option-btn b {
+            color: #d32f2f;
+            background-color: #fff9c4;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 110%;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 2px 2px rgba(0,0,0,0.15);
+            margin: 0 4px;
+        }
+
+        button.option-btn:hover:not(:disabled) {
+            background: linear-gradient(145deg, #ffb74d, #ffa726);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #e65100;
+        }
+        button.option-btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #e65100;
+        }
+        button.option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake-effect { animation: shake 0.4s ease-in-out; }
+
+        .feedback {
+            flex-shrink: 0;
+            margin-top: 1vh;
+            font-size: clamp(18px, 2.5vh, 24px);
+            font-weight: bold;
+            height: clamp(25px, 4vh, 35px);
+            transition: all 0.3s;
+        }
+        .correct { color: #2e7d32; transform: scale(1.05); }
+        .incorrect { color: #c62828; }
+
+        /* --- PHẦN ĐỒ HỌA MÓN ĂN --- */
+        .food-section {
+            flex: 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end; 
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            padding: 1vh 1vw;
+            position: relative;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .food-stack {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            height: 340px; 
+            width: 285px;
+            transform-origin: bottom center;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .layer {
+            opacity: 0;
+            animation: dropBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+
+        /* --- CSS ART (GIỮ NGUYÊN) --- */
+        .bm-bottom { width: 280px; height: 35px; background: linear-gradient(to bottom, #e49b3f, #b0651f); border-radius: 15px 15px 50px 50px; border: 1px solid #b0651f; }
+        .bm-pate { width: 250px; height: 15px; background-color: #8a6352; border-radius: 10px; margin-bottom: -5px; }
+        .bm-meat { width: 260px; height: 20px; background: repeating-linear-gradient(-45deg, #d2691e, #d2691e 10px, #bd601a 10px, #bd601a 12px); border-radius: 12px; margin-bottom: -5px; }
+        .bm-veggies { width: 250px; height: 15px; background: repeating-linear-gradient(90deg, #ff8c00 0 5px, #f0f0f0 5px 10px, #a7c957 10px 15px); border-radius: 8px; margin-bottom: -5px; }
+        .bm-herbs { width: 270px; height: 25px; background: transparent; font-size: 25px; line-height: 25px; text-align: center; margin-bottom: -15px; box-shadow: none; }
+        .bm-top { width: 285px; height: 45px; background: linear-gradient(135deg, #f5b971, #e49b3f, #b0651f); border-radius: 60px 60px 20px 20px; border: 1px solid #b0651f; }
+
+        .hb-bottom { width: 220px; height: 30px; background: #e6a15c; border-radius: 10px 10px 30px 30px; }
+        .hb-lettuce { width: 240px; height: 12px; background: #4caf50; border-radius: 8px; margin-bottom: -3px; clip-path: polygon(0 0, 10% 30%, 20% 0, 30% 30%, 40% 0, 50% 30%, 60% 0, 70% 30%, 80% 0, 90% 30%, 100% 0, 100% 100%, 0 100%); }
+        .hb-patty { width: 230px; height: 25px; background: #4e342e; border-radius: 15px; margin-bottom: -5px; border: 1px solid #3e2723; }
+        .hb-cheese { width: 240px; height: 8px; background: #ffca28; border-radius: 3px; margin-bottom: -3px; }
+        .hb-tomato { width: 220px; height: 12px; background: repeating-linear-gradient(90deg, #e53935 0 60px, transparent 60px 65px); border-radius: 10px; margin-bottom: -3px; background-color: #c62828; }
+        .hb-top { width: 220px; height: 55px; background: #e6a15c; border-radius: 110px 110px 20px 20px; position: relative; }
+        .hb-top::before { content: '•• • •• •'; position: absolute; color: #fff8e1; font-size: 16px; top: 10px; left: 40px; letter-spacing: 15px; opacity: 0.8; }
+
+        .hd-bottom { width: 260px; height: 30px; background: #d78c43; border-radius: 25px; box-shadow: inset 0 -10px 15px rgba(0,0,0,0.2); }
+        .hd-sausage { width: 280px; height: 35px; background: #c62828; border-radius: 25px; margin-bottom: -15px; border-bottom: 3px solid #8e0000; }
+        .hd-mustard { width: 250px; height: 12px; background: transparent; background-image: radial-gradient(circle at 10px 10px, #fbc02d 10px, transparent 11px); background-size: 30px 20px; margin-bottom: -12px; box-shadow: none; z-index: 5;}
+        .hd-ketchup { width: 250px; height: 12px; background: transparent; background-image: radial-gradient(circle at 10px 10px, #b71c1c 10px, transparent 11px); background-size: 30px 20px; background-position: 15px 0; margin-bottom: -8px; box-shadow: none; z-index: 6;}
+        .hd-onions { width: 240px; height: 8px; background: repeating-linear-gradient(90deg, #fff 0 5px, transparent 5px 10px); margin-bottom: -3px; box-shadow: none; z-index: 7;}
+        .hd-top { width: 260px; height: 25px; background: #e6a15c; border-radius: 25px; margin-bottom: -18px; opacity: 0.9; box-shadow: inset 0 10px 15px rgba(255,255,255,0.4); z-index: 8;}
+
+        .pz-crust { width: 280px; height: 25px; background: #e0a866; border-radius: 15px; border-bottom: 4px solid #c7893f; }
+        .pz-sauce { width: 260px; height: 12px; background: #b71c1c; border-radius: 10px; margin-bottom: -8px; }
+        .pz-cheese { width: 250px; height: 20px; background: #fff59d; border-radius: 12px; margin-bottom: -12px; border-bottom: 2px solid #ffca28; }
+        .pz-pep { width: 240px; height: 15px; background: transparent; margin-bottom: -8px; box-shadow: none; display: flex; justify-content: space-around; align-items: center; }
+        .pz-pep::before, .pz-pep::after { content: ''; display: block; width: 40px; height: 12px; background: #d32f2f; border-radius: 50%; box-shadow: 60px 0 0 #d32f2f, -60px 0 0 #d32f2f; }
+        .pz-veg { width: 240px; height: 20px; background: transparent; font-size: 20px; line-height: 20px; text-align: center; margin-bottom: -12px; box-shadow: none; letter-spacing: 15px;}
+
+        @keyframes dropBounce {
+            0% { transform: translateY(-150px) scaleY(1.2); opacity: 0; }
+            60% { transform: translateY(10px) scaleY(0.9); opacity: 1; }
+            100% { transform: translateY(0) scaleY(1); opacity: 1; }
+        }
+        
+        .success-message { display: none; color: #bf360c; font-size: clamp(20px, 3vh, 26px); font-weight: bold; margin-top: 15px; animation: dropBounce 0.5s ease forwards; text-align: center; line-height: 1.3;}
+        #restart-btn { display: none; margin-top: 10px; background-color: #2e7d32; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: clamp(16px, 2vh, 20px); font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #1b5e20; transition: all 0.2s; }
+        #restart-btn:hover { background-color: #1b5e20; transform: translateY(-2px); box-shadow: 0 6px 0 #0d3b10; }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999; }
+
+        /* --- MEDIA QUERIES ĐỂ ÉP ĐỒ ĂN THU NHỎ NẾU MÀN HÌNH QUÁ BÉ --- */
+        @media (max-width: 1200px) { .food-stack { transform: scale(0.9); } }
+        @media (max-width: 992px) { .food-stack { transform: scale(0.75); } }
+        
+        /* Mobile Layout */
+        @media (max-width: 768px) {
+            body { padding: 2vh 2vw; } /* Vẫn duy trì khoảng cách ở mobile */
+            .game-area { flex-direction: column; gap: 1vh; }
+            .quiz-section { border-right: none; border-bottom: 2px dashed #bdbdbd; padding-right: 0; padding-bottom: 2vh; }
+            .food-section { padding-top: 1vh; justify-content: center; }
+            .food-stack { transform: scale(0.65); }
+        }
+        @media (max-height: 600px) {
+            .food-stack { transform: scale(0.5); }
+            .container { padding: 1.5vh 2vw; }
+        }
+
+        /* --- HIỆU ỨNG ĐÓNG CỬA & ĐỔ ĐỒ ĂN DÀY ĐẶC HỖN LOẠN --- */
+        #penalty-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        #food-spill-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1002; 
+        }
+
+        .food-emoji {
+            position: absolute;
+            animation-name: chaoticFall;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            animation-fill-mode: forwards;
+            filter: drop-shadow(4px 10px 8px rgba(0,0,0,0.5));
+            will-change: transform;
+        }
+
+        @keyframes chaoticFall {
+            0% { transform: translate(0, -20vh) rotate(0deg) scale(0); opacity: 0; }
+            10% { opacity: 1; scale(1); }
+            100% { transform: translate(calc(var(--drift) * 2), 120vh) rotate(1080deg) scale(1.5); opacity: 1; }
+        }
+
+        /* Cửa cuốn kim loại (Roller Shutter) */
+        .shutter {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                #90a4ae, #90a4ae 25px,
+                #78909c 25px, #78909c 50px
+            );
+            border-bottom: 30px solid #263238;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.8);
+            transform: translateY(-100%);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+        .shutter.closed { transform: translateY(0); }
+
+        .closed-sign {
+            background-color: #1a1a1a;
+            padding: clamp(20px, 4vh, 40px) clamp(30px, 6vw, 60px);
+            border-radius: 20px;
+            text-align: center;
+            border: 6px solid #ff5252;
+            box-shadow: 0 0 30px #ff5252, inset 0 0 20px rgba(255, 82, 82, 0.2);
+            animation: pulseSign 1s infinite alternate;
+        }
+
+        @keyframes pulseSign {
+            from { box-shadow: 0 0 15px #ff5252; border-color: #ff5252; }
+            to { box-shadow: 0 0 45px #ff1744; border-color: #ff1744; }
+        }
+
+        .closed-sign h1 { color: #ff5252; font-size: clamp(30px, 6vw, 60px); margin: 0 0 10px 0; letter-spacing: 2px; text-transform: uppercase;}
+        .closed-sign p { font-size: clamp(16px, 2.5vw, 24px); margin: 0 0 20px 0; color: #e0e0e0; }
+        #countdown-timer { font-size: clamp(70px, 15vw, 130px); font-weight: 900; color: #ffeb3b; line-height: 1; text-shadow: 0 8px 15px rgba(0,0,0,0.6); }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Penalty Overlay (Hiệu ứng Đóng cửa & Đổ đồ ăn) -->
+    <div id="penalty-overlay">
+        <div id="food-spill-container"></div>
+        <div class="shutter" id="store-shutter">
+            <div class="closed-sign">
+                <h1>⚠️ STORE CLOSED ⚠️</h1>
+                <p>Anti-guessing system activated.</p>
+                <div id="countdown-timer">5</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cấu trúc HTML & Logic Giữ nguyên hoàn toàn -->
+    <div class="menu-bar" id="menu-bar">
+        <button class="menu-btn active" onclick="changeFood('banhmi', this)">🥖 Banh Mi</button>
+        <button class="menu-btn" onclick="changeFood('hamburger', this)">🍔 Hamburger</button>
+        <button class="menu-btn" onclick="changeFood('hotdog', this)">🌭 Hotdog</button>
+        <button class="menu-btn" onclick="changeFood('pizza', this)">🍕 Pizza</button>
+    </div>
+
+    <div class="container">
+        <h1 id="game-title">Making: Banh Mi</h1>
+        <p>Select the correct function for the shortcut to collect ingredients!</p>
+
+        <div class="game-area">
+            <div class="quiz-section">
+                <div class="question" id="question-text"></div>
+                <div class="options" id="options-container"></div>
+                <div class="feedback" id="feedback"></div>
+            </div>
+
+            <div class="food-section">
+                <div class="food-stack" id="food-stack"></div>
+                <div class="success-message" id="success-message">🎉 Awesome! Food completed! 🎉</div>
+                <button id="restart-btn" onclick="startGame()">Remake this food</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);  
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            } else if (type === 'incorrect') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(130, audioCtx.currentTime); 
+                osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'drop') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'victory') {
+                const notes = [523.25, 659.25, 783.99, 1046.50]; 
+                notes.forEach((freq, index) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.1);
+                    g.gain.setValueAtTime(0.1, audioCtx.currentTime + index * 0.1);
+                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + index * 0.1 + 0.3);
+                    o.start(audioCtx.currentTime + index * 0.1);
+                    o.stop(audioCtx.currentTime + index * 0.1 + 0.3);
+                });
+            } else if (type === 'shutterSlam') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(80, audioCtx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.6); 
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+            }
+        }
+
+        const canvas = document.getElementById("confetti-canvas");
+        const ctx = canvas.getContext("2d");
+        let confetti = [];
+        let animationFrameId;
+
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        function createConfetti() {
+            confetti = [];
+            const colors = ["#ff9800", "#e91e63", "#00bcd4", "#4caf50", "#ffeb3b", "#9c27b0"];
+            for (let i = 0; i < 150; i++) {
+                confetti.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    r: Math.random() * 6 + 4,
+                    d: Math.random() * canvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10 - 5,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                    tiltAngle: 0
+                });
+            }
+        }
+
+        function drawConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let remaining = false;
+            confetti.forEach((p) => {
+                p.tiltAngle += p.tiltAngleIncremental;
+                p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+                p.x += Math.sin(p.tiltAngle);
+                p.tilt = Math.sin(p.tiltAngle - confetti.indexOf(p) / 3) * 15;
+                if (p.y <= canvas.height) remaining = true;
+                ctx.beginPath();
+                ctx.lineWidth = p.r;
+                ctx.strokeStyle = p.color;
+                ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                ctx.stroke();
+            });
+            if (remaining) animationFrameId = requestAnimationFrame(drawConfetti);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function startConfetti() {
+            cancelAnimationFrame(animationFrameId);
+            createConfetti(); drawConfetti();
+        }
+
+        const shortcutData = [
+            { shortcut: "Ctrl + S", desc: "<b>Save</b> the current file or document." },
+            { shortcut: "Ctrl + F", desc: "Open the <b>Find</b> menu to <b>search</b> for text." },
+            { shortcut: "Ctrl + N", desc: "<b>Create a new</b> file, document, or window." },
+            { shortcut: "Ctrl + P", desc: "Open the <b>print</b> menu." },
+            { shortcut: "Ctrl + O", desc: "<b>Open</b> an <b>existing</b> file." },
+            { shortcut: "Windows + L", desc: "<b>Lock</b> the computer screen." },
+            { shortcut: "Windows + M", desc: "<b>Minimize all</b> open windows to the desktop." },
+            { shortcut: "Caps Lock", desc: "Toggle <b>uppercase (ALL CAPS)</b> typing on or off." },
+            { shortcut: "Home", desc: "Scroll immediately to the <b>very top</b> of the webpage." },
+            { shortcut: "End", desc: "Scroll immediately to the <b>very bottom</b> of the webpage." }
+        ];
+
+        let baseQuestions = [];
+
+        const foodConfigs = {
+            banhmi: { title: "Making: Banh Mi 🥖", layers: ["bm-bottom", "bm-pate", "bm-meat", "bm-meat", "bm-veggies", "bm-veggies", "bm-herbs", "bm-herbs", "bm-top", "bm-top"], herbText: "🌿🌶️🌿" },
+            hamburger: { title: "Making: Hamburger 🍔", layers: ["hb-bottom", "hb-lettuce", "hb-patty", "hb-patty", "hb-cheese", "hb-cheese", "hb-tomato", "hb-tomato", "hb-top", "hb-top"] },
+            hotdog: { title: "Making: Hotdog 🌭", layers: ["hd-bottom", "hd-sausage", "hd-sausage", "hd-mustard", "hd-mustard", "hd-ketchup", "hd-ketchup", "hd-onions", "hd-top", "hd-top"] },
+            pizza: { title: "Making: Pizza 🍕", layers: ["pz-crust", "pz-sauce", "pz-sauce", "pz-cheese", "pz-cheese", "pz-pep", "pz-pep", "pz-veg", "pz-veg", "pz-veg"], vegText1: "🫒🫑🫒", vegText2: "🍄🧅🍄", vegText3: "🍍 Broccoli", vegText4: "🌽 Tomato" }
+        };
+
+        let currentFood = "banhmi";
+        let currentQuestionIndex = 0;
+        let consecutiveWrongCount = 0;
+
+        const questionText = document.getElementById("question-text");
+        const optionsContainer = document.getElementById("options-container");
+        const feedback = document.getElementById("feedback");
+        const foodStack = document.getElementById("food-stack");
+        const successMessage = document.getElementById("success-message");
+        const restartBtn = document.getElementById("restart-btn");
+        const gameTitle = document.getElementById("game-title");
+        const penaltyOverlay = document.getElementById("penalty-overlay");
+        const shutter = document.getElementById("store-shutter");
+        const spillContainer = document.getElementById("food-spill-container");
+        const countdownTimer = document.getElementById("countdown-timer");
+
+        function changeFood(foodKey, btnElement) {
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            currentFood = foodKey;
+            gameTitle.textContent = foodConfigs[foodKey].title;
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            startGame();
+        }
+
+        function startGame() {
+            baseQuestions = shuffleArray([...shortcutData]);
+            currentQuestionIndex = 0;
+            consecutiveWrongCount = 0;
+            foodStack.innerHTML = "";
+            successMessage.style.display = "none";
+            restartBtn.style.display = "none";
+            feedback.textContent = "";
+            loadQuestion();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            const config = foodConfigs[currentFood];
+            if (currentQuestionIndex >= config.layers.length) {
+                finishGame(); return;
+            }
+
+            const currentData = baseQuestions[currentQuestionIndex];
+            questionText.innerHTML = `What is the function of: <span>${currentData.shortcut}</span>`;
+            optionsContainer.innerHTML = "";
+            feedback.textContent = "";
+
+            let allOtherDescs = shortcutData.map(item => item.desc).filter(desc => desc !== currentData.desc);
+            let wrongOptions = shuffleArray(allOtherDescs).slice(0, 3);
+            let finalOptions = shuffleArray([currentData.desc, ...wrongOptions]);
+
+            finalOptions.forEach(answerDesc => {
+                const button = document.createElement("button");
+                button.classList.add("option-btn");
+                button.innerHTML = answerDesc; 
+                button.onclick = () => checkAnswer(answerDesc, currentData.desc, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function triggerPenalty(buttonElement) {
+            playSound('shutterSlam');
+            penaltyOverlay.style.display = 'block';
+            spillContainer.innerHTML = '';
+            
+            const emojis = ['🍔', '🍟', '🥤', '🥗', '🍗', '🥓', '🍕', '🌭', '🌮', '🍩'];
+            for (let i = 0; i < 80; i++) {
+                const food = document.createElement('div');
+                food.className = 'food-emoji';
+                food.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                food.style.left = Math.random() * 100 + 'vw';
+                const size = Math.random() * 50 + 40;
+                food.style.fontSize = `${size}px`;
+                
+                const duration = Math.random() * 1.5 + 1; 
+                const delay = Math.random() * 1.5; 
+                food.style.animationDuration = `${duration}s`;
+                food.style.animationDelay = `${delay}s`;
+                
+                const drift = (Math.random() - 0.5) * 600; 
+                food.style.setProperty('--drift', `${drift}px`);
+                
+                spillContainer.appendChild(food);
+            }
+            
+            setTimeout(() => { shutter.classList.add('closed'); }, 50);
+
+            let timeLeft = 5;
+            countdownTimer.textContent = timeLeft;
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    countdownTimer.textContent = timeLeft;
+                } else {
+                    clearInterval(timer);
+                    shutter.classList.remove('closed');
+                    
+                    setTimeout(() => {
+                        penaltyOverlay.style.display = 'none';
+                        spillContainer.innerHTML = '';
+                        consecutiveWrongCount = 0;
+                        
+                        const allButtons = document.querySelectorAll('.option-btn');
+                        allButtons.forEach(btn => btn.disabled = false);
+                        feedback.textContent = "";
+                        buttonElement.style.backgroundColor = "";
+                        buttonElement.classList.remove("shake-effect");
+                    }, 600); 
+                }
+            }, 1000);
+        }
+
+        function checkAnswer(selected, correct, buttonElement) {
+            const allButtons = document.querySelectorAll('.option-btn');
+            allButtons.forEach(btn => btn.disabled = true);
+
+            if (selected === correct) {
+                consecutiveWrongCount = 0;
+                playSound('correct');
+                feedback.innerHTML = "✅ Correct!";
+                feedback.className = "feedback correct";
+                buttonElement.style.background = "#a5d6a7";
+                
+                setTimeout(() => { playSound('drop'); addLayerVisual(); }, 200);
+                setTimeout(() => { currentQuestionIndex++; loadQuestion(); }, 1100);
+            } else {
+                consecutiveWrongCount++;
+                playSound('incorrect');
+                feedback.innerHTML = "❌ Incorrect!";
+                feedback.className = "feedback incorrect";
+                buttonElement.style.background = "#ef9a9a";
+                buttonElement.classList.add("shake-effect"); 
+                
+                if (consecutiveWrongCount >= 2) {
+                    setTimeout(() => { triggerPenalty(buttonElement); }, 500);
+                } else {
+                    setTimeout(() => {
+                        allButtons.forEach(btn => btn.disabled = false);
+                        feedback.textContent = "";
+                        buttonElement.style.background = "";
+                        buttonElement.classList.remove("shake-effect");
+                    }, 1000);
+                }
+            }
+        }
+
+        function addLayerVisual() {
+            const config = foodConfigs[currentFood];
+            const layerClass = config.layers[currentQuestionIndex];
+            const layerDiv = document.createElement("div");
+            layerDiv.classList.add("layer", layerClass);
+
+            if (layerClass === "bm-herbs") layerDiv.textContent = config.herbText;
+            if (layerClass === "pz-veg" && currentQuestionIndex === 7) layerDiv.textContent = config.vegText1;
+            if (layerClass === "pz-veg" && currentQuestionIndex === 8) layerDiv.textContent = config.vegText2;
+            if (layerClass === "pz-veg" && currentQuestionIndex === 9) layerDiv.textContent = config.vegText3;
+
+            foodStack.appendChild(layerDiv);
+        }
+
+        function finishGame() {
+            playSound('victory');
+            startConfetti();
+            questionText.innerHTML = "🎉 Congratulations! 🎉";
+            optionsContainer.innerHTML = "";
+            feedback.textContent = "";
+            successMessage.style.display = "block";
+            restartBtn.style.display = "inline-block";
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
